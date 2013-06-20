@@ -128,22 +128,6 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 
 [Document7]
-DocumentPath=ov_ftdi.OutJob
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-
-[Document8]
 DocumentPath=OpenVizsla footprints.PcbLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -159,7 +143,7 @@ ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
 
-[Document9]
+[Document8]
 DocumentPath=OpenVizsla symbols.SchLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -175,7 +159,7 @@ ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
 
-[Document10]
+[Document9]
 DocumentPath=usb.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -190,14 +174,6 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-
-[GeneratedDocument1]
-DocumentPath=Project Outputs for ov_ftdi\RAM v3.BOM
-DItemRevisionGUID=
-
-[GeneratedDocument2]
-DocumentPath=Project Outputs for ov_ftdi\RAM v3.CSV
-DItemRevisionGUID=
 
 [PCBConfiguration1]
 ReleaseItemId=
