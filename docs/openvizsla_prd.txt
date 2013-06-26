@@ -1,0 +1,34 @@
+OpenVizsla product requirements definition
+
+Target users:
+USB driver developers, reverse engineers, USB hardware developers
+
+
+Requirements:
+* self-contained unit
+* inexpensive -- $250 or cheaper
+* small -- comparable in size to an 2.5" external hard drive
+* compatibility with USB 1.1/2.0 (LS/FS/HS)
+* connects to host machine using high-speed USB2.0
+* collects all data connecting between two machines at the USB PHY level
+* buffer memory to allow collection of bursty data
+* LEDs to indicate capture status
+* Unique VID/PID
+* open design information, including published schematics and protocol / data format
+* reprogrammable (nonvolatile) devices can be reflashed in most cases without specialized hardware
+
+Nice to have
+* unused GPIOs brought out to a header
+* trigger button
+* compression of data to allow streaming 480Mbps collection
+* filtering of data to allow streaming 480Mbps collection
+* USB current draw measurement
+
+Software/firmware
+Reference firmware/ HDL will be provided (in source and binary form), sufficient to test and demonstrate all basic functionality.  Basic cross-platform libusb-based command line utilities (with source) will be provided to allow the firmware to be controlled / updated, and data collected. Raw data format will be documented, and a converter will be provided to convert the raw data to a format that Wireshark can parse (e.g. usbmon -- note that this may require discarding some data).
+
+Distribution
+OpenVizsla will be provided to KickStarter backers as a raw PCB, a kit (??), a bare assembled PCB, and a complete unit with enclosure and cables. 
+
+Out of scope:
+* No GUI will be provided (but we will make it easy for a third party to write one)
