@@ -196,7 +196,71 @@ DocumentPath=Project Outputs for ov_ftdi\Design Rule Check - ov_ftdi.html
 DItemRevisionGUID=
 
 [GeneratedDocument2]
+DocumentPath=Project Outputs for ov_ftdi\NC Drill\ov_ftdi.DRR
+DItemRevisionGUID=
+
+[GeneratedDocument3]
 DocumentPath=AutoCAD PCB\ov_ftdi.DWG
+DItemRevisionGUID=
+
+[GeneratedDocument4]
+DocumentPath=Project Outputs for ov_ftdi\AutoCAD PCB\ov_ftdi.DWG
+DItemRevisionGUID=
+
+[GeneratedDocument5]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.EXTREP
+DItemRevisionGUID=
+
+[GeneratedDocument6]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.GBL
+DItemRevisionGUID=
+
+[GeneratedDocument7]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.GBS
+DItemRevisionGUID=
+
+[GeneratedDocument8]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.GKO
+DItemRevisionGUID=
+
+[GeneratedDocument9]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.GM2
+DItemRevisionGUID=
+
+[GeneratedDocument10]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.GTL
+DItemRevisionGUID=
+
+[GeneratedDocument11]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.GTO
+DItemRevisionGUID=
+
+[GeneratedDocument12]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.GTP
+DItemRevisionGUID=
+
+[GeneratedDocument13]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.GTS
+DItemRevisionGUID=
+
+[GeneratedDocument14]
+DocumentPath=Project Outputs for ov_ftdi\NC Drill\ov_ftdi.LDP
+DItemRevisionGUID=
+
+[GeneratedDocument15]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.REP
+DItemRevisionGUID=
+
+[GeneratedDocument16]
+DocumentPath=Project Outputs for ov_ftdi\Gerber\ov_ftdi.RUL
+DItemRevisionGUID=
+
+[GeneratedDocument17]
+DocumentPath=Project Outputs for ov_ftdi\NC Drill\ov_ftdi.TXT
+DItemRevisionGUID=
+
+[GeneratedDocument18]
+DocumentPath=Project Outputs for ov_ftdi\Pick Place\Pick Place for ov_ftdi.txt
 DItemRevisionGUID=
 
 [PCBConfiguration1]
