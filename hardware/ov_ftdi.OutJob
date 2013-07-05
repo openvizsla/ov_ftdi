@@ -308,11 +308,33 @@ Configuration7_Name73=OutputConfigurationParameter73
 Configuration7_Item73=CArc=Full|CFill=Full|Comment=Full|Coordinate=Full|CPad=Full|CRegion=Full|CText=Full|CTrack=Full|CVia=Full|DDSymbolKind=0|DDSymbolSize=500000|DDSymbolSortKind=0|Designator=Full|Dimension=Full|DLayer1=TopLayer|DLayer2=BottomLayer|FArc=Full|FFill=Full|FPad=Full|FRegion=Full|FText=Full|FTrack=Full|FVia=Full|Layer=Mechanical15|Polygon=Full|PrintOutIndex=10|Record=PcbPrintLayer
 Configuration7_Name74=OutputConfigurationParameter74
 Configuration7_Item74=CArc=Full|CFill=Full|Comment=Full|Coordinate=Full|CPad=Full|CRegion=Full|CText=Full|CTrack=Full|CVia=Full|DDSymbolKind=0|DDSymbolSize=500000|DDSymbolSortKind=0|Designator=Full|Dimension=Full|DLayer1=TopLayer|DLayer2=BottomLayer|FArc=Full|FFill=Full|FPad=Full|FRegion=Full|FText=Full|FTrack=Full|FVia=Full|Layer=Mechanical16|Polygon=Full|PrintOutIndex=10|Record=PcbPrintLayer
+OutputType8=BOM_PartType
+OutputName8=Bill of Materials
+OutputCategory8=Report
+OutputDocumentPath8=
+OutputVariantName8=
+OutputEnabled8=1
+OutputEnabled8_OutputMedium1=0
+OutputEnabled8_OutputMedium2=0
+OutputEnabled8_OutputMedium3=5
+OutputEnabled8_OutputMedium4=0
+OutputDefault8=0
+PageOptions8=Record=PageOptions|CenterHorizontal=True|CenterVertical=True|PrintScale=1.00|XCorrection=1.00|YCorrection=1.00|PrintKind=0|BorderSize=5000000|LeftOffset=0|BottomOffset=0|Orientation=2|PaperLength=1000|PaperWidth=1000|Scale=100|PaperSource=7|PrintQuality=-4|MediaType=1|DitherType=10|PaperKind=Letter|PrintScaleMode=1
+Configuration8_Name1=Filter
+Configuration8_Item1=545046300E5446696C74657257726170706572000D46696C7465722E416374697665090F46696C7465722E43726974657269610A04000000000000000000
+Configuration8_Name2=General
+Configuration8_Item2=OpenExported=False|AddToProject=False|ForceFit=False|NotFitted=False|Database=False|IncludePCBData=False|ShowExportOptions=True|TemplateFilename=|BatchMode=0|FormWidth=1178|FormHeight=787|SupplierProdQty=1|SupplierAutoQty=False|SupplierUseCachedPricing=False|SupplierCurrency=<none>
+Configuration8_Name3=GroupOrder
+Configuration8_Item3=Value=True|Comment=True|Footprint=True
+Configuration8_Name4=SortOrder
+Configuration8_Item4=Designator=Up|Comment=Up|Footprint=Up
+Configuration8_Name5=VisibleOrder
+Configuration8_Item5=Comment=100|Description=100|Designator=100|Footprint=100|Quantity=100|Value=100
 
 [PublishSettings]
 OutputFilePath2=
 ReleaseManaged2=1
-OutputBasePath2=Project Outputs for ov_ftdi
+OutputBasePath2=
 OutputPathMedia2=
 OutputPathOutputer2=[Output Type]
 OutputFileName2=ov_ftdi.PDF
@@ -329,7 +351,7 @@ MarkPortsId2=1
 GenerateTOC=1
 OutputFilePath3=X:\ov\ov_ftdi\hardware\Project Outputs for ov_ftdi\
 ReleaseManaged3=1
-OutputBasePath3=
+OutputBasePath3=Project Outputs for ov_ftdi
 OutputPathMedia3=
 OutputPathOutputer3=[Output Type]
 OutputFileName3=
