@@ -20,7 +20,7 @@ endif
 # Local headers
 CFLAGS += -I../include
 
-BIN := memhost
+BIN := ovctl
 OBJS := main.o fastftdi.o fpgaconfig.o bit_file.o \
         hw_common.o
 
