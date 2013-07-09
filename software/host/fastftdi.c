@@ -82,8 +82,8 @@ FTDIDevice_Open(FTDIDevice *dev)
   libusb_set_debug(dev->libusb, 2);
 
   dev->handle = libusb_open_device_with_vid_pid(dev->libusb,
-						TWLFPGA_VENDOR,
-						TWLFPGA_PRODUCT);
+						OV_VENDOR,
+						OV_PRODUCT);
 
   if (!dev->handle) {
     dev->handle = libusb_open_device_with_vid_pid(dev->libusb,

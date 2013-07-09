@@ -22,7 +22,7 @@ CFLAGS += -I../include
 
 BIN := ovctl
 OBJS := main.o fastftdi.o fpgaconfig.o bit_file.o \
-        hw_common.o
+        hw_common.o ftdieep.o
 
 CFLAGS += -O3 -g
 

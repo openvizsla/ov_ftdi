@@ -31,6 +31,7 @@
 
 #include "fastftdi.h"
 #include "hw_common.h"
+#include "ftdieep.h"
 //#include "hw_trace.h"
 //#include "hw_patch.h"
 
@@ -195,6 +196,7 @@ int main(int argc, char **argv)
       return 1;
    }
 
+  FTDIEEP_CheckAndProgram(&dev);
 //   if (iohook)
 //      HWTrace_InitIOHookPatch(&patch);
 
