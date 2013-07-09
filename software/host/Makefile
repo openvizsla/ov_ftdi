@@ -22,7 +22,7 @@ CFLAGS += -I../include
 
 BIN := memhost
 OBJS := main.o fastftdi.o fpgaconfig.o bit_file.o \
-        hw_common.o hw_trace.o hw_patch.o iohook_svc.o
+        hw_common.o
 
 CFLAGS += -O3 -g
 

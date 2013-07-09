@@ -54,6 +54,7 @@ HW_Init(FTDIDevice *dev, const char *bitstream)
 }
 
 
+#if 0
 /*
  * HW_SetSystemClock --
  *
@@ -76,7 +77,7 @@ HW_SetSystemClock(FTDIDevice *dev, float mhz)
 
    HW_ConfigWrite(dev, REG_SYSCLK, regValue, true);
 }
-
+#endif
 
 /*
  * HW_ConfigWriteMultiple --
