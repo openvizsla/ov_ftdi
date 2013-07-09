@@ -27,7 +27,7 @@
 #include <stdlib.h>
 
 #include "hw_common.h"
-
+#include "fpgaconfig.h"
 
 /*
  * HW_Init --

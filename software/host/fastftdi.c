@@ -24,6 +24,7 @@
  * THE SOFTWARE.
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -160,7 +161,9 @@ FTDIDevice_SetMode(FTDIDevice *dev, FTDIInterface interface,
                                   FTDI_COMMAND_TIMEOUT);
     if (err)
       return err;
-  }
+  } 
+
+  return err;
 }
 
 
