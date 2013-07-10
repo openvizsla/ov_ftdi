@@ -43,6 +43,14 @@ typedef enum {
 } FTDIBitmode;
 
 typedef enum {
+  FTDI_MPSSE_SETLOW  = 0x80,
+  FTDI_MPSSE_SETHIGH = 0x82,
+  FTDI_MPSSE_GETLOW  = 0x81,
+  FTDI_MPSSE_GETHIGH = 0x83,
+  FTDI_MPSSE_SETDIVISOR = 0x86,
+} FTDIMPSSEOpcode;
+
+typedef enum {
   FTDI_INTERFACE_A = 1,
   FTDI_INTERFACE_B = 2,
 } FTDIInterface;
@@ -112,5 +120,16 @@ int FTDIDevice_ReadStream(FTDIDevice *dev, FTDIInterface interface,
                           FTDIStreamCallback *callback, void *userdata,
                           int packetsPerTransfer, int numTransfers);
 
+int FTDIDevice_MPSSE_Enable(FTDIDevice *dev, FTDIInterface interface);
+int FTDIDevice_MPSSE_SetDivisor(FTDIDevice *dev, FTDIInterface interface,
+                                uint8_t ValueL, uint8_t ValueH);
+
+int FTDIDevice_MPSSE_SetLowByte(FTDIDevice *dev, FTDIInterface interface,
+                                uint8_t data, uint8_t dir);
+int FTDIDevice_MPSSE_SetHighByte(FTDIDevice *dev, FTDIInterface interface,
+                                 uint8_t data, uint8_t dir);
+
+int FTDIDevice_MPSSE_GetLowByte(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte);
+int FTDIDevice_MPSSE_GetHighByte(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte);
 
 #endif /* __FASTFTDI_H */

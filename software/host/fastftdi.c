@@ -443,3 +443,84 @@ FTDIDevice_ReadStream(FTDIDevice *dev, FTDIInterface interface,
    else
       return state.result;
 }
+
+/* MPSSE mode support -- see
+ * http://www.ftdichip.com/Support/Documents/AppNotes/AN_108_Command_Processor_for_MPSSE_and_MCU_Host_Bus_Emulation_Modes.pdf
+ */
+
+int
+FTDIDevice_MPSSE_Enable(FTDIDevice *dev, FTDIInterface interface)          
+{
+  int err;
+
+ /* Reset interface */
+
+  err = FTDIDevice_SetMode(dev, interface, FTDI_BITMODE_RESET, 0, 0);
+  if (err)
+    return err;
+
+ /* Enable MPSSE mode */
+
+  err = FTDIDevice_SetMode(dev, interface, FTDI_BITMODE_MPSSE,
+    FTDI_SET_BITMODE_REQUEST, 0);
+
+  return err;
+}
+
+int
+FTDIDevice_MPSSE_SetDivisor(FTDIDevice *dev, FTDIInterface interface,
+                   uint8_t ValueL, uint8_t ValueH)
+{
+  uint8_t buf[3] = {FTDI_MPSSE_SETDIVISOR, 0, 0};
+
+  buf[1] = ValueL;
+  buf[2] = ValueH;
+
+  return FTDIDevice_Write(dev, interface, buf, 3, false);
+}
+
+int
+FTDIDevice_MPSSE_SetLowByte(FTDIDevice *dev, FTDIInterface interface, uint8_t data, uint8_t dir) 
+{
+  uint8_t buf[3] = {FTDI_MPSSE_SETLOW, 0, 0};
+
+  buf[1] = data;
+  buf[2] = dir;
+
+  return FTDIDevice_Write(dev, interface, buf, 3, false);
+}
+
+int
+FTDIDevice_MPSSE_SetHighByte(FTDIDevice *dev, FTDIInterface interface, uint8_t data, uint8_t dir) 
+{
+  uint8_t buf[3] = {FTDI_MPSSE_SETHIGH, 0, 0};
+
+  buf[1] = data;
+  buf[2] = dir;
+
+  return FTDIDevice_Write(dev, interface, buf, 3, false);
+}
+
+int
+FTDIDevice_MPSSE_GetLowByte(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte)
+{
+  int err;
+
+  err = FTDIDevice_WriteByteSync(dev, interface, FTDI_MPSSE_GETLOW);
+  if (err)
+    return err;
+
+  return FTDIDevice_ReadByteSync(dev, interface, byte); // ??
+}
+
+int
+FTDIDevice_MPSSE_GetHighByte(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte)
+{
+  int err;
+
+  err = FTDIDevice_WriteByteSync(dev, interface, FTDI_MPSSE_GETHIGH);
+  if (err)
+    return err;
+
+  return FTDIDevice_ReadByteSync(dev, interface, byte); // ??
+}

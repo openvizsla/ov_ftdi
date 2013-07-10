@@ -76,6 +76,11 @@
 
 #define FPGA_PART          "3s500epq208"
 
+#define PORTB_TCK_BIT      (1 << 0)  // GPIOL0
+#define PORTB_TDI_BIT      (1 << 1)  // GPIOL1
+#define PORTB_TDO_BIT      (1 << 2)  // GPIOL2
+#define PORTB_TMS_BIT      (1 << 3)  // GPIOL3
+
 #define PORTB_CSI_BIT      (1 << 0)  // GPIOH0
 #define PORTB_RDWR_BIT     (1 << 1)  // GPIOH1
 #define PORTB_DONE_BIT     (1 << 2)  // GPIOH2
@@ -168,36 +173,31 @@ ConfigBegin(FTDIDevice *dev)
   if (err)
     return err;
 
-  /* Reset interface B */
-
-  err = FTDIDevice_SetMode(dev, FTDI_INTERFACE_B,
-         FTDI_BITMODE_RESET,
-         0,
-         0);
-  if (err)
-    return err;
-
+  
   /* Enable MPSSE mode */
 
-  err = FTDIDevice_SetMode(dev, FTDI_INTERFACE_B,
-			   FTDI_BITMODE_MPSSE,
-			   FTDI_SET_BITMODE_REQUEST,
-			   0);
+  err = FTDIDevice_MPSSE_Enable(dev, FTDI_INTERFACE_B); 
   if (err)
     return err;
 
   // Set speed to 6MHz.
-  err = FTDIDevice_Write(dev, FTDI_INTERFACE_B, "\x86\x00\x00", 3, false);
+  err = FTDIDevice_MPSSE_SetDivisor(dev, FTDI_INTERFACE_B, 0, 0);
   if (err)
     return err;
 
   // Set GPIOL pin state / direction
-  err = FTDIDevice_Write(dev, FTDI_INTERFACE_B, "\x80\x08\x0b", 3, false);
+  // 0x08 TCK TDI low, TMS high
+  // 0x0B TCK, TDI, TMS output, TDO and GPIOL0-> GPIOL3 input
+  err = FTDIDevice_MPSSE_SetLowByte(dev, FTDI_INTERFACE_B, 
+    PORTB_TMS_BIT,
+    PORTB_TCK_BIT | PORTB_TDI_BIT | PORTB_TMS_BIT);
   if (err)
     return err;
 
-  // Set GPIOL pin state / direction
-  err = FTDIDevice_Write(dev, FTDI_INTERFACE_B, "\x82\x0b\x0b", 3, false);
+  // Set GPIOH pin state / direction
+  err = FTDIDevice_MPSSE_SetHighByte(dev, FTDI_INTERFACE_B, 
+    PORTB_CSI_BIT | PORTB_RDWR_BIT | PORTB_PROG_BIT | PORTB_M1_BIT,
+    PORTB_CSI_BIT | PORTB_RDWR_BIT | PORTB_PROG_BIT | PORTB_M1_BIT | PORTB_M0_BIT);
   if (err)
     return err;
 
@@ -205,18 +205,16 @@ ConfigBegin(FTDIDevice *dev)
    * Begin configuration: Pulse PROG low.
    */
 
-  err = FTDIDevice_WriteByteSync(dev, FTDI_INTERFACE_B,
-				 PORTB_CSI_BIT | PORTB_RDWR_BIT | PORTB_PROG_BIT);
-  if (err)
-    return err;
-
-  err = FTDIDevice_WriteByteSync(dev, FTDI_INTERFACE_B,
-				 PORTB_CSI_BIT | PORTB_RDWR_BIT);
+  err = FTDIDevice_MPSSE_SetHighByte(dev, FTDI_INTERFACE_B, 
+    PORTB_CSI_BIT | PORTB_RDWR_BIT | PORTB_M1_BIT,
+    PORTB_CSI_BIT | PORTB_RDWR_BIT | PORTB_PROG_BIT | PORTB_M1_BIT | PORTB_M0_BIT);
   if (err)
     return err;
 
   // Into programming mode (CSI/RDWR low, PROG high)
-  err = FTDIDevice_WriteByteSync(dev, FTDI_INTERFACE_B, PORTB_PROG_BIT);
+  err = FTDIDevice_MPSSE_SetHighByte(dev, FTDI_INTERFACE_B, 
+    PORTB_PROG_BIT | PORTB_M1_BIT,
+    PORTB_CSI_BIT | PORTB_RDWR_BIT | PORTB_PROG_BIT | PORTB_M1_BIT | PORTB_M0_BIT);
   if (err)
     return err;
 
@@ -226,7 +224,7 @@ ConfigBegin(FTDIDevice *dev)
   fprintf(stderr, "FPGA: sending configuration bitstream\n");
 
   // Make sure DONE is low now, for sanity.
-  err = FTDIDevice_ReadByteSync(dev, FTDI_INTERFACE_B, &byte);
+  err = FTDIDevice_MPSSE_GetHighByte(dev, FTDI_INTERFACE_B, &byte);
   if (err)
     return err;
   if (byte & PORTB_DONE_BIT) {
@@ -260,9 +258,16 @@ ConfigEnd(FTDIDevice *dev)
    * Did configuration succeed? Check the DONE pin.
    */
 
-  err = FTDIDevice_ReadByteSync(dev, FTDI_INTERFACE_B, &byte);
+  err = FTDIDevice_MPSSE_GetHighByte(dev, FTDI_INTERFACE_B, &byte);
   if (err)
     return err;
+
+  if (byte & PORTB_INIT_BIT) {
+    fprintf(stderr, "FPGA: CRC OK\n");
+  } else {
+    fprintf(stderr, "FPGA: CRC failed\n");
+    // return -1     (not sure if this will work without a pull-up resistor)
+  }
 
   if (byte & PORTB_DONE_BIT) {
     fprintf(stderr, "FPGA: configured\n");
