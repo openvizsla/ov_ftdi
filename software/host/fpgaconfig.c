@@ -1,21 +1,9 @@
 /*
- * fpgaconfig.c - FPGA configuration for a Spartan 3E in Slave Parallel mode
- *                over an FT232H interface.
- *
- *   Pin assignment:
- *
- *    FT2232H     FPGA
- *    --------------------
- *    AD[7:0]     D[7:0]
- *    AC1/WRSTB#  CCLK
- *    BD0         CSI
- *    BD1         RDWR
- *    BD2*        DONE
- *    BD3*        PROG
- *
- *    * = Series 330 ohm resistor
+ * fpgaconfig.c - FPGA configuration for a Spartan 6 in Slave SelectMAP (Parallel)
+ *                mode over an FT2232H interface.
  *
  * Copyright (C) 2009 Micah Elizabeth Scott
+ * Copyright (C) 2013 bushing
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +24,48 @@
  * THE SOFTWARE.
  */
 
+/* Hardware notes:
+ *   Reference: http://www.xilinx.com/support/documentation/user_guides/ug380.pdf
+ * 
+ *   Pin assignment:
+ *
+ *    FT2232H     FPGA
+ *    --------------------
+ *    AD[7:0]     D[7:0]    (configuration, FIFO mode)
+ *    AC0/RXF#    p55       (FIFO mode)
+ *    AC1/WRSTB#  CCLK      (configuration)
+ *    AC2/RD#     p41       (FIFO mode)
+ *    AC3/WR#     p40       (FIFO mode)
+ *    AC5/CLKOUT  p51       (FIFO mode)
+ *    AC6/OE#     p38       (FIFO mode)
+ *    BC0         CSI       (configuration)
+ *    BC1         RDWR      (configuration)
+ *    BC2         DONE      (configuration)
+ *    BC3         PROG      (configuration)
+ *    BC5         INIT      (configuration)
+ *    BC6         M0        (configuration)
+ *    BC7         M1        (configuration)
+ *
+ * The configuration signals could also be used as GPIOs after configuration is complete.
+ * CLKOUT should be a 60MHz clock available whenever the host USB is connected (which
+ * should be always, in this design).
+ * 
+ * M[1:0] should be 10 to select Slave SelectMAP mode
+ *
+ * note: JTAG is also wired up to the second channel of the FT2232H:
+ *
+ *    FT2232H     FPGA
+ *    --------------------
+ *    BD0         TCK
+ *    BD1         TDI
+ *    BD2         TDO
+ *    BD3         TMS
+ * (Xilinx does not use TRST.)
+ *  M[1:0] is ignored when JTAG is used.
+
+ * The remaining FT2232H signals (BC4, BD4, BD5, BD6, BD7) are unused, but wired up to P3.
+ */
+
 #include "fpgaconfig.h"
 #include "bit_file.h"
 #include <unistd.h>
@@ -46,10 +76,14 @@
 
 #define FPGA_PART          "3s500epq208"
 
-#define PORTB_CSI_BIT      (1 << 0)
-#define PORTB_RDWR_BIT     (1 << 1)
-#define PORTB_DONE_BIT     (1 << 2)
-#define PORTB_PROG_BIT     (1 << 3)
+#define PORTB_CSI_BIT      (1 << 0)  // GPIOH0
+#define PORTB_RDWR_BIT     (1 << 1)  // GPIOH1
+#define PORTB_DONE_BIT     (1 << 2)  // GPIOH2
+#define PORTB_PROG_BIT     (1 << 3)  // GPIOH3
+#define PORTB_INIT_BIT     (1 << 5)  // GPIOH5
+#define PORTB_M0_BIT       (1 << 6)  // GPIOH6
+#define PORTB_M1_BIT       (1 << 7)  // GPIOH7
+
 
 #define NUM_EXTRA_CLOCKS   512
 #define BLOCK_SIZE         (16 * 1024)
@@ -123,7 +157,7 @@ ConfigBegin(FTDIDevice *dev)
      return err;
 
   /*
-   * Initialize the FTDI chip using both interfaces as bit-bang.
+   * Initialize the FTDI chip using bit-bang and MPSSE mode.
    * Interface A is a byte-wide parallel port for config data, and
    * interface B is GPIO for the control signals.
    */
@@ -134,10 +168,36 @@ ConfigBegin(FTDIDevice *dev)
   if (err)
     return err;
 
+  /* Reset interface B */
+
   err = FTDIDevice_SetMode(dev, FTDI_INTERFACE_B,
-			   FTDI_BITMODE_BITBANG,
-			   PORTB_CSI_BIT | PORTB_RDWR_BIT | PORTB_PROG_BIT,
-			   CONFIG_BIT_RATE);
+         FTDI_BITMODE_RESET,
+         0,
+         0);
+  if (err)
+    return err;
+
+  /* Enable MPSSE mode */
+
+  err = FTDIDevice_SetMode(dev, FTDI_INTERFACE_B,
+			   FTDI_BITMODE_MPSSE,
+			   FTDI_SET_BITMODE_REQUEST,
+			   0);
+  if (err)
+    return err;
+
+  // Set speed to 6MHz.
+  err = FTDIDevice_Write(dev, FTDI_INTERFACE_B, "\x86\x00\x00", 3, false);
+  if (err)
+    return err;
+
+  // Set GPIOL pin state / direction
+  err = FTDIDevice_Write(dev, FTDI_INTERFACE_B, "\x80\x08\x0b", 3, false);
+  if (err)
+    return err;
+
+  // Set GPIOL pin state / direction
+  err = FTDIDevice_Write(dev, FTDI_INTERFACE_B, "\x82\x0b\x0b", 3, false);
   if (err)
     return err;
 

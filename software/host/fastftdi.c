@@ -1,5 +1,5 @@
 /*
- * fastftdi.c - A minimal FTDI FT232H interface for which supports bit-bang
+ * fastftdi.c - A minimal FTDI FT2232H interface for which supports bit-bang
  *              mode, but focuses on very high-performance support for
  *              synchronous FIFO mode. Requires libusb-1.0
  *
