@@ -74,7 +74,7 @@
 
 #define CONFIG_BIT_RATE    4000000   // 4 MB/s (mostly arbitrary)
 
-#define FPGA_PART          "3s500epq208"
+#define FPGA_PART          "6slx9tqg144"
 
 #define PORTB_TCK_BIT      (1 << 0)  // GPIOL0
 #define PORTB_TDI_BIT      (1 << 1)  // GPIOL1
