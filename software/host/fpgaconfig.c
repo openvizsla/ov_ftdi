@@ -254,6 +254,9 @@ ConfigEnd(FTDIDevice *dev)
   if (err)
     return err;
 
+  // Short delay while we wait for DONE to rise
+  usleep(10000);
+
   /*
    * Did configuration succeed? Check the DONE pin.
    */
