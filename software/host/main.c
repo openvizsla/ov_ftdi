@@ -115,7 +115,8 @@ int main(int argc, char **argv)
    FTDIDevice dev;
    bool resetFPGA = true;
    bool resetDSI = true;
-   bool iohook = false;
+   bool progeep = false;
+   bool eraseeep = false;
    int err, c;
 
 //   HWPatch_Init(&patch);
@@ -129,13 +130,12 @@ int main(int argc, char **argv)
          {"fast", 0, NULL, 'f'},
          {"slow", 0, NULL, 's'},
          {"clock", 1, NULL, 'c'},
-         {"patch", 1, NULL, 'p'},
-         {"iohook", 0, NULL, 'i'},
-         {"stop", 1, NULL, 'S'},
+         {"progEEP", 0, NULL, 'p'},
+         {"eraseEEP}", 0, NULL, 'e'},
          {NULL},
       };
 
-      c = getopt_long(argc, argv, "FDb:fsc:p:iS:", long_options, &option_index);
+      c = getopt_long(argc, argv, "FDb:fsc:pe", long_options, &option_index);
       if (c == -1)
          break;
 
@@ -166,15 +166,11 @@ int main(int argc, char **argv)
          break;
 
       case 'p':
-//         HWPatch_ParseString(&patch, optarg);
+         progeep = true;
          break;
 
-      case 'i':
-         iohook = true;
-         break;
-
-      case 'S':
-//         HWTrace_ParseStopCondition(optarg);
+      case 'e':
+         eraseeep = true;
          break;
 
       default:
@@ -196,20 +192,20 @@ int main(int argc, char **argv)
       return 1;
    }
 
-  FTDIEEP_CheckAndProgram(&dev);
-//   if (iohook)
-//      HWTrace_InitIOHookPatch(&patch);
+  if (eraseeep) {
+    FTDIEEP_Erase(&dev);
+    FTDIDevice_Reset(&dev);
+  }
+
+  if (progeep) {
+    FTDIEEP_CheckAndProgram(&dev);
+    FTDIDevice_Reset(&dev);
+  }
 
    HW_Init(&dev, resetFPGA ? bitstream : NULL);
    HW_ConfigWrite(&dev, REG_POWERFLAGS, POWERFLAG_DSI_BATT, false);
-//   HW_SetSystemClock(&dev, clock);
-//   HW_LoadPatch(&dev, &patch);
-
-//   if (tracefile || iohook)
-//      HW_Trace(&dev, &patch, tracefile, iohook, resetDSI);
 
    FTDIDevice_Close(&dev);
-//   IOH_Exit();
 
    return 0;
 }

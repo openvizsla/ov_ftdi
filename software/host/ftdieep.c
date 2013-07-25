@@ -245,6 +245,18 @@ static int FTDIEEP_WriteDefaults(FTDIDevice *dev)
 	return 0;
 }
 
+int FTDIEEP_Erase(FTDIDevice *dev)
+{
+	int err = 0;
+	uint8_t addr;
+
+	for (addr = 0; addr < EEP_SIZE; addr++) {
+		err = FTDIEEP_WriteWord(dev, addr, 0xFF);
+		if (err)
+			return err;
+	}
+	return 0;
+}
 
 int FTDIEEP_CheckAndProgram(FTDIDevice *dev)
 {
@@ -267,9 +279,9 @@ int FTDIEEP_CheckAndProgram(FTDIDevice *dev)
 //		fprintf(stderr, "EEPROM: Device blank or checksum incorrect, programming\n");
 		fprintf(stderr, "EEPROM: Device blank or checksum incorrect\n");
 
-//		err = FTDIEEP_WriteDefaults(dev);
-//		if (err)
-//			return err;
+		err = FTDIEEP_WriteDefaults(dev);
+		if (err)
+			return err;
 		err = FTDIDevice_Reset(dev);
 		if (err)
 			return err;

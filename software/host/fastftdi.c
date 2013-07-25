@@ -37,7 +37,6 @@ typedef struct {
    FTDIProgressInfo progress;
 } FTDIStreamState;
 
-
 static int
 DeviceInit(FTDIDevice *dev)
 {

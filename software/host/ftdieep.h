@@ -33,5 +33,6 @@
  */
 
 int FTDIEEP_CheckAndProgram(FTDIDevice *dev);
+int FTDIEEP_Erase(FTDIDevice *dev);
 
 #endif /* __FTDIEEP_H */
