@@ -133,4 +133,18 @@ assign led3=rst;
 		.RST(rst)
 		);
 
+   usbstreamer streamer (
+	   .mclk(CLK),
+		.reset(rst),
+		.usb_d(D),
+		.usb_rxf_n(ACBUS0),
+		.usb_txe_n(CCLK),
+		.usb_rd_n(ACBUS2),
+		.usb_wr_n(ACBUS3),
+		.usb_oe_n(ACBUS6),
+		.have_space(),
+		.data(),
+		.wr()
+		);
+
 endmodule
