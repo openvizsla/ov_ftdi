@@ -79,8 +79,8 @@ typedef struct {
 #define FTDI_VENDOR               0x0403
 #define FTDI_PRODUCT_FT2232H      0x6010
 
-#define OV_VENDOR                 0x0403
-#define OV_PRODUCT                0x6010 // FIXME
+#define OV_VENDOR                 0x1d50
+#define OV_PRODUCT                0x607c // FIXME
 
 #define FTDI_COMMAND_TIMEOUT      1000
 
