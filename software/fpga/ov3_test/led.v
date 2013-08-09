@@ -1,23 +1,5 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    13:39:56 07/25/2013 
-// Design Name: 
-// Module Name:    led 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
+
 module led(
     inout [1:0] M,
     inout [7:0] D,
@@ -57,26 +39,24 @@ module led(
 	 
 	 input S2);
 
-wire [35:0] CONTROL0;
-wire [63:0] DEBUG;
+	wire [35:0] CONTROL0;
+	wire [63:0] DEBUG;
 
-cs_icon i_cs_icon (
-    .CONTROL0(CONTROL0) // INOUT BUS [35:0]
-);
+	cs_icon i_cs_icon (
+		.CONTROL0(CONTROL0) // INOUT BUS [35:0]
+	);
 
-cs_ila i_cs_ila (
-    .CONTROL(CONTROL0), // INOUT BUS [35:0]
-    .CLK(ULPI_CLK), // IN
-    .TRIG0({S2, DEBUG[62:0]}) // IN BUS [63:0]
-);
+	cs_ila i_cs_ila (
+		.CONTROL(CONTROL0), // INOUT BUS [35:0]
+		.CLK(ULPI_CLK), // IN
+		.TRIG0({S2, DEBUG[62:0]}) // IN BUS [63:0]
+	);
 
-assign led1=~rst;
-assign led2=1'b1;
-assign led3=rst;
+	assign led1=~rst;
+	assign led2=1'b1;
+	assign led3=rst;
 
-//
 	// Implicit reset for the first 2^24 cycles.
-	//
 
 	reg [25:0] reset_counter = 0;
 
@@ -134,9 +114,9 @@ assign led3=rst;
 		.RST(rst)
 		);
 
-wire have_space;
-reg [7:0] data = 8'h42;
-assign wr = 1'b1;
+	wire have_space;
+	reg [7:0] data = 8'h42;
+	assign wr = 1'b1;
 
    usbstreamer streamer (
 	   .mclk(CLKOUT),
@@ -150,5 +130,5 @@ assign wr = 1'b1;
 		.have_space(have_space),
 		.data(data),
 		.wr(wr)
-		);
+	);
 endmodule
