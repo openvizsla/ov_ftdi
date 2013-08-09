@@ -29,6 +29,7 @@ module led(
 	 input ACBUS2,
 	 input ACBUS3,
 	 input INIT_B,
+	 input CLKOUT,
 	 input ACBUS6,
 	 
     inout [7:0] ULPI_D,
@@ -138,7 +139,7 @@ reg [7:0] data = 8'h42;
 assign wr = 1'b1;
 
    usbstreamer streamer (
-	   .mclk(CLK),
+	   .mclk(CLKOUT),
 		.reset(rst),
 		.usb_d(D),
 		.usb_rxf_n(ACBUS0),
