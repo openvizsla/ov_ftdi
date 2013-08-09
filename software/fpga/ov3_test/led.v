@@ -24,7 +24,7 @@ module led(
     input BUSY_DOUT,
     output CSI_B,
     output CCLK,
-    input ACBUS0,
+    output ACBUS0,
 	 input RDWR_B,
 	 input ACBUS2,
 	 input ACBUS3,
@@ -84,7 +84,7 @@ assign led3=rst;
 		if (!SW1)
 			reset_counter <= 0;
 		else if (!reset_counter[25])
-			reset_counter <= reset_counter + 1;
+			reset_counter <= reset_counter + 1'b1;
 	end
 
 	assign rst = ~reset_counter[25]; // start with a reset
@@ -133,6 +133,10 @@ assign led3=rst;
 		.RST(rst)
 		);
 
+wire have_space;
+reg [7:0] data = 8'h42;
+assign wr = 1'b1;
+
    usbstreamer streamer (
 	   .mclk(CLK),
 		.reset(rst),
@@ -142,9 +146,8 @@ assign led3=rst;
 		.usb_rd_n(ACBUS2),
 		.usb_wr_n(ACBUS3),
 		.usb_oe_n(ACBUS6),
-		.have_space(),
-		.data(),
-		.wr()
+		.have_space(have_space),
+		.data(data),
+		.wr(wr)
 		);
-
 endmodule

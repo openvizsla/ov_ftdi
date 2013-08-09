@@ -68,9 +68,9 @@ module ulpi_ctrl(
 				if (reg_read_ack) begin
 					reg_read_req <= 1'b0;
 				end else if (!reg_read_req && reg_address != 6'h10) begin
-					cnt <= cnt + 1;
+					cnt <= cnt + 1'b1;
 					if (!cnt) begin
-						cnt2 <= cnt2 + 1;
+						cnt2 <= cnt2 + 1'b1;
 						
 						reg_read_req <= 1'b1; 
 						reg_address <= cnt2;

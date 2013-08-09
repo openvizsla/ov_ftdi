@@ -51,7 +51,7 @@ module usbstreamer (
 		end else begin
 			if (!fifo_full && wr) begin
 				fifo_mem[fifo_write_ptr] <= data;
-				fifo_write_ptr <= fifo_write_ptr + 1;
+				fifo_write_ptr <= fifo_write_ptr + 1'b1;
 			end
 		end
 	end
@@ -70,7 +70,7 @@ module usbstreamer (
 				// only fetch new byte if we don't have a byte hanging around
 				if (!pending_byte) begin
 					usb_dout <= fifo_mem[fifo_read_ptr];
-					fifo_read_ptr <= fifo_read_ptr + 1;
+					fifo_read_ptr <= fifo_read_ptr + 1'b1;
 				end
 				usb_wr_n <= 0;
 				just_sent <= 1;
