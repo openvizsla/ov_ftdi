@@ -38,3 +38,6 @@ ipcore_dir/*.tcl
 ipcore_dir/tmp
 _ngo
 _xmsgs
+ipcore_dir/fifo/example_design
+ipcore_dir/fifo/implement
+ipcore_dir/fifo/simulation
