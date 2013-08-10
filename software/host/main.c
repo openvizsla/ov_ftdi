@@ -42,6 +42,34 @@
 
 static void usage(const char *argv0);
 static const char *getDefaultBitstreamPath(void);
+typedef unsigned char u8;
+
+// thanks, marcan!
+static char ascii(u8 s)
+{
+  if(s < 0x20) return '.';
+  if(s > 0x7E) return '.';
+  return s;
+}
+
+void hexdump(void *d, int len)
+{
+  u8 *data;
+  int i, off;
+  data = (u8 *)d;
+  for (off=0; off<len; off += 16) {
+    printf("%08x  ",off);
+    for(i=0; i<16; i++)
+      if((i+off)>=len) printf("   ");
+      else printf("%02x ",data[off+i]);
+
+    printf(" ");
+    for(i=0; i<16; i++)
+      if((i+off)>=len) printf(" ");
+      else printf("%c",ascii(data[off+i]));
+    printf("\n");
+  }
+}
 
 
 static void
@@ -105,6 +133,12 @@ usage(const char *argv0)
    exit(1);
 }
 
+int readcb(uint8_t *buffer, int length, FTDIProgressInfo *progress, void *userdata)
+{
+  printf("readcb(%p, %d, %p, %p)\n", buffer, length, progress, userdata);
+  if (buffer) hexdump(buffer, length);
+  return 0;
+}
 
 int main(int argc, char **argv)
 {
@@ -202,9 +236,12 @@ int main(int argc, char **argv)
     FTDIDevice_Reset(&dev);
   }
 
-   HW_Init(&dev, resetFPGA ? bitstream : NULL);
-   HW_ConfigWrite(&dev, REG_POWERFLAGS, POWERFLAG_DSI_BATT, false);
 
+   HW_Init(&dev, resetFPGA ? bitstream : NULL);
+//   HW_ConfigWrite(&dev, REG_POWERFLAGS, POWERFLAG_DSI_BATT, false);
+   err = FTDIDevice_ReadStream(&dev, FTDI_INTERFACE_A, readcb, NULL, 32, 64);
+   printf("ReadStream returned %d\n", err);
+   sleep(1);
    FTDIDevice_Close(&dev);
 
    return 0;

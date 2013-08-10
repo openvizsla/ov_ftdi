@@ -6,13 +6,13 @@ module led(
     input BUSY_DOUT,
     output CSI_B,
     output CCLK,
-    output ACBUS0,
+    input ACBUS0,
 	 input RDWR_B,
-	 input ACBUS2,
-	 input ACBUS3,
+	 output ACBUS2,
+	 output ACBUS3,
 	 input INIT_B,
 	 input CLKOUT,
-	 input ACBUS6,
+	 output ACBUS6,
 	 
     inout [7:0] ULPI_D,
     input ULPI_DIR,
@@ -53,7 +53,7 @@ module led(
 	);
 
 	assign led1=~rst;
-	assign led2=1'b1;
+	assign led2=CCLK;
 	assign led3=rst;
 
 	// Implicit reset for the first 2^24 cycles.
@@ -115,7 +115,7 @@ module led(
 		);
 
 	wire have_space;
-	reg [7:0] data = 8'h42;
+	wire [7:0] data = reset_counter[7:0];
 	assign wr = 1'b1;
 
    usbstreamer streamer (
