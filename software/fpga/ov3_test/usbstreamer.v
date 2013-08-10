@@ -9,7 +9,7 @@ see file COPYING or http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 module usbstreamer (
 	input mclk, reset,
 	inout [7:0] usb_d, input usb_rxf_n, usb_txe_n, output usb_rd_n, output reg usb_wr_n, output usb_oe_n,
-	output have_space, input [7:0] data, input wr
+	output have_space, input [7:0] data, input wr, output fifo_full, output fifo_empty
 );
 
 	// unused read lines

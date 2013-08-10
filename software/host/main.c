@@ -135,8 +135,19 @@ usage(const char *argv0)
 
 int readcb(uint8_t *buffer, int length, FTDIProgressInfo *progress, void *userdata)
 {
+static unsigned long long bytes_read=0, packets=0;
+  if (!length) {
+    if (bytes_read > 0) {
+      printf("died after %llu bytes (%u packets)\n", bytes_read, packets);
+      bytes_read=0;
+      packets=0;
+    }
+    return 0;
+  }
   printf("readcb(%p, %d, %p, %p)\n", buffer, length, progress, userdata);
   if (buffer) hexdump(buffer, length);
+  bytes_read += length;
+  packets++;
   return 0;
 }
 
