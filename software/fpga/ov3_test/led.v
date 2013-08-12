@@ -52,10 +52,12 @@ module led(
 		.TRIG0({S2, DEBUG[62:0]}) // IN BUS [63:0]
 	);
 
-	assign led1=~fifo_empty;
-	assign led2=~fifo_full;
+//	assign led1=~fifo_empty;
+//	assign led2=~fifo_full;
 //	assign led3=rst;
-	assign led3 = have_space;
+	assign led1 = CLKOUT;
+	assign led2 = rst;
+	assign led3 = CCLK;
 	
 	// Implicit reset for the first 2^24 cycles.
 
@@ -69,6 +71,7 @@ module led(
 			reset_counter <= reset_counter + 1'b1;
 	end
 
+	wire rst;
 	assign rst = ~reset_counter[25]; // start with a reset
 	
 	wire [5:0] reg_address;
@@ -118,18 +121,21 @@ module led(
 	wire have_space;
 	wire fifo_empty;
 	wire fifo_full;
+	wire read12;
+	wire write12;
+	wire wr;
 	assign wr = 1'b1;
 
-//	reg [7:0] data;
+	reg [7:0] data;
 
-//	always @(posedge CLKOUT)
-//	begin
-//			data <= data + 1'b1;
-//	end
-	reg [7:0] data = 8'h42;
+	always @(posedge CLKOUT)
+	begin
+			data <= data + 1'b1;
+	end
+//	reg [7:0] data = 8'h42;
    usbstreamer streamer (
 	   .mclk(CLKOUT),
-		.reset(rst),
+		.reset(~rst),
 		.usb_d(D),
 		.usb_rxf_n(ACBUS0),
 		.usb_txe_n(CCLK),
@@ -140,6 +146,8 @@ module led(
 		.data(data),
 		.wr(wr),
 		.fifo_full(fifo_full),
-		.fifo_empty(fifo_empty)
+		.fifo_empty(fifo_empty),
+		.read12(read12),
+		.write12(write12)
 	);
 endmodule

@@ -9,7 +9,7 @@ see file COPYING or http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 module usbstreamer (
 	input mclk, reset,
 	inout [7:0] usb_d, input usb_rxf_n, usb_txe_n, output usb_rd_n, output reg usb_wr_n, output usb_oe_n,
-	output have_space, input [7:0] data, input wr, output fifo_full, output fifo_empty
+	output have_space, input [7:0] data, input wr, output fifo_full, output fifo_empty, output read12, output write12
 );
 
 	// unused read lines
@@ -26,12 +26,13 @@ module usbstreamer (
 
 	reg [FIFO_LOG_SIZE-1:0] fifo_read_ptr;
 	reg [FIFO_LOG_SIZE-1:0] fifo_write_ptr;
-
+	assign read12 = fifo_read_ptr[12];
+	assign write12 = fifo_write_ptr[12];
 	wire [FIFO_LOG_SIZE-1:0] fifo_write_ptr_next = fifo_write_ptr + 1;
 	wire [FIFO_LOG_SIZE-1:0] fifo_used_space = fifo_write_ptr - fifo_read_ptr;
 
-	wire fifo_empty = fifo_write_ptr == fifo_read_ptr;
-	wire fifo_full = fifo_write_ptr_next == fifo_read_ptr;
+	assign fifo_empty = fifo_write_ptr == fifo_read_ptr;
+	assign fifo_full = fifo_write_ptr_next == fifo_read_ptr;
 	assign have_space = fifo_used_space < (FIFO_SIZE - FIFO_THRESHOLD);
 
 	// silly FT2232 handshake handking

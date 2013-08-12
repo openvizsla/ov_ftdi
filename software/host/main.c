@@ -250,7 +250,7 @@ int main(int argc, char **argv)
 
    HW_Init(&dev, resetFPGA ? bitstream : NULL);
 //   HW_ConfigWrite(&dev, REG_POWERFLAGS, POWERFLAG_DSI_BATT, false);
-   err = FTDIDevice_ReadStream(&dev, FTDI_INTERFACE_A, readcb, NULL, 32, 64);
+   err = FTDIDevice_ReadStream(&dev, FTDI_INTERFACE_A, readcb, NULL, 4, 4);
    printf("ReadStream returned %d\n", err);
    sleep(1);
    FTDIDevice_Close(&dev);
