@@ -41,6 +41,7 @@ module led(
 
 	wire [35:0] CONTROL0;
 	wire [63:0] DEBUG;
+	wire clk_sdram, LOCKED;
 
 	cs_icon i_cs_icon (
 		.CONTROL0(CONTROL0) // INOUT BUS [35:0]
@@ -55,15 +56,15 @@ module led(
 //	assign led1=~fifo_empty;
 //	assign led2=~fifo_full;
 //	assign led3=rst;
-	assign led1 = CLKOUT;
-	assign led2 = rst;
-	assign led3 = CCLK;
+	//assign led1 = CLKOUT;
+	//assign led2 = rst;
+	//assign led3 = CCLK;
 	
 	// Implicit reset for the first 2^24 cycles.
 
 	reg [25:0] reset_counter = 0;
 
-	always @(posedge CLK)
+	always @(posedge clk_sdram)
 	begin
 		if (!SW1)
 			reset_counter <= 0;
@@ -91,7 +92,7 @@ module led(
 		 .ULPI_STP(ULPI_STP), 
 		 .ULPI_D(ULPI_D), 
 		 .DEBUG(DEBUG),
-		 .DATA_CLK(CLK), 
+		 .DATA_CLK(clk_sdram), 
 		 .RST(rst), 
 		 .REG_ADDR(reg_address), 
 		 .REG_DATA_WRITE(reg_data_write), 
@@ -107,7 +108,7 @@ module led(
 		 );
 
 	ulpi_ctrl ulpi_ctrl_inst (
-		.CLK(CLK), 
+		.CLK(clk_sdram), 
 		.REG_ADDR(reg_address), 
 		.REG_DATA_WRITE(reg_data_write), 
 		.REG_DATA_READ(reg_data_read), 
@@ -150,4 +151,110 @@ module led(
 		.read12(read12),
 		.write12(write12)
 	);
+	
+	//
+	// sdram test
+	//
+
+
+	wire clk_sdram_90;
+
+  clkgen i_clkgen
+   (
+    .CLK_IN1(CLK),
+    .CLKOUT(clk_sdram),
+	 //.CLKOUT90(clk_sdram_90),
+    .LOCKED(LOCKED)
+	 );
+
+	assign clk_sdram_90 = clk_sdram;
+
+	ODDR2 buf_vclk1 (
+			  .Q(SD_CLK),
+			  .C0(clk_sdram_90),
+			  .C1(~clk_sdram_90),
+			  .CE(1'b1),
+			  .D0(1'b0),
+			  .D1(1'b1),
+			  .R(1'b0),
+			  .S(1'b0)
+	);
+
+	// memory interface - write request
+	wire user_wreq;
+	wire user_wstart;
+	wire user_wdone;
+	wire [23:0] user_waddr;
+	wire [9:0] user_wsize;
+	wire user_wen;
+	wire [15:0] user_wdata;
+
+	// memory interface - read request
+	wire user_rreq;
+	wire user_rstart;
+	wire user_rdone;
+	wire [23:0] user_raddr;
+	wire [9:0] user_rsize;
+	wire user_rvalid;
+	wire [15:0] user_rdata;
+
+	// reset
+	wire status;
+	wire err_strobe;
+	wire err_latch;
+
+	mt_extram_sdrctrl mt_extram_sdrctrl_inst (
+			  .clk(clk_sdram),
+			  .rst(rst),
+			  .user_wreq(user_wreq),
+			  .user_wstart(user_wstart),
+			  .user_wdone(user_wdone),
+			  .user_waddr(user_waddr),
+			  .user_wsize(user_wsize),
+			  .user_wen(user_wen),
+			  .user_wdata(user_wdata),
+			  .user_rreq(user_rreq),
+			  .user_rstart(user_rstart),
+			  .user_rdone(user_rdone),
+			  .user_raddr(user_raddr),
+			  .user_rsize(user_rsize),
+			  .user_rvalid(user_rvalid),
+			  .user_rdata(user_rdata),
+			  .SD_CKE(SD_CKE),
+			  .SD_CS(SD_CS),
+			  .SD_WE(SD_WE),
+			  .SD_CAS(SD_CAS),
+			  .SD_RAS(SD_RAS),
+			  .SD_DQM(SD_DQM),
+			  .SD_BA(SD_BA),
+			  .SD_A(SD_A),
+			  .SD_DQ(SD_DQ)
+	);
+
+	mt_extram_test mt_extram_test_inst (
+			  .clk(clk_sdram),
+			  .rst(rst),
+			  .user_wreq(user_wreq),
+			  .user_wstart(user_wstart),
+			  .user_wdone(user_wdone),
+			  .user_waddr(user_waddr),
+			  .user_wsize(user_wsize),
+			  .user_wen(user_wen),
+			  .user_wdata(user_wdata),
+			  .user_rreq(user_rreq),
+			  .user_rstart(user_rstart),
+			  .user_rdone(user_rdone),
+			  .user_raddr(user_raddr),
+			  .user_rsize(user_rsize),
+			  .user_rvalid(user_rvalid),
+			  .user_rdata(user_rdata),
+			  .status(status),
+			  .err_strobe(err_strobe),
+			  .err_latch(err_latch)
+	);
+	
+	assign led1 = ~status;
+	assign led2 = ~err_strobe;
+	assign led3 = ~err_latch;
+
 endmodule

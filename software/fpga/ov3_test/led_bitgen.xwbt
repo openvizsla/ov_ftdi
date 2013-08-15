@@ -1,8 +1,8 @@
 INTSTYLE=ise
-INFILE=/media/psf/Home/ov_ftdi/software/fpga/ov3_test/led.ncd
-OUTFILE=/media/psf/Home/ov_ftdi/software/fpga/ov3_test/led.bit
+INFILE=E:\projects\ov\ov3\ov_ftdi\software\fpga\ov3_test\led.ncd
+OUTFILE=E:\projects\ov\ov3\ov_ftdi\software\fpga\ov3_test\led.bit
 FAMILY=Spartan6
 PART=xc6slx9-3tqg144
-WORKINGDIR=/media/psf/Home/ov_ftdi/software/fpga/ov3_test
-LICENSE=ISE
-USER_INFO=210781084_0_0_004
+WORKINGDIR=E:\projects\ov\ov3\ov_ftdi\software\fpga\ov3_test
+LICENSE=WebPack
+USER_INFO=207283695_1777493334_210563651_923
