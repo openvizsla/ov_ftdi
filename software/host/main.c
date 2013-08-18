@@ -88,7 +88,7 @@ usage(const char *argv0)
            "                          before starting. Not recommended when tracing,\n"
            "                          but this can be useful for patching or adjusting\n"
            "                          clock frequency without glitches.\n"
-           "  -D, --no-dsi-reset    Do not reset the DSi's CPUs when starting a trace.\n"
+           "  -C, --config-only     Exit after loading the FPGA bitstream.\n"
            "  -b, --bitstream=FILE  Load an FPGA bitstream from the provided file.\n"
            "                          By default, loads \"%s\".\n"
            "  -f, --fast            Run the DSi at full speed (%.3f MHz) instead of\n"
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
 //   HWPatch patch;
    FTDIDevice dev;
    bool resetFPGA = true;
-   bool resetDSI = true;
+   bool config_only = false;
    bool progeep = false;
    bool eraseeep = false;
    int err, c;
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
       int option_index;
       static struct option long_options[] = {
          {"no-fpga-reset", 0, NULL, 'F'},
-         {"no-dsi-reset", 0, NULL, 'D'},
+         {"config-only", 0, NULL, 'C'},
          {"bitstream", 1, NULL, 'b'},
          {"fast", 0, NULL, 'f'},
          {"slow", 0, NULL, 's'},
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
          {NULL},
       };
 
-      c = getopt_long(argc, argv, "FDb:fsc:pe", long_options, &option_index);
+      c = getopt_long(argc, argv, "FCb:fsc:pe", long_options, &option_index);
       if (c == -1)
          break;
 
@@ -190,8 +190,8 @@ int main(int argc, char **argv)
          resetFPGA = false;
          break;
 
-      case 'D':
-         resetDSI = false;
+      case 'C':
+         config_only = true;
          break;
 
       case 'b':
@@ -249,7 +249,9 @@ int main(int argc, char **argv)
 
 
    HW_Init(&dev, resetFPGA ? bitstream : NULL);
-//   HW_ConfigWrite(&dev, REG_POWERFLAGS, POWERFLAG_DSI_BATT, false);
+   if (config_only) {
+      return 0;
+   }
    err = FTDIDevice_ReadStream(&dev, FTDI_INTERFACE_A, readcb, NULL, 4, 4);
    printf("ReadStream returned %d\n", err);
    sleep(1);
