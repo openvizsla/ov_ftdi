@@ -1,5 +1,6 @@
 from mibuild.generic_platform import *
-from mibuild.xilinx_ise import XilinxISEPlatform, CRG_SE
+from mibuild.xilinx_ise import XilinxISEPlatform
+from mibuild.crg import SimpleCRG
 
 _io = [
     ("led", 1, Pins("P57"), IOStandard("LVCMOS33"), Drive(24), Misc("SLEW=QUIETIO")),
@@ -81,4 +82,26 @@ _io = [
 class Platform(XilinxISEPlatform):
     def __init__(self):
         XilinxISEPlatform.__init__(self, "xc6slx9-tqg144-3", _io,
-            lambda p: CRG_SE(p, "clk50", None, 20.0))
+            lambda p: SimpleCRG(p, "clk50", None))
+
+    def do_finalize(self, fragment):
+        clocks = {
+            "clk50": 50.0,
+            "clk12": 12.0,
+            ("ulpi", "clk"): 60.0,
+            ("ftdi", "clk"): 60.0
+        }
+
+        for name, mhz in clocks.items():
+            period = 1000.0 / mhz
+            try:
+                if isinstance(name, tuple):
+                    clk = getattr(self.lookup_request(name[0]), name[1])
+                else:
+                    clk = self.lookup_request(name)
+                self.add_platform_command("""
+NET "{clk}" TNM_NET = "GRP{clk}";
+TIMESPEC "TS{clk}" = PERIOD "GRP{clk}" %f ns HIGH 50%%;
+""" % period, clk=clk)
+            except ConstraintError:
+                pass
