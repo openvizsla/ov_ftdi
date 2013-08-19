@@ -21,7 +21,7 @@ class ClockGen(Module):
             Instance.Input("RST", 0),
             Instance.Output("CLKFBOUT", feedback),
             Instance.Output("CLKOUT0", clkout0),
-            Instance.Output("CLKOUT1", clkout1),
+            Instance.Output("CLKOUT1", self.clk_sdram),
             Instance.Output("CLKOUT2", clkout2),
             Instance.Output("LOCKED", self.pll_locked),
             Instance.Parameter("BANDWIDTH", "LOW"),
@@ -39,12 +39,21 @@ class ClockGen(Module):
         self.specials += [
             Instance("BUFG", Instance.Input("I", clkout0),
                              Instance.Output("O", self.clk_sys)),
-            Instance("BUFG", Instance.Input("I", clkout1),
-                             Instance.Output("O", self.clk_sdram)),
             Instance("BUFG", Instance.Input("I", clkout2),
                              Instance.Output("O", self.clk_sdram_sample)),
         ]
+
+        # Reset generator: 4 cycles in reset after PLL is locked
+        rst_ctr = Signal(max=4)
+        self.clock_domains.cd_rst = ClockDomain()
+        self.cd_sys.rst.reset = 1
+        self.sync.rst += If(rst_ctr == 3,
+                            self.cd_sys.rst.eq(0)
+                         ).Else(
+                            rst_ctr.eq(rst_ctr+1)
+                         )
         self.comb += [
+            self.cd_rst.clk.eq(self.clk_sys),
+            self.cd_rst.rst.eq(~self.pll_locked),
             self.cd_sys.clk.eq(self.clk_sys),
-            self.cd_sys.rst.eq(~self.pll_locked),
         ]

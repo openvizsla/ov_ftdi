@@ -64,7 +64,7 @@ _io = [
     ("spare", 23, Pins("P74"), IOStandard("LVCMOS33")),
 
     ("sdram", 0,
-        Subsignal("clk", Pins("P32")),
+        Subsignal("clk", Pins("P24")),
         Subsignal("a", Pins("P7 P8 P9 P10 P35 P34 P33 P32 P30 P29 P6 P27 P26")),
         Subsignal("ba", Pins("P2 P5")),
         Subsignal("cs_n", Pins("P1")),
