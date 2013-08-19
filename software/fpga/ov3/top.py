@@ -31,7 +31,7 @@ class OV3(Module):
                       clk_sample=self.clockgen.clk_sdram_sample,
                       databits=16, rowbits=13, colbits=9, bankbits=2,
                       inbuf=1024, outbuf=1024, burst=512,
-                      tRESET=20000, tCL=3, tRP=4, tRFC=12,
+                      tRESET=20000, tCL=3, tRP=4, tRFC=12, tRCD=4,
                       tREFI=780),
             {"read": "sys", "write": "sys"})
 

@@ -40,7 +40,7 @@ class SDRAMFIFO(Module):
     def __init__(self, sdram, clk_out, clk_sample,
                  databits, rowbits, colbits, bankbits,
                  inbuf, outbuf, burst,
-                 tRESET, tCL, tRP, tRFC, tREFI):
+                 tRESET, tCL, tRP, tRFC, tRCD, tREFI):
         _FIFOInterface.__init__(self, databits, None)
 
         addrbits = rowbits + colbits + bankbits
@@ -129,4 +129,11 @@ class SDRAMFIFO(Module):
         fsm.delayed_enter("INIT_MODE", "IDLE", tMRD)
 
         # Main loop
-        fsm.act("IDLE")
+        fsm.act("IDLE", If(refresh_ctr >= refresh_interval,
+                           NextState("REFRESH")
+                        ).Else(
+                           NextState("READ")
+                        ))
+        fsm.act("REFRESH", cmd.eq(AUTO_REFRESH))
+        fsm.delayed_enter("REFRESH", "IDLE", tRFC)
+        fsm.act("READ", NextState("IDLE"))
