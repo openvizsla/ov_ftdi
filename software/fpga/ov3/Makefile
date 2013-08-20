@@ -14,3 +14,6 @@ clean:
 
 run: $(OVCTL) $(BITFILE)
 	$(OVCTL) -C -b $(BITFILE)
+
+sim_sdram:
+	python3 sdram.py

@@ -203,7 +203,6 @@ class SDRAMFIFO(Module):
             If(fifo_in.re & fifo_in.readable,
                write_ptr.eq(write_ptr + 1)),
         ]
-        
 
         # Address generation
         def split(addr):
@@ -281,3 +280,80 @@ class SDRAMFIFO(Module):
                    NextState("PRECHARGE")))
         fsm.act("PRECHARGE", cmd.eq(PRECHARGE), a[10].eq(1)),
         fsm.delayed_enter("PRECHARGE", "IDLE", tRP)
+
+class FakeSDRAM(Module):
+    CMD_MAP = {
+        (1,0,0,0): "INHIBIT",
+        (0,1,1,1): "NOP",
+        (0,0,1,1): "ACTIVE",
+        (0,1,0,1): "READ",
+        (0,1,0,0): "WRITE",
+        (0,1,1,0): "BURST_TERM",
+        (0,0,1,0): "PRECHARGE",
+        (0,0,0,1): "AUTO_REFRESH",
+        (0,0,0,0): "LOAD_MODE",
+    }
+    def __init__(self):
+        self.clk = Signal()
+        self.a = Signal(13)
+        self.ba = Signal(2)
+        self.cs_n = Signal()
+        self.cke = Signal()
+        self.ras_n = Signal()
+        self.cas_n = Signal()
+        self.we_n = Signal()
+        self.dq = Signal(16)
+        self.dqm = Signal(2)
+
+    def do_simulation(self, s):
+        cmd = s.rd(self.cs_n), s.rd(self.ras_n), s.rd(self.cas_n), s.rd(self.we_n)
+        print("%12s CKE[%01x] A[%04x] BA[%01x] DQM[%01x] DQ[%04x]" % (
+            self.CMD_MAP[cmd], s.rd(self.cke), s.rd(self.a), s.rd(self.ba),
+            s.rd(self.dqm), s.rd(self.dq)
+        ))
+
+class TestSDRAM(Module):
+    def __init__(self, clock):
+        self.submodules.fakesdram = FakeSDRAM()
+        self.clock_domains.inv = ClockDomain()
+        self.inv.clk = Signal()
+        self.comb += self.inv.clk.eq(clock.clk)
+        self.inv.rst = clock.rst
+        self.submodules.sdram = RenameClockDomains(
+            SDRAMFIFO(self.fakesdram,
+                      clk_out=clock.clk,
+                      clk_sample=clock.clk,
+                      databits=16, rowbits=13, colbits=9, bankbits=2,
+                      inbuf=32, outbuf=32, burst=512,
+                      tRESET=20, tCL=3, tRP=4, tRFC=12, tRCD=4,
+                      tREFI=780),
+            {"read": "inv", "write": "inv", "sys": "inv"})
+
+        # Test the SDRAM: write incrementing 16-bit words
+        word_ctr = Signal(16)
+        self.sync.inv += If(self.sdram.writable & self.sdram.we,
+                            word_ctr.eq(word_ctr + 1))
+        div = Signal(16)
+        self.sync.inv += div.eq(div+1)
+        self.comb += [
+            self.sdram.we.eq(div[0:2] == 0),
+            self.sdram.din.eq(word_ctr),
+        ]
+
+        # Read back and do nothing
+        self.comb += [
+            self.sdram.re.eq(1),
+        ]
+    def do_simulation(self, s):
+        if s.rd(self.sdram.re) and s.rd(self.sdram.readable):
+            print("GET %04x" % s.rd(self.sdram.dout))
+        if s.rd(self.sdram.we) and s.rd(self.sdram.writable):
+            print("PUT %04x" % s.rd(self.sdram.din))
+
+
+if __name__ == "__main__":
+    from migen.sim.generic import Simulator, TopLevel
+    tl = TopLevel("sdram.vcd")
+    test = TestSDRAM(tl.clock_domains[0])
+    sim = Simulator(test, tl)
+    sim.run(5000)
