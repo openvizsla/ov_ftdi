@@ -149,8 +149,8 @@ class SDRAMFIFO(Module):
 
         # Read cycle state signals
         issuing_read = Signal()
-        # Reads come back tCL +1 clock later due to sampling clock delay
-        returning_read = delay_clocks(issuing_read, tCL + 1)
+        # Reads come back tCL clocks later
+        returning_read = delay_clocks(issuing_read, tCL)
         can_read = Signal()
         can_continue_read = Signal()
         kill_read = Signal()
