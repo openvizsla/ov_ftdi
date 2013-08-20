@@ -46,6 +46,7 @@ class SDRAMFIFO(Module):
         addrbits = rowbits + colbits + bankbits
         assert sdram.dq.nbits == databits
         colabits = colbits if colbits <= 10 else colbits + 1
+        max_col = Replicate(1, colbits)
         assert sdram.a.nbits >= colabits
         assert sdram.a.nbits >= rowbits
         assert sdram.ba.nbits == bankbits
@@ -111,6 +112,109 @@ class SDRAMFIFO(Module):
         # Mode: Full page burst mode, burst write
         mode = 0b0000000111 | (tCL << 4)
 
+        # FIFOs
+        fifo_in = RenameClockDomains(AsyncFIFO(databits, inbuf),
+                                     {"read": "sys"})
+        fifo_out = RenameClockDomains(AsyncFIFO(databits, outbuf),
+                                      {"write": "sys"})
+        self.submodules += [fifo_in, fifo_out]
+        self.comb += [
+            # Wire up FIFO ports to module interface
+            self.writable.eq(fifo_in.writable),
+            fifo_in.din.eq(self.din_bits),
+            fifo_in.we.eq(self.we),
+            self.readable.eq(fifo_out.readable),
+            fifo_out.re.eq(self.re),
+            self.dout_bits.eq(fifo_out.dout),
+        ]
+
+        # short circuit FIFOs for testing
+        #self.comb += [
+            #fifo_out.din.eq(fifo_in.dout),
+            #fifo_out.we.eq(fifo_in.readable),
+            #fifo_in.re.eq(fifo_out.writable),
+        #]
+
+        # SDRAM FIFO pointer regs
+        write_ptr = Signal(addrbits)
+        read_ptr = Signal(addrbits)
+        read_ptr_shadow = Signal(addrbits)
+
+        def delay_clocks(v, d):
+            for i in range(d):
+                n = Signal()
+                self.sync += n.eq(v)
+                v = n
+            return v
+
+        # Read cycle state signals
+        issuing_read = Signal()
+        # Reads come back tCL +1 clock later due to sampling clock delay
+        returning_read = delay_clocks(issuing_read, tCL + 1)
+        can_read = Signal()
+        can_continue_read = Signal()
+        kill_read = Signal()
+        self.comb += [
+            can_read.eq((write_ptr != read_ptr) & fifo_out.writable),
+            can_continue_read.eq((write_ptr != read_ptr_shadow + 1) &
+                                 fifo_out.writable &
+                                 (read_ptr_shadow[:colbits] != max_col) &
+                                 ~kill_read),
+
+            fifo_out.din.eq(dq_r),
+            fifo_out.we.eq(returning_read & ~kill_read),
+        ]
+        self.sync += [
+            # Increment read pointer when data is written to output FIFO
+            If(fifo_out.we & fifo_out.writable,
+               read_ptr.eq(read_ptr + 1)),
+            # Keep a shadow read pointer for issuing reads. Increment it
+            # while a read is being issued, but reset it to the true read
+            # otherwise (which might be different if a read was killed).
+            If(~issuing_read,
+               read_ptr_shadow.eq(read_ptr),
+            ).Else(
+               read_ptr_shadow.eq(read_ptr_shadow + 1),
+            ),
+            # If the output FIFO becomes full, kill the current read
+            If(returning_read & ~fifo_out.writable,
+               kill_read.eq(1)
+            ).Elif(~returning_read,
+               kill_read.eq(0)
+            ),
+        ]
+
+        # Write state signals
+        issuing_write = Signal()
+        can_write = Signal()
+        can_continue_write = Signal()
+        self.comb += [
+            can_write.eq((write_ptr + 1 != read_ptr) & fifo_in.readable),
+            can_continue_write.eq((write_ptr + 2 != read_ptr) &
+                                  fifo_in.readable &
+                                  (write_ptr[:colbits] != max_col)),
+
+            dq.o.eq(fifo_in.dout),
+            dq.oe.eq(issuing_write),
+            fifo_in.re.eq(issuing_write),
+        ]
+        self.sync += [
+            # Increment write pointer when data is read from input FIFO
+            If(fifo_in.re & fifo_in.readable,
+               write_ptr.eq(write_ptr + 1)),
+        ]
+        
+
+        # Address generation
+        def split(addr):
+            col = addr[:colbits]
+            if colbits > 10:
+                col = Cat(col[:10],0,col[10:])
+            return col, addr[colbits:colbits+rowbits], addr[colbits+rowbits:]
+
+        r_col, r_row, r_bank = split(read_ptr)
+        w_col, w_row, w_bank = split(write_ptr)
+
         # Finite state machine driving the controller
         fsm = self.submodules.fsm = FSM(reset_state="RESET")
 
@@ -131,9 +235,49 @@ class SDRAMFIFO(Module):
         # Main loop
         fsm.act("IDLE", If(refresh_ctr >= refresh_interval,
                            NextState("REFRESH")
-                        ).Else(
-                           NextState("READ")
+                        ).Elif(can_write,
+                           NextState("WRITE_ACTIVE")
+                        ).Elif(can_read,
+                           NextState("READ_ACTIVE")
                         ))
+        # REFRESH
         fsm.act("REFRESH", cmd.eq(AUTO_REFRESH))
         fsm.delayed_enter("REFRESH", "IDLE", tRFC)
-        fsm.act("READ", NextState("IDLE"))
+
+        # WRITE
+        fsm.act("WRITE_ACTIVE", cmd.eq(ACTIVE), ba.eq(w_bank), a.eq(w_row))
+        fsm.delayed_enter("WRITE_ACTIVE", "WRITE", tRCD)
+        fsm.act("WRITE", cmd.eq(WRITE), ba.eq(w_bank), a.eq(w_col),
+                issuing_write.eq(1), dqm.eq(~fifo_in.readable),
+                If(can_continue_write,
+                   NextState("WRITING")
+                ).Else(
+                   If(can_read,
+                      NextState("PRECHARGE_AND_READ")
+                   ).Else(
+                      NextState("PRECHARGE")
+                   )))
+        fsm.act("WRITING", issuing_write.eq(1), dqm.eq(~fifo_in.readable),
+                If(~can_continue_write,
+                   If(can_read,
+                      NextState("PRECHARGE_AND_READ")
+                   ).Else(
+                      NextState("PRECHARGE")
+                   )))
+        fsm.act("PRECHARGE_AND_READ", cmd.eq(PRECHARGE), a[10].eq(1)),
+        fsm.delayed_enter("PRECHARGE_AND_READ", "READ_ACTIVE", tRP)
+
+        # READ
+        fsm.act("READ_ACTIVE", cmd.eq(ACTIVE), ba.eq(r_bank), a.eq(r_row))
+        fsm.delayed_enter("READ_ACTIVE", "READ", tRCD)
+        fsm.act("READ", cmd.eq(READ), ba.eq(r_bank), a.eq(r_col),
+                issuing_read.eq(1),
+                If(can_continue_read,
+                   NextState("READING")
+                ).Else(
+                   NextState("PRECHARGE")))
+        fsm.act("READING", issuing_read.eq(1),
+                If(~can_continue_read,
+                   NextState("PRECHARGE")))
+        fsm.act("PRECHARGE", cmd.eq(PRECHARGE), a[10].eq(1)),
+        fsm.delayed_enter("PRECHARGE", "IDLE", tRP)
