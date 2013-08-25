@@ -83,40 +83,10 @@ usage(const char *argv0)
            "\n"
            "Options:\n"
            "  -F, --no-fpga-reset   Do not reset the FPGA and the USB interface\n"
-           "                          before starting. Not recommended when tracing,\n"
-           "                          but this can be useful for patching or adjusting\n"
-           "                          clock frequency without glitches.\n"
+           "                          before starting.\n"
            "  -C, --config-only     Exit after loading the FPGA bitstream.\n"
            "  -b, --bitstream=FILE  Load an FPGA bitstream from the provided file.\n"
-           "  -f, --fast            Run the DSi at full speed (%.3f MHz) instead of\n"
-           "                          the default speed of %.3f MHz. Currently\n"
-           "                          incompatible with tracing and patching.\n"
-           "  -s, --slow            Run the DSi at the lowest speed (%.3f MHz).\n"
-           "                          May help prevent buffer overflows.\n"
-           "  -c, --clock=MHZ       Set a custom clock frequency, in MHz.\n"
-           "  -p, --patch=PATCH     Apply a patch to RAM reads. May be specified\n"
-           "                          times. See the accepted PATCH formats below.\n"
-           "  -i, --iohook          Enable I/O hooks which allow patches to log data\n"
-           "                          to the PC and to read and write data files.\n"
            "  -S, --stop=COND       Stop when the specified condition (below) is met\n"
-           "\n"
-           "About patch options:\n"
-           "  * All addresses are in hexadecimal.\n"
-           "  * If a patch affects the first word of a memory burst, the entire burst\n"
-           "    will be modified. If the burst is longer than the patch, the data read\n"
-           "    is undefined.\n"
-           "  * If the first word of a memory burst is not patched, no part of the\n"
-           "    burst may be patched.\n"
-           "\n"
-           "Patch formats:\n"
-           "  -p flat:ADDR:FILE        Load a flat binary file at the address ADDR.\n"
-           "  -p ascii:ADDR:\"TEXT\"     Write an ASCII string at ADDR.\n"
-           "  -p asciiz:ADDR:\"TEXT\"    Write an ASCII string with trailing 0 at ADDR.\n"
-           "  -p utf16:ADDR:\"TEXT\"     Write a UTF-16 string at ADDR.\n"
-           "  -p utf16z:ADDR:\"TEXT\"    Write a UTF-16 string with trailing 0 at ADDR.\n"
-           "  -p hex:ADDR:\"01 23 ...\"  Write a string of hexadecimal bytes at ADDR.\n"
-           "                             Whitespace in the string is ignored.\n"
-           "  -p elf:FILE              Load each loadable segment from an ELF object.\n"
            "\n"
            "Stop conditions:\n"
            "  -S time:SECONDS          Stop after SECONDS elapsed on the trace clock.\n"
@@ -151,7 +121,6 @@ int main(int argc, char **argv)
 {
    const char *bitstream = NULL;
    const char *tracefile = NULL;
-   double clock = CLOCK_DEFAULT;
 //   HWPatch patch;
    FTDIDevice dev;
    bool resetFPGA = true;
@@ -168,9 +137,6 @@ int main(int argc, char **argv)
          {"no-fpga-reset", 0, NULL, 'F'},
          {"config-only", 0, NULL, 'C'},
          {"bitstream", 1, NULL, 'b'},
-         {"fast", 0, NULL, 'f'},
-         {"slow", 0, NULL, 's'},
-         {"clock", 1, NULL, 'c'},
          {"progEEP", 0, NULL, 'p'},
          {"eraseEEP}", 0, NULL, 'e'},
          {NULL},
@@ -192,18 +158,6 @@ int main(int argc, char **argv)
 
       case 'b':
          bitstream = strdup(optarg);
-         break;
-
-      case 'f':
-         clock = CLOCK_FAST;
-         break;
-
-      case 's':
-         clock = CLOCK_SLOW;
-         break;
-
-      case 'c':
-         clock = atof(optarg);
          break;
 
       case 'p':
@@ -245,9 +199,11 @@ int main(int argc, char **argv)
 
 
    HW_Init(&dev, resetFPGA ? bitstream : NULL);
+
    if (config_only) {
       return 0;
    }
+
    err = FTDIDevice_ReadStream(&dev, FTDI_INTERFACE_A, readcb, NULL, 4, 4);
    printf("ReadStream returned %d\n", err);
    sleep(1);
