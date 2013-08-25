@@ -35,13 +35,11 @@
 //#include "hw_trace.h"
 //#include "hw_patch.h"
 
-#define DEFAULT_FPGA_BITSTREAM   "stable.bit"
 #define CLOCK_FAST               16.756
 #define CLOCK_DEFAULT            3.0
 #define CLOCK_SLOW               1.0
 
 static void usage(const char *argv0);
-static const char *getDefaultBitstreamPath(void);
 typedef unsigned char u8;
 
 // thanks, marcan!
@@ -90,7 +88,6 @@ usage(const char *argv0)
            "                          clock frequency without glitches.\n"
            "  -C, --config-only     Exit after loading the FPGA bitstream.\n"
            "  -b, --bitstream=FILE  Load an FPGA bitstream from the provided file.\n"
-           "                          By default, loads \"%s\".\n"
            "  -f, --fast            Run the DSi at full speed (%.3f MHz) instead of\n"
            "                          the default speed of %.3f MHz. Currently\n"
            "                          incompatible with tracing and patching.\n"
@@ -128,7 +125,6 @@ usage(const char *argv0)
            "\n"
            "Copyright (C) 2009 Micah Elizabeth Scott <beth@scanlime.org>\n",
            argv0,
-           DEFAULT_FPGA_BITSTREAM,
            CLOCK_FAST, CLOCK_DEFAULT, CLOCK_SLOW);
    exit(1);
 }
@@ -138,7 +134,7 @@ int readcb(uint8_t *buffer, int length, FTDIProgressInfo *progress, void *userda
 static unsigned long long bytes_read=0, packets=0;
   if (!length) {
     if (bytes_read > 0) {
-      printf("died after %llu bytes (%u packets)\n", bytes_read, packets);
+      printf("died after %llu bytes (%llu packets)\n", bytes_read, packets);
       bytes_read=0;
       packets=0;
     }
@@ -153,7 +149,7 @@ static unsigned long long bytes_read=0, packets=0;
 
 int main(int argc, char **argv)
 {
-   const char *bitstream = getDefaultBitstreamPath();
+   const char *bitstream = NULL;
    const char *tracefile = NULL;
    double clock = CLOCK_DEFAULT;
 //   HWPatch patch;
@@ -260,42 +256,3 @@ int main(int argc, char **argv)
    return 0;
 }
 
-
-static const char *
-getDefaultBitstreamPath(void)
-{
-   /*
-    * The default bitstream is loaded from the same directory this
-    * program is in.  There's no sane way to get this directory
-    * portably, and argv[0] is worse than useless. Currently we just
-    * use the very Linux-only /proc/self/exe symlink. On other
-    * platforms, this should harmlessly fail and search in the current
-    * directory only.
-    */
-
-   static char buf[PATH_MAX];
-   const int basenameMax = sizeof buf - sizeof DEFAULT_FPGA_BITSTREAM - 1;
-   ssize_t size;
-
-   size = readlink("/proc/self/exe", buf, basenameMax);
-   if (size > 0) {
-      char *sep;
-
-      buf[size] = '\0';
-
-      sep = strrchr(buf, '/');
-
-      if (sep) {
-         sep[1] = '\0';
-      } else {
-         buf[0] = '\0';
-      }
-
-   } else {
-      buf[0] = '\0';
-   }
-
-   strcat(buf, DEFAULT_FPGA_BITSTREAM);
-
-   return buf;
-}
