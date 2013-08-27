@@ -421,15 +421,35 @@ FTDIDevice_ReadStream(FTDIDevice *dev, FTDIInterface interface,
 
  cleanup:
    if (transfers) {
-      for (xferIndex = 0; xferIndex < numTransfers; xferIndex++) {
-         struct libusb_transfer *transfer = transfers[xferIndex];
+      bool done_cleanup = false;
+      while (!done_cleanup)
+      {
+          done_cleanup = true;
 
-         if (transfer) {
-            if (transfer->status == -1)
-               libusb_cancel_transfer(transfer);
-            free(transfer->buffer);
-            libusb_free_transfer(transfer);
-         }
+          for (xferIndex = 0; xferIndex < numTransfers; xferIndex++) {
+             struct libusb_transfer *transfer = transfers[xferIndex];
+
+             if (transfer) {
+                // If a transfer is in progress, cancel it
+                if (transfer->status == -1) {
+                   libusb_cancel_transfer(transfer);
+
+                   // And we need to wait until we get a clean sweep
+                   done_cleanup = false;
+
+                // If a transfer is complete or cancelled, nuke it
+                } else if (transfer->status == 0 ||
+                        transfer->status == LIBUSB_TRANSFER_CANCELLED) {
+                    free(transfer->buffer);
+                    libusb_free_transfer(transfer);
+                    transfers[xferIndex] = NULL;
+                }
+             }
+          }
+
+          // pump events
+          struct timeval timeout = { 0, 10000 };
+          libusb_handle_events_timeout(dev->libusb, &timeout);
       }
       free(transfers);
    }
