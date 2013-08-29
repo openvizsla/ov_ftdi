@@ -40,11 +40,14 @@ class ULPI(Module):
 			).Elif(RegWriteAckSet, ulpi_reg.wack.eq(1))
 			
 		exp = If(~RegWriteReqR, ulpi_reg.wack.eq(0)).Elif(RegWriteAckSet, ulpi_reg.wack.eq(1))
+
+		self.clock_domains.cd_dataout = ClockDomain()
+		self.comb += self.cd_dataout.clk.eq(~ulpi.clk)
 			
 		# output data if required by state
-		self.sync += ulpi.stp.eq(ulpi_stp_next)
-		self.sync += ulpi_data_out.eq(ulpi_data_next)
-		self.sync += ulpi_data_tristate.eq(ulpi_data_tristate_next)
+		self.sync.dataout += ulpi.stp.eq(ulpi_stp_next)
+		self.sync.dataout += ulpi_data_out.eq(ulpi_data_next)
+		self.sync.dataout += ulpi_data_tristate.eq(ulpi_data_tristate_next)
 		self.comb += ulpi.do.eq(ulpi_data_out)
 		self.comb += ulpi.doe.eq(~ulpi_data_tristate)
 		
@@ -380,8 +383,57 @@ class FakeULPI(Module):
 	
 	do_simulation.initialize = True
 
+class ULPIRegTest(Module):
+	def __init__(self, ulpi_reg):
+		
+		ReadAddress = Signal(6)
+		
+		write_fsm = FSM()
+		self.submodules += write_fsm
+		
+		def delay_clocks(v, d):
+			for i in range(d):
+				n = Signal()
+				self.sync += n.eq(v)
+				v = n
+			return v
+		
+		ulpi_reg_wack = delay_clocks(ulpi_reg.wack, 2)
+		ulpi_reg_rack = delay_clocks(ulpi_reg.rack, 2)
+		
+		write_fsm.delayed_enter("RESET", "WRITE_HS_SNOOP", 16)
+
+		write_fsm.act("WRITE_HS_SNOOP",
+			ulpi_reg.waddr.eq(0x4),
+			ulpi_reg.wdata.eq(0x48),
+			ulpi_reg.wreq.eq(1),
+			If(ulpi_reg_wack, NextState("WRITE_IDLE")))
+		
+		write_fsm.act("WRITE_IDLE",
+			ulpi_reg.wreq.eq(0))
+		
+		read_fsm = FSM()
+		self.submodules += read_fsm
+
+		read_fsm.delayed_enter("RESET", "READ_REG", 16)
+		
+		read_fsm.act("READ_REG",
+			ulpi_reg.raddr.eq(ReadAddress),
+			ulpi_reg.rreq.eq(1),
+			If(ulpi_reg_rack, NextState("READ_ACK")))
+		
+		self.sync += If(ulpi_reg_rack & ulpi_reg.rreq, ReadAddress.eq(ReadAddress + 1))
+		
+		read_fsm.act("READ_ACK",
+			ulpi_reg.rreq.eq(0),
+			If(~ulpi_reg_rack, NextState("READ_WAIT")))
+		
+		read_fsm.delayed_enter("READ_WAIT", "READ_REG", 16)
+
 class TestULPI(Module):
-	def __init__(self, clock):
+	def __init__(self, clock, use_regtest):
+
+		self.use_regtest = use_regtest
 
 		ulpi_reg = Record(ULPI_REG)
 		ulpi_data = Record(ULPI_DATA)
@@ -405,6 +457,13 @@ class TestULPI(Module):
 			FakeULPI(ulpi_bus_slave),
 			{"sys": "ulpi"}
 		)
+		
+		if use_regtest:
+			self.submodules.regtest = RenameClockDomains(
+				ULPIRegTest(ulpi_reg), {"sys":"ulpi"}
+			)
+			ulpi_reg_master = Record(ULPI_REG)
+			self.comb += ulpi_reg_master.connect(ulpi_reg)
 		
 		self.cd_ulpi.clk = ulpi_bus_master.clk
 		self.cd_ulpi.rst = ulpi_bus_master.rst
@@ -431,16 +490,17 @@ class TestULPI(Module):
 			
 			return
 		
-		if len(self.tr) > 0 and ~s.rd(self.ulpi_reg.rack) & ~s.rd(self.ulpi_reg.rreq) & s.cycle_counter >= self.tr[0][0]:
-			t = self.tr.pop(0)
-			s.wr(self.ulpi_reg.raddr, t[1])
-			s.wr(self.ulpi_reg.rreq, 1)
-		
-		if len(self.tw) > 0 and ~s.rd(self.ulpi_reg.wack) & ~s.rd(self.ulpi_reg.wreq) & s.cycle_counter >= self.tw[0][0]:
-			t = self.tw.pop(0)
-			s.wr(self.ulpi_reg.waddr, t[1])
-			s.wr(self.ulpi_reg.wreq, 1)
-			s.wr(self.ulpi_reg.wdata, t[2])
+		if not self.regtest:
+			if len(self.tr) > 0 and ~s.rd(self.ulpi_reg.rack) & ~s.rd(self.ulpi_reg.rreq) & s.cycle_counter >= self.tr[0][0]:
+				t = self.tr.pop(0)
+				s.wr(self.ulpi_reg.raddr, t[1])
+				s.wr(self.ulpi_reg.rreq, 1)
+			
+			if len(self.tw) > 0 and ~s.rd(self.ulpi_reg.wack) & ~s.rd(self.ulpi_reg.wreq) & s.cycle_counter >= self.tw[0][0]:
+				t = self.tw.pop(0)
+				s.wr(self.ulpi_reg.waddr, t[1])
+				s.wr(self.ulpi_reg.wreq, 1)
+				s.wr(self.ulpi_reg.wdata, t[2])
 
 		if s.rd(self.ulpi_reg.rack) & s.rd(self.ulpi_reg.rreq):
 			print("%06d TestULPI REGR [%02x] = %02x" % (s.cycle_counter, s.rd(self.ulpi_reg.raddr), s.rd(self.ulpi_reg.rdata)))
@@ -458,7 +518,7 @@ class TestULPI(Module):
 if __name__ == "__main__":
 	from migen.sim.generic import Simulator, TopLevel
 	tl = TopLevel("ulpi.vcd")
-	test = TestULPI(tl.clock_domains[0])
+	test = TestULPI(tl.clock_domains[0], True)
 	sim = Simulator(test, tl)
 	sim.run(5000)
 	#print(verilog.convert(test, set(ulpi_data.flatten()) | set(ulpi_reg.flatten()) ))
