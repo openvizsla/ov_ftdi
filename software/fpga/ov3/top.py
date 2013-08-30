@@ -3,7 +3,9 @@
 from migen.fhdl.std import *
 import ov3, clocking
 from sdram import SDRAMFIFO
+from ulpi import ULPI, ULPI_BUS, ULPI_REG, ULPI_DATA, ULPIRegTest
 from migen.genlib.cdc import NoRetiming, MultiReg
+from migen.genlib.record import Record
 
 
 plat = ov3.Platform()
@@ -61,6 +63,46 @@ class OV3(Module):
             led2.eq(~word_ctr2[22]),
             led3.eq(~valid),
         ]
+        
+        # ULPI
+        
+        ulpi_bus = Record(ULPI_BUS)
+        ulpi_reg = Record(ULPI_REG)
+        ulpi_data = Record(ULPI_DATA)
+
+        self.clock_domains.cd_ulpi = ClockDomain()
+
+        self.cd_ulpi.clk = ulpi_bus.clk
+        self.cd_ulpi.rst = ulpi_bus.rst
+        
+        ulpi_pins = plat.request("ulpi")
+        
+        self.comb += ulpi_pins.rst.eq(~ulpi_bus.rst)
+        self.comb += ulpi_bus.nxt.eq(ulpi_pins.nxt)
+        self.comb += ulpi_bus.clk.eq(ulpi_pins.clk)
+        self.comb += ulpi_bus.dir.eq(ulpi_pins.dir)
+        self.comb += ulpi_pins.stp.eq(ulpi_bus.stp)
+        dq = TSTriple(8)
+        self.specials += dq.get_tristate(ulpi_pins.d)
+        self.comb += ulpi_bus.di.eq(dq.i)
+        self.comb += dq.o.eq(ulpi_bus.do)
+        self.comb += dq.oe.eq(ulpi_bus.doe)
+        
+        self.submodules.ulpi = RenameClockDomains(
+          ULPI(ulpi_bus, ulpi_reg, ulpi_data),
+          {"sys": "ulpi"}
+        )
+        
+        self.clock_domains.cd_ulpi_reg = ClockDomain()
+        self.cd_ulpi_reg.clk = self.cd_sys.clk
+        self.cd_ulpi_reg.rst = ulpi_bus.rst
+
+        self.submodules.regtest = RenameClockDomains(
+          ULPIRegTest(ulpi_reg),
+          {"sys":"ulpi_reg"}
+        )
+        
+        self.comb += ulpi_bus.rst.eq(btn_sync)
 
 if __name__ == "__main__":
     plat.build_cmdline(OV3())
