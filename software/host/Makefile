@@ -30,18 +30,11 @@ endif
 # Local headers
 CFLAGS += -I../include
 
-BIN := ovctl
-OBJS := main.o fastftdi.o fpgaconfig.o bit_file.o \
-        hw_common.o ftdieep.o
-
 SO_OBJS := fastftdi.o fpgaconfig.o bit_file.o hw_common.o ftdieep.o
 
 CFLAGS += -O3 -g --std=c99
 
-all: $(BIN) $(SO)
-
-$(BIN): $(OBJS)
-	cc -o $(BIN) $(OBJS) $(LDFLAGS)
+all: $(SO)
 
 $(SO): $(SO_OBJS)
 	cc -o $@ $^ $(SO_LDFLAGS)
@@ -49,4 +42,4 @@ $(SO): $(SO_OBJS)
 *.o: *.h Makefile
 
 clean:
-	rm -f $(BIN) $(SO) $(OBJS)
+	rm -f $(SO) $(OBJS)

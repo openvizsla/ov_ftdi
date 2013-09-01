@@ -1,7 +1,11 @@
 import ctypes
 import re
+import os
 
-libov =  ctypes.cdll.LoadLibrary("./libov.so")
+_lpath = (os.path.dirname(__file__))
+if _lpath == '':
+    _lpath = '.'
+libov =  ctypes.cdll.LoadLibrary(_lpath + "/libov.so")
 
 class FTDI_Device(ctypes.Structure):
     _fields_ = [
@@ -138,7 +142,12 @@ class _OV_regs:
         self._d = d
 
     def __getattr__(self, attr):
-        return self.__dict__['_d'][attr.upper()]
+        try:
+            return self.__dict__['_d'][attr.upper()]
+        except KeyError:
+            pass
+
+        raise KeyError("No such register %s - did you specify a mapfile?" % attr)
 
 
 class OVDevice:
@@ -147,14 +156,14 @@ class OVDevice:
 
         self.__addrmap = {}
 
+        d = {}
         if mapfile:
             self.__parse_mapfile(mapfile)
 
-            d = {}
             for name, addr in self.__addrmap.items():
                 d[name] = _OV_reg(self, name, addr)
 
-            self.regs = _OV_regs(d)
+        self.regs = _OV_regs(d)
 
 
 

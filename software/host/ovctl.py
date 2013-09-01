@@ -51,6 +51,10 @@ def iowrite(dev, addr, value):
 def ledtest(dev, v):
     dev.regs.leds_out.set(v)
 
+@command('none')
+def nop(dev):
+    pass
+
 class LB_Test(Command):
     name = "lb-test"
 
