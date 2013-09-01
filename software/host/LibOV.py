@@ -1,4 +1,5 @@
 import ctypes
+import re
 
 libov =  ctypes.cdll.LoadLibrary("./libov.so")
 
@@ -119,9 +120,77 @@ class ProtocolError(Exception):
 class TimeoutError(Exception):
     pass
 
+class _OV_reg:
+    def __init__(self, dev, name, addr):
+        self.dev = dev
+        self.addr = addr
+        self.shadow = 0
+
+    def get(self):
+        self.shadow = self.dev.ioread(self.addr)
+        return self.shadow
+
+    def set(self, value):
+        self.shadow = self.dev.iowrite(self.addr, value)
+
+class _OV_regs:
+    def __init__(self, d):
+        self._d = d
+
+    def __getattr__(self, attr):
+        return self.__dict__['_d'][attr.upper()]
+
+
 class OVDevice:
-    def __init__(self):
+    def __init__(self, mapfile=None):
         self.dev = FTDIDevice()
+
+        self.__addrmap = {}
+
+        if mapfile:
+            self.__parse_mapfile(mapfile)
+
+            d = {}
+            for name, addr in self.__addrmap.items():
+                d[name] = _OV_reg(self, name, addr)
+
+            self.regs = _OV_regs(d)
+
+
+
+
+    def __parse_mapfile(self, mapfile):
+
+        for line in open(mapfile).readlines():
+            line = line.strip()
+
+            line = re.sub('#.*', '', line)
+            if not line:
+                continue
+
+            m = re.match('\s*(\w+)\s*=\s*(\w+)\s*', line)
+            if not m:
+                raise ValueError("Mapfile - could not parse %s" % line)
+
+            name = m.group(1)
+            value = int(m.group(2), 16)
+
+            self.__addrmap[name] = value
+
+
+    def resolve_addr(self, sym):
+        if type(sym) == int:
+            return sym
+
+        try:
+            return int(sym, 16)
+        except ValueError:
+            pass
+
+        try:
+            return self.__addrmap[sym.upper()]
+        except KeyError:
+            raise ValueError("No map for %s" % sym)
 
     def open(self, bitstream=None):
         stat = self.dev.open()
@@ -132,10 +201,10 @@ class OVDevice:
 
 
     def ioread(self, addr):
-        return self.io(addr, 0)
+        return self.io(self.resolve_addr(addr), 0)
 
     def iowrite(self, addr, value):
-        return self.io(addr | 0x8000, value)
+        return self.io(self.resolve_addr(addr) | 0x8000, value)
 
     def io(self, io_ext, value):
         msg = [0x55, (io_ext >> 8), io_ext & 0xFF, value]

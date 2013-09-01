@@ -34,17 +34,22 @@ def command(_name, *_args):
 
 int16 = lambda x: int(x, 16)
 
-@command('ioread', ('addr', int16))
+@command('ioread', ('addr', str))
 def ioread(dev, addr):
-    print("%04x: %02x" % (addr, dev.ioread(addr)))
+    try:
+        addr = "%04x" % addr
+    except TypeError:
+        pass
 
-@command('iowrite', ('addr', int16), ('value', int16))
+    print("%s: %02x" % (addr, dev.ioread(addr)))
+
+@command('iowrite', ('addr', str), ('value', int16))
 def iowrite(dev, addr, value):
     dev.iowrite(addr, value)
 
 @command('led-test', ('v', int16))
 def ledtest(dev, v):
-    dev.iowrite(0, v)
+    dev.regs.leds_out.set(v)
 
 class LB_Test(Command):
     name = "lb-test"
@@ -94,10 +99,10 @@ class LB_Test(Command):
             print("Got %d bytes" % PP.rc)
         print("FINI %s" % PP.ok)
 
-
 def main():
     
     ap = argparse.ArgumentParser()
+    ap.add_argument("--mapfile", "-m")
     ap.add_argument("--bitstream", "-b", type=as_ascii)
     ap.add_argument("--config-only", "-C", action="store_true")
 
@@ -110,7 +115,7 @@ def main():
 
     args = ap.parse_args()
 
-    dev = LibOV.OVDevice()
+    dev = LibOV.OVDevice(mapfile=args.mapfile)
 
     err = dev.open(bitstream=args.bitstream)
 
