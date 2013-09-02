@@ -151,8 +151,9 @@ class _OV_regs:
 
 
 class OVDevice:
-    def __init__(self, mapfile=None):
+    def __init__(self, mapfile=None, verbose=False):
         self.dev = FTDIDevice()
+        self.verbose = verbose
 
         self.__addrmap = {}
 
@@ -219,10 +220,17 @@ class OVDevice:
         msg = [0x55, (io_ext >> 8), io_ext & 0xFF, value]
         checksum = (sum(msg) & 0xFF)
         msg.append(checksum)
+
+        if self.verbose:
+            print("< %s" % " ".join("%02x" % i for i in msg))
+
         msg = bytes(msg)
 
         self.dev.write(FTDI_INTERFACE_A, msg, async=False)
         bb = self.dev.read(FTDI_INTERFACE_A, 5)
+
+        if self.verbose:
+            print("> %s" % " ".join("%02x" % i for i in bb))
 
         if bb[0] != 0x55:
             raise ProtocolError("No magic found for io response")

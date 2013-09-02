@@ -108,6 +108,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mapfile", "-m")
     ap.add_argument("--bitstream", "-b", type=as_ascii)
+    ap.add_argument("--verbose", "-v", action="store_true")
     ap.add_argument("--config-only", "-C", action="store_true")
 
     # Bind commands
@@ -119,7 +120,7 @@ def main():
 
     args = ap.parse_args()
 
-    dev = LibOV.OVDevice(mapfile=args.mapfile)
+    dev = LibOV.OVDevice(mapfile=args.mapfile, verbose=args.verbose)
 
     err = dev.open(bitstream=args.bitstream)
 
