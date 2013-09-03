@@ -41,13 +41,10 @@ class ULPI(Module):
 			
 		exp = If(~RegWriteReqR, ulpi_reg.wack.eq(0)).Elif(RegWriteAckSet, ulpi_reg.wack.eq(1))
 
-		self.clock_domains.cd_dataout = ClockDomain()
-		self.comb += self.cd_dataout.clk.eq(~ulpi.clk)
-			
 		# output data if required by state
-		self.sync.dataout += ulpi.stp.eq(ulpi_stp_next)
-		self.sync.dataout += ulpi_data_out.eq(ulpi_data_next)
-		self.sync.dataout += ulpi_data_tristate.eq(ulpi_data_tristate_next)
+		self.comb += ulpi.stp.eq(ulpi_stp_next)
+		self.comb += ulpi_data_out.eq(ulpi_data_next)
+		self.comb += ulpi_data_tristate.eq(ulpi_data_tristate_next)
 		self.comb += ulpi.do.eq(ulpi_data_out)
 		self.comb += ulpi.doe.eq(~ulpi_data_tristate)
 		
@@ -103,7 +100,7 @@ class ULPI(Module):
 				ulpi_data_next.eq(0x80 | ulpi_reg.waddr), # REGW
 				ulpi_data_tristate_next.eq(0),
 				ulpi_stp_next.eq(0),
-				NextState("RWD")
+				If(ulpi.nxt, NextState("RWD")).Else(NextState("RW0")),
 			).Else(
 				NextState("ERROR")
 			))
@@ -123,7 +120,7 @@ class ULPI(Module):
 			)
 		
 		fsm.act("RWS",
-			If(~ulpi.dir & ulpi.nxt,
+			If(~ulpi.dir,
 				NextState("IDLE"),
 				ulpi_data_next.eq(0x00), # NOOP
 				ulpi_data_tristate_next.eq(0),
@@ -132,8 +129,6 @@ class ULPI(Module):
 			).Elif(ulpi.dir,
 				NextState("RX"),
 				ulpi_data_tristate_next.eq(1),
-			).Else(
-				NextState("ERROR")
 			),
 			)
 		
