@@ -34,13 +34,71 @@ def command(_name, *_args):
 
 int16 = lambda x: int(x, 16)
 
+
+def check_ulpi_clk(dev):
+    clks_up = dev.regs.ucfg_stat.rd()
+
+    if not clks_up:
+        print("ULPI Clock has not started up - osc?")
+        return 1
+
+    return 0
+
+@command('uwrite', ('addr', str), ('val', int16))
+def uwrite(dev, addr, val):
+    addr = int(addr, 16)
+
+    if check_ulpi_clk(dev):
+        return 
+
+    dev.ulpiwrite(addr, val)
+
+@command('uread', ('addr', str))
+def uread(dev, addr):
+    addr = int(addr, 16)
+
+    if check_ulpi_clk(dev):
+        return 
+
+    print ("ULPI %02x: %02x" % (addr, dev.ulpiread(addr)))
+
+@command('report')
+def report(dev):
+
+    print("USB PHY Tests")
+    if check_ulpi_clk(dev):
+        print("\tWARNING: ULPI PHY clock not started; skipping ULPI data")
+    else:
+        # display the ULPI identifier
+        ident = 0
+        for x in [dev.ulpiregs.vidh,
+                dev.ulpiregs.vidl,
+                dev.ulpiregs.pidh,
+                dev.ulpiregs.pidl]:
+            ident <<= 8
+            ident |= x.rd()
+
+        name = 'unknown'
+        if ident == LibOV.SMSC_334x_MAGIC:
+            name = 'SMSC 334x'
+        print("\tULPI PHY ID: %08x (%s)" % (ident, name))
+
+        # do in depth phy tests
+        if ident == LibOV.SMSC_334x_MAGIC:
+            dev.ulpiregs.scratch.wr(0)
+            dev.ulpiregs.scratch_set.wr(0xCF)
+            dev.ulpiregs.scratch_clr.wr(0x3C)
+
+            stat = "OK" if dev.ulpiregs.scratch.rd() == 0xC3 else "FAIL"
+
+            print("\tULPI Scratch register IO test: %s" % stat)
+            print("\tPHY Function Control Reg:  %02x" % dev.ulpiregs.func_ctl.rd())
+            print("\tPHY Interface Control Reg: %02x" % dev.ulpiregs.intf_ctl.rd())
+        else:
+            print("\tUnknown PHY - skipping phy tests")
+
 @command('ioread', ('addr', str))
 def ioread(dev, addr):
-    try:
-        addr = "%04x" % addr
-    except TypeError:
-        pass
-
     print("%s: %02x" % (addr, dev.ioread(addr)))
 
 @command('iowrite', ('addr', str), ('value', int16))
@@ -49,7 +107,7 @@ def iowrite(dev, addr, value):
 
 @command('led-test', ('v', int16))
 def ledtest(dev, v):
-    dev.regs.leds_out.set(v)
+    dev.regs.leds_out.wr(v)
 
 @command('none')
 def nop(dev):

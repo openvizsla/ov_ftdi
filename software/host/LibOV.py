@@ -124,20 +124,21 @@ class ProtocolError(Exception):
 class TimeoutError(Exception):
     pass
 
-class _OV_reg:
-    def __init__(self, dev, name, addr):
-        self.dev = dev
+class _mapped_reg:
+    def __init__(self, readfn, writefn, name, addr):
+        self.readfn = readfn
+        self.writefn = writefn
         self.addr = addr
         self.shadow = 0
 
-    def get(self):
-        self.shadow = self.dev.ioread(self.addr)
+    def rd(self):
+        self.shadow = self.readfn(self.addr)
         return self.shadow
 
-    def set(self, value):
-        self.shadow = self.dev.iowrite(self.addr, value)
+    def wr(self, value):
+        self.shadow = self.writefn(self.addr, value)
 
-class _OV_regs:
+class _mapped_regs:
     def __init__(self, d):
         self._d = d
 
@@ -150,6 +151,70 @@ class _OV_regs:
         raise KeyError("No such register %s - did you specify a mapfile?" % attr)
 
 
+UCFG_REG_GO = 0x80
+UCFG_REG_ADDRMASK = 0x3F
+
+SMSC_334x_MAGIC = 0x4240009
+SMSC_334x_MAP = {
+    "VIDL": 0x00,
+    "VIDH": 0x01,
+    "PIDL": 0x02,
+    "PIDH": 0x03,
+
+    "FUNC_CTL": 0x04,
+    "FUNC_CTL_SET": 0x05,
+    "FUNC_CTL_CLR": 0x06,
+
+    "INTF_CTL": 0x07,
+    "INTF_CTL_SET": 0x08,
+    "INTF_CTL_CLR": 0x09,
+
+    "OTG_CTL": 0x0A,
+    "OTG_CTL_SET": 0x0B,
+    "OTG_CTL_CLR": 0x0C,
+
+    "USB_INT_EN_RISE": 0x0D,
+    "USB_INT_EN_RISE_SET": 0x0e,
+    "USB_INT_EN_RISE_CLR": 0x0f,
+
+    "USB_INT_EN_FALL": 0x10,
+    "USB_INT_EN_FALL_SET": 0x11,
+    "USB_INT_EN_FALL_CLR": 0x12,
+
+    "USB_INT_STAT": 0x13,
+    "USB_INT_LATCH": 0x14,
+
+    "DEBUG": 0x15,
+
+    "SCRATCH": 0x16,
+    "SCRATCH_SET": 0x17,
+    "SCRATCH_CLR": 0x18,
+
+    "CARKIT": 0x19,
+    "CARKIT_SET": 0x1A,
+    "CARKIT_CLR": 0x1B,
+
+    "CARKIT_INT_EN": 0x1D,
+    "CARKIT_INT_EN_SET": 0x1E,
+    "CARKIT_INT_EN_CLR": 0x1F,
+
+    "CARKIT_INT_STAT": 0x20,
+    "CARKIT_INT_LATCH": 0x21,
+
+    "HS_COMP_REG":   0x31,
+    "USBIF_CHG_DET": 0x32,
+    "HS_AUD_MODE":   0x33,
+
+    "VND_RID_CONV": 0x36,
+    "VND_RID_CONV_SET": 0x37,
+    "VND_RID_CONV_CLR": 0x38,
+
+    "USBIO_PWR_MGMT": 0x39,
+    "USBIO_PWR_MGMT_SET": 0x3A,
+    "USBIO_PWR_MGMT_CLR": 0x3B,
+}
+
+
 class OVDevice:
     def __init__(self, mapfile=None, verbose=False):
         self.dev = FTDIDevice()
@@ -157,16 +222,31 @@ class OVDevice:
 
         self.__addrmap = {}
 
-        d = {}
         if mapfile:
             self.__parse_mapfile(mapfile)
 
-            for name, addr in self.__addrmap.items():
-                d[name] = _OV_reg(self, name, addr)
 
-        self.regs = _OV_regs(d)
+        self.regs = self.__build_map(self.__addrmap, self.ioread, self.iowrite)
+        self.ulpiregs = self.__build_map(SMSC_334x_MAP, self.ulpiread, self.ulpiwrite)
 
 
+        self.clkup = False
+    
+    def __build_map(self, addrmap, readfn, writefn):
+        d = {}
+        for name, addr in addrmap.items():
+            d[name] = _mapped_reg(readfn, writefn, name, addr)
+
+        return _mapped_regs(d)
+
+
+    def __check_clkup(self):
+        if self.clkup:
+            return True
+
+        self.clkup = self.regs.ucfg_stat.rd() & 0x1
+
+        return self.clkup
 
 
     def __parse_mapfile(self, mapfile):
@@ -209,6 +289,26 @@ class OVDevice:
 
         HW_Init(self.dev, bitstream)
 
+
+    def ulpiread(self, addr):
+        assert self.__check_clkup()
+
+        self.regs.ucfg_rcmd.wr(UCFG_REG_GO | (addr & UCFG_REG_ADDRMASK))
+
+        while self.regs.ucfg_rcmd.rd() & UCFG_REG_GO:
+            pass
+
+        return self.regs.ucfg_rdata.rd()
+
+
+    def ulpiwrite(self, addr, value):
+        assert self.__check_clkup()
+
+        self.regs.ucfg_wdata.wr(value)
+        self.regs.ucfg_wcmd.wr(UCFG_REG_GO | (addr & UCFG_REG_ADDRMASK))
+        
+        while self.regs.ucfg_wcmd.rd() & UCFG_REG_GO:
+            pass
 
     def ioread(self, addr):
         return self.io(self.resolve_addr(addr), 0)
