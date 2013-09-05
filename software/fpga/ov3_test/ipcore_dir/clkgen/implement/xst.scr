@@ -1,9 +1,0 @@
-run
--ifmt MIXED
--top clkgen_exdes
--p xc6slx9-tqg144-3
--ifn xst.prj
--ofn clkgen_exdes
--keep_hierarchy soft 
--equivalent_register_removal no 
--max_fanout 65535
