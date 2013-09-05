@@ -10,7 +10,7 @@ from migen.bank.csrgen import BankArray
 
 import ov3, clocking
 from sdram import SDRAMFIFO
-from ulpi import ULPI, ULPI_BUS, ULPI_REG, ULPI_DATA, ULPIRegTest
+from ulpi import ULPI, ULPI_BUS, ULPI_REG, ULPI_DATA
 from leds import LED_outputs
 from buttons import BTN_status
 
@@ -92,16 +92,19 @@ class OV3(Module):
 
         self.clock_domains.cd_ulpi = ClockDomain()
 
+        cd_rst = Signal()
         self.cd_ulpi.clk = ulpi_bus.clk
-        self.cd_ulpi.rst = ulpi_bus.rst
+        self.cd_ulpi.rst = cd_rst
         
         ulpi_pins = plat.request("ulpi")
         
+        stp_ovr = Signal(1)
+
         self.comb += ulpi_pins.rst.eq(~ulpi_bus.rst)
         self.comb += ulpi_bus.nxt.eq(ulpi_pins.nxt)
         self.comb += ulpi_bus.clk.eq(ulpi_pins.clk)
         self.comb += ulpi_bus.dir.eq(ulpi_pins.dir)
-        self.comb += ulpi_pins.stp.eq(ulpi_bus.stp)
+        self.comb += ulpi_pins.stp.eq(ulpi_bus.stp | stp_ovr)
         dq = TSTriple(8)
         self.specials += dq.get_tristate(ulpi_pins.d)
         self.comb += ulpi_bus.di.eq(dq.i)
@@ -113,16 +116,8 @@ class OV3(Module):
           {"sys": "ulpi"}
         )
         
-        self.clock_domains.cd_ulpi_reg = ClockDomain()
-        self.cd_ulpi_reg.clk = self.cd_sys.clk
-        self.cd_ulpi_reg.rst = ulpi_bus.rst
-
-        self.submodules.regtest = RenameClockDomains(
-          ULPIRegTest(ulpi_reg),
-          {"sys":"ulpi_reg"}
-        )
-        
-        self.comb += ulpi_bus.rst.eq(btn_sync)
+        from ulpicfg import ULPICfg
+        self.submodules.ucfg = ULPICfg(self.cd_ulpi.clk, cd_rst, ulpi_bus.rst, stp_ovr, ulpi_reg);
 
        
 
@@ -147,6 +142,7 @@ class OV3(Module):
         self.csr_map = {
                 'leds': 0,
                 'buttons' : 1,
+                'ucfg' : 2,
                 }
 
         self.submodules.csrbankarray = BankArray(self,
