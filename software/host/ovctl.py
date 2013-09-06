@@ -1,8 +1,16 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.3
+
+# This needs python3.3 or greater - argparse changes behavior
+# TODO - workaround
 
 import LibOV
 import argparse
 import time
+
+import zipfile
+
+import sys
+import os
 
 def as_ascii(arg):
     if arg == None:
@@ -10,10 +18,14 @@ def as_ascii(arg):
     return arg.encode('ascii')
 
 class Command:
+    def __subclasshook__(self):
+        pass
+
     @staticmethod
     def setup_args(sp):
         pass
 
+__cmd_keeper = []
 def command(_name, *_args):
     def _i(todeco):
         class _sub(Command):
@@ -28,6 +40,7 @@ def command(_name, *_args):
             def go(dev, args):
                 aarray = dict([(i, getattr(args, i)) for (i, _) in _args])
                 todeco(dev, **aarray)
+        __cmd_keeper.append(_sub)
         return todeco
 
     return _i
@@ -109,10 +122,6 @@ def iowrite(dev, addr, value):
 def ledtest(dev, v):
     dev.regs.leds_out.wr(v)
 
-@command('none')
-def nop(dev):
-    pass
-
 class LB_Test(Command):
     name = "lb-test"
 
@@ -162,10 +171,11 @@ class LB_Test(Command):
         print("FINI %s" % PP.ok)
 
 def main():
-    
+
     ap = argparse.ArgumentParser()
-    ap.add_argument("--mapfile", "-m")
-    ap.add_argument("--bitstream", "-b", type=as_ascii)
+    ap.add_argument("--pkg", "-p", type=lambda x: zipfile.ZipFile(x, 'r'), 
+            default=os.getenv('OV_PKG'))
+    ap.add_argument("-l", "--load", action="store_true")
     ap.add_argument("--verbose", "-v", action="store_true")
     ap.add_argument("--config-only", "-C", action="store_true")
 
@@ -178,9 +188,10 @@ def main():
 
     args = ap.parse_args()
 
-    dev = LibOV.OVDevice(mapfile=args.mapfile, verbose=args.verbose)
 
-    err = dev.open(bitstream=args.bitstream)
+    dev = LibOV.OVDevice(mapfile=args.pkg.open('map.txt', 'r'), verbose=args.verbose)
+
+    err = dev.open(bitstream=args.pkg.open('ov3.bit', 'r') if args.load else None)
 
     if err:
         print("USB: Error opening device\n")
@@ -192,7 +203,8 @@ def main():
     
     dev.dev.write(LibOV.FTDI_INTERFACE_A, b'\x00' * 512, async=False)
 
-    args.hdlr.go(dev, args)
+    if hasattr(args, 'hdlr'):
+        args.hdlr.go(dev, args)
 
 if  __name__ == "__main__":
     main()

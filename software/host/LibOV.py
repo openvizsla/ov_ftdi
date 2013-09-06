@@ -251,8 +251,8 @@ class OVDevice:
 
     def __parse_mapfile(self, mapfile):
 
-        for line in open(mapfile).readlines():
-            line = line.strip()
+        for line in mapfile.readlines():
+            line = line.strip().decode('utf-8')
 
             line = re.sub('#.*', '', line)
             if not line:
@@ -287,7 +287,33 @@ class OVDevice:
         if stat:
             return stat
 
-        HW_Init(self.dev, bitstream)
+        if not isinstance(bitstream, bytes) and hasattr(bitstream, 'read'):
+
+            # FIXME: Current bit_file code is heavily dependent on fstream ops
+            #  and isn't nice to call with a python file-like object
+            #
+            # Workaround this by emitting a tempfile
+            import tempfile
+            import os
+
+            bitfile = tempfile.NamedTemporaryFile(delete=False)
+
+            try:
+                bitfile.write(bitstream.read())
+                bitfile.close()
+
+                HW_Init(self.dev, bitfile.name.encode('ascii'))
+           
+            finally:
+                # Make sure we cleanup the tempfile
+                os.unlink(bitfile.name)
+
+        elif isinstance(bitstream, bytes) or bitstream == None:
+            HW_Init(self.dev, bitstream)
+
+        else:
+            raise TypeError("bitstream must be bytes or file-like")
+
 
 
     def ulpiread(self, addr):
