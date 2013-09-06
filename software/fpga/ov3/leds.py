@@ -6,13 +6,37 @@ from migen.bus.csr import Initiator, Interconnect
 from migen.bus.transactions import *
 from migen.sim.generic import Simulator
 
+from itertools import zip_longest
+
 class LED_outputs(Module, description.AutoCSR):
-    def __init__(self, leds):
+    def __init__(self, leds, leds_muxes=None):
+
         self._out = description.CSRStorage(flen(leds), atomic_write=True)
 
-        self.comb += [
-            leds.eq(self._out.storage),
-        ]
+        if leds_muxes:
+            assert len(leds_muxes) == flen(leds)
+            for n in range(flen(leds)):
+                name = "mux_%d" % n
+                attr = description.CSRStorage(8, atomic_write=True, name=name)
+                setattr(self, "_%s" % name, attr)
+
+                mux_vals = [self._out.storage[n]]
+
+                if leds_muxes[n]:
+                    mux_vals.extend(leds_muxes[n])
+
+                cases = {k: leds[n].eq(v) for k, v in enumerate(mux_vals)}
+
+                self.comb += [
+                        leds[n].eq(0),
+                        Case(attr.storage, cases)
+                        ]
+
+
+        else:
+            self.comb += [
+                leds.eq(self._out.storage),
+            ]
 
 def my_gen():
     for x in range(10):

@@ -124,7 +124,13 @@ class OV3(Module):
         # GPIOs (leds/buttons)
         leds_v = Signal(3)
         self.comb += Cat(led1, led2, led3).eq(~leds_v)
-        self.submodules.leds = LED_outputs(leds_v)
+
+        self.submodules.leds = LED_outputs(leds_v,
+                [
+                    [word_ctr[22]],
+                    [word_ctr2[22]],
+                    [valid]
+                ])
         self.submodules.buttons = BTN_status(~btn)
         
         # FTDI Command processor
