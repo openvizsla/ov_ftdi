@@ -135,7 +135,7 @@ class BusInterleave(Module):
 
         released = Signal(reset=1)
 
-        self.sync += If(request, released.eq(0)).Elif(
+        self.sync += If(self.rr.ce, released.eq(0)).Elif(
                         release, released.eq(1))
 
         self.comb += request.eq(self.rr.request != 0)
@@ -144,14 +144,17 @@ class BusInterleave(Module):
         self.comb += self.rr.ce.eq(request & released)
 
         for i, port in enumerate(mux_ports):
-            self.comb += [
-                If(granted == i,
-                    self.source.stb.eq(port.source.stb),
-                    self.source.payload.d.eq(port.source.payload.d),
-                    port.source.ack.eq(self.source.ack),
+            _grant = Signal(name="grant_to_%d" % i)
 
-                    If(port.source.payload.last,
-                        release.eq(1))),
+            self.comb += [
+                _grant.eq(granted == i),
+                If(granted == i,
+                    self.source.payload.d.eq(port.source.payload.d),
+                    release.eq(self.source.ack & port.source.stb & port.source.payload.last),
+                    self.source.stb.eq(port.source.stb),
+                ),
+                port.source.ack.eq(self.source.ack & _grant),
+
 
                 self.rr.request[i].eq(port.source.stb)
                 ]
