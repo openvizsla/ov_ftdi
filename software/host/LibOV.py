@@ -1,6 +1,9 @@
 import ctypes
 import re
 import os
+import queue
+import threading
+import collections
 
 _lpath = (os.path.dirname(__file__))
 if _lpath == '':
@@ -215,8 +218,127 @@ SMSC_334x_MAP = {
 }
 
 
+INCOMPLETE = -1
+UNMATCHED = 0
+class baseService:
+    def presentBytes(self, b):
+        if b[0] != self.MAGIC:
+            return UNMATCHED
+
+        if len(b) < self.NEEDED_FOR_SIZE:
+            return INCOMPLETE
+
+        size = self.getPacketSize(b)
+
+        if len(b) < size:
+            return INCOMPLETE
+
+        self.consume(b[:size])
+
+        return size
+
+class IO:
+    class __IOService(baseService):
+        MAGIC = 0x55
+        NEEDED_FOR_SIZE = 1
+
+        def __init__(self):
+            self.q = queue.Queue()
+
+        def getPacketSize(self, buf):
+            return 5
+
+        def consume(self, buf):
+            assert buf[0] == self.MAGIC
+            assert len(buf) == 5
+
+            calc_ck = (sum(buf[0:4]) & 0xFF)
+
+            if calc_ck != buf[4]:
+                raise ProtocolError(
+                    "Checksum for response incorrect: expected %02x, got %02x" %
+                    (calc_ck, buf[4])
+                )
+
+            self.q.put((buf[1] << 8 | buf[2], buf[3]))
+
+    def __init__(self):
+        self.service = IO.__IOService()
+
+    def do_read(self, addr, timeout=None):
+        return self.__txn(addr, 0, timeout)
+
+    def do_write(self, addr, value, timeout=None):
+        return self.__txn(0x8000 | addr, value, timeout)
+
+    def __txn(self, io_ext, value, timeout):
+        msg = [0x55, (io_ext >> 8), io_ext & 0xFF, value]
+        checksum = (sum(msg) & 0xFF)
+        msg.append(checksum)
+        msg = bytes(msg)
+
+        self.service.write(msg)
+
+        try:
+            resp = self.service.q.get(True, timeout)
+        except queue.Empty:
+            raise TimeoutError("IO access timed out")
+
+        r_addr, r_value = resp
+
+        assert r_addr == io_ext
+
+        return r_value
+
+# Basic Test service for testing stream rates and ordering
+# Ideally we'd verify the entire LFSR, but python is too slow
+# As it is, the rates are CPU-bound
+class LFSRTest:
+    __stats = collections.namedtuple('LFSR_Stat', 
+            ['total', 'error'])
+
+    class __LFSRTestService(baseService):
+        MAGIC = 0xAA
+
+        NEEDED_FOR_SIZE = 2
+
+        def __init__(self):
+            self.total = 0
+            self.reset()
+
+        def reset(self):
+            self.state = None
+            self.error = 0
+            self.total = 0
+
+        def getPacketSize(self, buf):
+            # overhead is magic, length
+            return buf[1] + 2
+
+        def consume(self, buf):
+            assert buf[0] == self.MAGIC
+            assert buf[1] + 2 == len(buf)
+
+            self.total += buf[1]
+
+            if self.state != None:
+                if buf[2] & 0xFE != (self.state << 1) & 0xFE:
+                    self.error = 1
+
+            self.state = buf[-1]
+
+    def __init__(self):
+        self.service = LFSRTest.__LFSRTestService()
+
+        self.reset = self.service.reset
+
+    def stats(self):
+        return LFSRTest.__stats(total=self.service.total, error=self.service.error)
+
 class OVDevice:
     def __init__(self, mapfile=None, verbose=False):
+        self.__is_open = False
+
         self.dev = FTDIDevice()
         self.verbose = verbose
 
@@ -231,7 +353,64 @@ class OVDevice:
 
 
         self.clkup = False
+
+
+        self.io = IO()
+        self.lfsrtest = LFSRTest()
+
+        self.__services = [self.io.service, self.lfsrtest.service]
+
+        # Inject a write function to the services
+        for service in self.__services:
+            def write(msg):
+                if self.verbose:
+                    print("< %s" % " ".join("%02x" % i for i in msg))
+
+                self.dev.write(FTDI_INTERFACE_A, msg, async=False)
+
+            service.write = write
     
+        self.commthread = threading.Thread(target=self.__comms, daemon=True)
+        self.__comm_term = False
+        self.__comm_exc = None
+    
+    def __comms(self):
+        self.__buf = b""
+
+        def callback(b, prog):
+            try:
+                if self.verbose and b:
+                    print("> %s" % " ".join("%02x" % i for i in b))
+
+                self.__buf += b
+
+                incomplete = False
+
+                while self.__buf and not incomplete:
+                    for service in self.__services:
+                        code = service.presentBytes(self.__buf)
+                        if code == INCOMPLETE:
+                            incomplete = True
+                            break
+                        elif code:
+                            self.__buf = self.__buf[code:]
+                            break
+                    else:
+                        print("Unmatched byte %02x - discarding" % self.__buf[0])
+                        self.__buf = self.__buf[1:]
+
+                return int(self.__comm_term) 
+            except Exception as e:
+                self.__comm_term = True
+                self.__comm_exc = e
+                return 1
+
+        while not self.__comm_term:
+            self.dev.read_async(FTDI_INTERFACE_A, callback, 8, 16)
+
+        if self.__comm_exc:
+            raise self.__comm_exc
+            
     def __build_map(self, addrmap, readfn, writefn):
         d = {}
         for name, addr in addrmap.items():
@@ -282,7 +461,14 @@ class OVDevice:
         except KeyError:
             raise ValueError("No map for %s" % sym)
 
+    def __del__(self):
+        if self.__is_open:
+            self.close()
+
     def open(self, bitstream=None):
+        if self.__is_open:
+            raise ValueError("OVDevice doubly opened")
+
         stat = self.dev.open()
         if stat:
             return stat
@@ -313,7 +499,20 @@ class OVDevice:
 
         else:
             raise TypeError("bitstream must be bytes or file-like")
+        
+        self.commthread.start()
 
+        self.__comm_term = False
+        self.__is_open = True
+
+    def close(self):
+        if not self.__is_open:
+            raise ValueError("OVDevice doubly closed")
+
+        self.__comm_term = True
+        self.commthread.join()
+
+        self.__is_open = False
 
 
     def ulpiread(self, addr):
@@ -337,37 +536,11 @@ class OVDevice:
             pass
 
     def ioread(self, addr):
-        return self.io(self.resolve_addr(addr), 0)
+        return self.io.do_read(self.resolve_addr(addr))
 
     def iowrite(self, addr, value):
-        return self.io(self.resolve_addr(addr) | 0x8000, value)
+        return self.io.do_write(self.resolve_addr(addr), value)
 
-    def io(self, io_ext, value):
-        msg = [0x55, (io_ext >> 8), io_ext & 0xFF, value]
-        checksum = (sum(msg) & 0xFF)
-        msg.append(checksum)
-
-        if self.verbose:
-            print("< %s" % " ".join("%02x" % i for i in msg))
-
-        msg = bytes(msg)
-
-        self.dev.write(FTDI_INTERFACE_A, msg, async=False)
-        bb = self.dev.read(FTDI_INTERFACE_A, 5)
-
-        if self.verbose:
-            print("> %s" % " ".join("%02x" % i for i in bb))
-
-        if bb[0] != 0x55:
-            raise ProtocolError("No magic found for io response")
-
-        calc_ck = (sum(bb[0:4]) & 0xFF)
-
-        if calc_ck != bb[4]:
-            raise ProtocolError("Checksum for response incorrect: expected %02x, got %02x" %
-                    (calc_ck, bb[4]))
-
-        return bb[3]
 
 
 

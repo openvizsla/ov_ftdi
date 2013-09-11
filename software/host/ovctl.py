@@ -127,48 +127,44 @@ class LB_Test(Command):
 
     @staticmethod
     def setup_args(sp):
-        sp.add_argument("n", type=int, default=512000, nargs='?')
+        sp.add_argument("size", type=int, default=64, nargs='?')
 
     @staticmethod
     def go(dev, args):
-        b = bytes(i & 0xFF for i in range(args.n))
+        # Stop the generator - do twice to make sure
+        # theres no hanging packet 
+        dev.regs.RANDTEST_CFG.wr(0)
+        dev.regs.RANDTEST_CFG.wr(0)
 
+        # LEDs off
+        dev.regs.LEDS_MUX_2.wr(0)
+        dev.regs.LEDS_OUT.wr(0)
 
-        class pp:
-            def __init__(self, rc):
-                self.nc = 0
-                self.s = 0
-                self.ok = True
-                self.rc = 0
-                self.goal = rc
+        # LEDS 0/1 to FTDI TX/RX
+        dev.regs.LEDS_MUX_0.wr(2)
+        dev.regs.LEDS_MUX_1.wr(2)
 
-            def __call__(self, buf, prog):
-                if buf:
-                    for i in buf:
-                        if i != self.s:
-                            print("mismatch! (%d %d)" % (i, self.s))
-                            self.ok = False
-                            self.s = i
-                        self.s += 1
-                        self.s &= 0xFF
-                    self.rc += len(buf)
-                self.nc += 1
-                return 0 if self.rc < self.goal else  1
+        # Set test packet size
+        dev.regs.RANDTEST_SIZE.wr(args.size)
 
-        PP = pp(args.n)
+        # Reset the statistics counters
+        dev.lfsrtest.reset()
 
-        print("Go! lb=%d" % len(b))
-        rc = dev.write(LibOV.FTDI_INTERFACE_A, b, async=False)
-        print("writeDone %s" % rc)
-        sync = 1
-        if sync:
-            bb = dev.read(LibOV.FTDI_INTERFACE_A, args.n)
-            print("Got %d bytes" % len(bb))
-            PP(bb, None)
-        else:
-            dev.read_async(LibOV.FTDI_INTERFACE_A, PP, 4, 4)
-            print("Got %d bytes" % PP.rc)
-        print("FINI %s" % PP.ok)
+        # Start the test (and reinit the generator)
+        dev.regs.RANDTEST_CFG.wr(1)
+
+        st = time.time()
+        try:
+            while 1:
+                time.sleep(1)
+                b = dev.lfsrtest.stats()
+                print("%4s %20d bytes %f MB/sec average" % (
+                    "ERR" if b.error else "OK", 
+                    b.total, b.total/float(time.time() - st)/1024/1024))
+
+        except KeyboardInterrupt:
+            dev.regs.randtest_cfg.wr(0)
+
 
 def main():
 
@@ -203,8 +199,11 @@ def main():
     
     dev.dev.write(LibOV.FTDI_INTERFACE_A, b'\x00' * 512, async=False)
 
-    if hasattr(args, 'hdlr'):
-        args.hdlr.go(dev, args)
+    try:
+        if hasattr(args, 'hdlr'):
+            args.hdlr.go(dev, args)
+    finally:
+        dev.close()
 
 if  __name__ == "__main__":
     main()
