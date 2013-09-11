@@ -16,7 +16,7 @@ from buttons import BTN_status
 
 from cmdproc import CmdProc
 from ftdi_bus import FTDI_sync245
-
+from ftdi_lfsr_test import FTDI_randtest
 
 plat = ov3.Platform()
 
@@ -134,14 +134,9 @@ class OV3(Module):
         self.submodules.buttons = BTN_status(~btn)
         
         # FTDI Command processor
-
-        # Create a fake streaming data source to 
-        # stub out the streaming data interface
-        class FakeSource:
-            def __init__(self):
-                self.source = Source([('d', 8), ('last', 1)])
-
-        self.submodules.cmdproc = CmdProc(self.ftdi_bus, FakeSource())
+        self.submodules.randtest = FTDI_randtest()
+        self.submodules.cmdproc = CmdProc(self.ftdi_bus, 
+                [self.randtest])
 
 
         # Bind all device CSRs
@@ -149,6 +144,7 @@ class OV3(Module):
                 'leds': 0,
                 'buttons' : 1,
                 'ucfg' : 2,
+                'randtest' : 3,
                 }
 
         self.submodules.csrbankarray = BankArray(self,

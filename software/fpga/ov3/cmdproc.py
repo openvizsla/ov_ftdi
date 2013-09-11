@@ -16,7 +16,7 @@ from migen.bank.csrgen import BankArray
 # CmdProc (perhaps misnamed) handles command parsing on the ftdi interface
 # inserting cmd responses, and multiplexing the cmd responses with the streaming data
 class CmdProc(Module):
-    def __init__(self, ftdi_sync, streaming_source):
+    def __init__(self, ftdi_sync, streaming_sources):
 
         # CSR Command Decoding
         bdec = BusDecode()
@@ -41,7 +41,7 @@ class CmdProc(Module):
         self.submodules.fg = CompositeActor(g)
 
         # Bus interleaver to merge streaming and response packets
-        bilv = BusInterleave([benc, streaming_source])
+        bilv = BusInterleave([benc] + streaming_sources)
         self.submodules += bilv
         self.comb += [
                 ftdi_sync.output_fifo.we.eq(bilv.source.stb),
