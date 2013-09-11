@@ -127,8 +127,8 @@ class OV3(Module):
 
         self.submodules.leds = LED_outputs(leds_v,
                 [
-                    [word_ctr[22]],
-                    [word_ctr2[22]],
+                    [word_ctr[22], self.ftdi_bus.tx_ind],
+                    [word_ctr2[22], self.ftdi_bus.rx_ind],
                     [valid]
                 ])
         self.submodules.buttons = BTN_status(~btn)

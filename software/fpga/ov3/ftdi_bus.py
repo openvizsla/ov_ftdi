@@ -127,3 +127,11 @@ class FTDI_sync245(Module):
         
 
         self.submodules.bsf = RenameClockDomains(bsf, {"sys": "ftdi"})
+
+
+        # LED Indicators for RX and TX
+        self.tx_ind = Signal()
+        self.rx_ind = Signal()
+
+        self.specials += MultiReg(~io.wr_n, self.tx_ind)
+        self.specials += MultiReg(~io.rd_n, self.rx_ind)
