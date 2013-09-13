@@ -4,6 +4,8 @@ from migen.sim.generic import Simulator, TopLevel
 from migen.genlib.fsm import FSM, NextState
 from migen.genlib.record import *
 
+from constants import *
+
 class ULPI(Module):
 	def __init__(self, ulpi, ulpi_reg, dataout):
 		
@@ -48,11 +50,31 @@ class ULPI(Module):
 		self.comb += ulpi.do.eq(ulpi_data_out)
 		self.comb += ulpi.doe.eq(~ulpi_data_tristate)
 		
-		# capture RX data at the end of RX, but only if no turnaround was requested
-		self.sync += dataout.wen.eq(ulpi_state_rx & ulpi.dir)
-		self.sync += dataout.d.eq(ulpi.di)
-		self.sync += dataout.rxcmd.eq(ulpi.nxt)
 
+
+		# capture RX data at the end of RX, but only if no turnaround was requested
+		# We also support "stuffing" data, to indicate conditions such as:
+		#  - Simultaneous DIR + NXT assertion
+		#	(the spec doesn't require an RXCMD - DIR+NXT asserting may be the'
+		#	only SOP signal)
+		#  - End-of-packet 
+		#	(Packets may end without an RXCMD, unless an error occurs)
+		ulpi_rx_stuff   = Signal()
+		ulpi_rx_stuff_d = Signal(8)
+
+		self.sync += dataout.wen.eq(ulpi_state_rx & ulpi.dir | ulpi_rx_stuff)
+		self.sync += If(ulpi_rx_stuff, 
+						dataout.d.eq(ulpi_rx_stuff_d),
+						dataout.rxcmd.eq(1)
+					 ).Else(
+						If(~ulpi.nxt,
+							dataout.d.eq(ulpi.di & RXCMD_MASK),
+							dataout.rxcmd.eq(1)
+						).Else(
+							dataout.d.eq(ulpi.di),
+							dataout.rxcmd.eq(0)
+						)
+					 )
 		# capture register reads at the end of RRD
 		self.sync += If(ulpi_state_rrd,ulpi_reg.rdata.eq(ulpi.di))
 
@@ -67,7 +89,12 @@ class ULPI(Module):
 				NextState("IDLE")
 			).Elif(ulpi.dir, # TA, and then either RXCMD or Data
 				NextState("RX"),
-				ulpi_data_tristate_next.eq(1)
+				ulpi_data_tristate_next.eq(1),
+				# If dir & nxt, we're starting a packet, so stuff a custom SOP
+				If(ulpi.nxt,
+					ulpi_rx_stuff.eq(1),
+					ulpi_rx_stuff_d.eq(RXCMD_MAGIC_SOP)
+				)
 			).Elif(RegWriteReq,
 				NextState("RW0"),
 				ulpi_data_next.eq(0x80 | ulpi_reg.waddr), # REGW
@@ -88,6 +115,9 @@ class ULPI(Module):
 				ulpi_state_rx.eq(1),
 				ulpi_data_tristate_next.eq(1)
 			).Else( # TA back to idle
+				# Stuff an EOP on return to idle
+				ulpi_rx_stuff.eq(1),
+				ulpi_rx_stuff_d.eq(RXCMD_MAGIC_EOP),
 				ulpi_data_tristate_next.eq(0), 
 				NextState("IDLE")
 			))
