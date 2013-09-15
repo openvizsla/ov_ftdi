@@ -221,8 +221,11 @@ SMSC_334x_MAP = {
 INCOMPLETE = -1
 UNMATCHED = 0
 class baseService:
+    def matchMagic(self, byt):
+        return byt == self.MAGIC
+
     def presentBytes(self, b):
-        if b[0] != self.MAGIC:
+        if not self.matchMagic(b[0]):
             return UNMATCHED
 
         if len(b) < self.NEEDED_FOR_SIZE:
@@ -335,6 +338,90 @@ class LFSRTest:
     def stats(self):
         return LFSRTest.__stats(total=self.service.total, error=self.service.error)
 
+def hd(x):
+    return " ".join("%02x" % i for i in x)
+
+class RXCSniff:
+    class __RXCSniffService(baseService):
+        NEEDED_FOR_SIZE = 1
+        def __init__(self):
+            self.last_rxcmd = 0
+
+            self.usbbuf = []
+
+        def matchMagic(self, byt):
+            return byt == 0xAC or byt == 0xAD
+
+        def getPacketSize(self, buf):
+            return 2
+
+        def consume(self, buf):
+            if buf[0] == 0xAC:
+                cmd = buf[1]
+                if self.last_rxcmd != cmd:
+                    #print("RXCMD: %02x" % cmd)
+                    if cmd & 0x10 == 1 or cmd == 0x40:
+                        assert not self.usbbuf
+
+                    elif (cmd & 0x10 == 0 or cmd == 0x41) and self.usbbuf:
+                        #print("\t%s" %  " ".join("%02x" % i for i in self.usbbuf))
+                        self.handle_usb(self.usbbuf)
+                        self.usbbuf = []
+
+                    self.last_rxcmd = cmd
+            else:
+                #print("USB: %02x" % buf[1])
+                self.usbbuf.append(buf[1])
+
+        def handle_usb(self, buf):
+            pid = buf[0] & 0xF
+            if (buf[0] >> 4) ^ 0xF != pid:
+                print("Err - bad PID of %02x" % pid)
+                return
+            
+            if pid == 0x5:
+                frameno = buf[1] | (buf[2] << 8) & 0x7
+                #print("Frame %d" % frameno)
+            elif pid == 0x3:
+                print ("DATA0: %s" % hd(buf[1:]))
+            elif pid == 0xB:
+                print ("DATA1: %s" % hd(buf[1:]))
+            elif pid == 0x7:
+                print ("DATA2: %s" % hd(buf[1:]))
+            elif pid == 0xF:
+                print ("MDATA: %s" % hd(buf[1:]))
+            elif pid in [0x01, 0x09, 0x0D]:
+                addr = buf[1] & 0x7F
+                endp = (buf[2] & 0x7) << 1 | buf[1] >> 7
+                if pid == 1:
+                    name = "OUT"
+                elif pid == 9:
+                    name = "IN"
+                elif pid == 0xD:
+                    name = "SETUP"
+
+                print("%-5s: %d.%d" % (name, addr, endp))
+            elif pid == 2:
+                print("ACK")
+            elif pid == 0xA:
+                print("NAK")
+            elif pid == 0xE:
+                print("STALL")
+            elif pid == 0x6:
+                print("NYET")
+            elif pid == 0xC:
+                print("PRE-ERR")
+                pass
+            elif pid == 0x8:
+                print("SPLIT")
+                pass
+            elif pid == 0x4:
+                print("PING")
+                pass
+
+    def __init__(self):
+        self.service = RXCSniff.__RXCSniffService()
+
 class OVDevice:
     def __init__(self, mapfile=None, verbose=False):
         self.__is_open = False
@@ -357,8 +444,9 @@ class OVDevice:
 
         self.io = IO()
         self.lfsrtest = LFSRTest()
+        self.rxcsniff = RXCSniff()
 
-        self.__services = [self.io.service, self.lfsrtest.service]
+        self.__services = [self.io.service, self.lfsrtest.service, self.rxcsniff.service]
 
         # Inject a write function to the services
         for service in self.__services:

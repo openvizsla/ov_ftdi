@@ -110,6 +110,26 @@ def report(dev):
         else:
             print("\tUnknown PHY - skipping phy tests")
 
+@command('sniff')
+def sniff(dev):
+    # LEDs off
+    dev.regs.LEDS_MUX_2.wr(0)
+    dev.regs.LEDS_OUT.wr(0)
+
+    # LEDS 0/1 to FTDI TX/RX
+    dev.regs.LEDS_MUX_0.wr(2)
+    dev.regs.LEDS_MUX_1.wr(2)
+
+
+    try:
+        dev.regs.CSTREAM_CFG.wr(1)
+        while 1:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        dev.regs.CSTREAM_CFG.wr(0)
+
 @command('ioread', ('addr', str))
 def ioread(dev, addr):
     print("%s: %02x" % (addr, dev.ioread(addr)))
