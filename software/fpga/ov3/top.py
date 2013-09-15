@@ -2,11 +2,15 @@
 
 from migen.fhdl.std import *
 from migen.genlib.cdc import NoRetiming, MultiReg
-from migen.genlib.record import Record
+from migen.genlib.fifo import AsyncFIFO
+from migen.genlib.fsm import FSM, NextState
+from migen.genlib.record import Record, DIR_M_TO_S
 from migen.flow.network import DataFlowGraph, CompositeActor
-from migen.flow.actor import Source
+from migen.flow.actor import Source, Sink
+import migen.actorlib.fifo as al_fifo
 from migen.bus.csr import Interconnect
 from migen.bank.csrgen import BankArray
+from migen.bank.description import AutoCSR, CSRStorage, CSRStatus
 
 import ov3, clocking
 from sdram import SDRAMFIFO
@@ -17,6 +21,9 @@ from buttons import BTN_status
 from cmdproc import CmdProc
 from ftdi_bus import FTDI_sync245
 from ftdi_lfsr_test import FTDI_randtest
+from ulpicfg import ULPICfg
+from rxcstream import RXCStream
+from cfilt import RXCmdFilter
 
 plat = ov3.Platform()
 
@@ -88,14 +95,14 @@ class OV3(Module):
         
         ulpi_bus = Record(ULPI_BUS)
         ulpi_reg = Record(ULPI_REG)
-        ulpi_data = Record(ULPI_DATA)
 
         self.clock_domains.cd_ulpi = ClockDomain()
 
         cd_rst = Signal()
         self.cd_ulpi.clk = ulpi_bus.clk
         self.cd_ulpi.rst = cd_rst
-        
+
+        # TODO - integrate all below into ULPI module
         ulpi_pins = plat.request("ulpi")
         
         stp_ovr = Signal(1)
@@ -112,14 +119,24 @@ class OV3(Module):
         self.comb += dq.oe.eq(ulpi_bus.doe)
         
         self.submodules.ulpi = RenameClockDomains(
-          ULPI(ulpi_bus, ulpi_reg, ulpi_data),
+          ULPI(ulpi_bus, ulpi_reg),
           {"sys": "ulpi"}
         )
         
-        from ulpicfg import ULPICfg
-        self.submodules.ucfg = ULPICfg(self.cd_ulpi.clk, cd_rst, ulpi_bus.rst, stp_ovr, ulpi_reg);
+        self.submodules.ucfg = ULPICfg(self.cd_ulpi.clk, cd_rst, ulpi_bus.rst, stp_ovr, ulpi_reg)
 
-       
+
+        # Receive Path
+        self.submodules.udata_fifo = RenameClockDomains(al_fifo.AsyncFIFO(ULPI_DATA, 1024),
+                {"write":"ulpi", "read":"sys"})
+
+        self.submodules.cfilt = RXCmdFilter()
+        self.submodules.cstream = RXCStream()
+        self.comb += [
+                self.udata_fifo.sink.connect(self.ulpi.data_out_source),
+                self.cfilt.sink.connect(self.udata_fifo.source),
+                self.cstream.sink.connect(self.cfilt.source)
+                ]
 
         # GPIOs (leds/buttons)
         leds_v = Signal(3)
@@ -136,7 +153,7 @@ class OV3(Module):
         # FTDI Command processor
         self.submodules.randtest = FTDI_randtest()
         self.submodules.cmdproc = CmdProc(self.ftdi_bus, 
-                [self.randtest])
+                [self.randtest, self.cstream])
 
 
         # Bind all device CSRs
@@ -145,6 +162,7 @@ class OV3(Module):
                 'buttons' : 1,
                 'ucfg' : 2,
                 'randtest' : 3,
+                'cstream' : 4,
                 }
 
         self.submodules.csrbankarray = BankArray(self,

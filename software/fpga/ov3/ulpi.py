@@ -3,12 +3,13 @@ from migen.fhdl import verilog
 from migen.sim.generic import Simulator, TopLevel
 from migen.genlib.fsm import FSM, NextState
 from migen.genlib.record import *
-
+from migen.flow.actor import Source
 from constants import *
 
 class ULPI(Module):
-	def __init__(self, ulpi, ulpi_reg, dataout):
+	def __init__(self, ulpi, ulpi_reg):
 		
+
 		ulpi_data_out = Signal(8)
 		ulpi_data_tristate = Signal()
 		
@@ -19,6 +20,8 @@ class ULPI(Module):
 		ulpi_state_rx = Signal()
 		ulpi_state_rrd = Signal()
 		
+		self.data_out_source = Source(ULPI_DATA)
+
 		RegWriteReqR = Signal()
 		RegReadReqR = Signal()
 		RegWriteReq = Signal()
@@ -62,17 +65,17 @@ class ULPI(Module):
 		ulpi_rx_stuff   = Signal()
 		ulpi_rx_stuff_d = Signal(8)
 
-		self.sync += dataout.wen.eq(ulpi_state_rx & ulpi.dir | ulpi_rx_stuff)
+		self.sync += self.data_out_source.stb.eq(ulpi_state_rx & ulpi.dir | ulpi_rx_stuff)
 		self.sync += If(ulpi_rx_stuff, 
-						dataout.d.eq(ulpi_rx_stuff_d),
-						dataout.rxcmd.eq(1)
+						self.data_out_source.payload.d.eq(ulpi_rx_stuff_d),
+						self.data_out_source.payload.rxcmd.eq(1)
 					 ).Else(
 						If(~ulpi.nxt,
-							dataout.d.eq(ulpi.di & RXCMD_MASK),
-							dataout.rxcmd.eq(1)
+							self.data_out_source.payload.d.eq(ulpi.di & RXCMD_MASK),
+							self.data_out_source.payload.rxcmd.eq(1)
 						).Else(
-							dataout.d.eq(ulpi.di),
-							dataout.rxcmd.eq(0)
+							self.data_out_source.payload.d.eq(ulpi.di),
+							self.data_out_source.payload.rxcmd.eq(0)
 						)
 					 )
 		# capture register reads at the end of RRD
@@ -239,7 +242,6 @@ ULPI_REG = [
 ULPI_DATA = [
 	("d", 8, DIR_M_TO_S),
 	("rxcmd", 1, DIR_M_TO_S),
-	("wen", 1, DIR_M_TO_S)
 ]
 
 class FakeULPI(Module):
@@ -461,7 +463,6 @@ class TestULPI(Module):
 		self.use_regtest = use_regtest
 
 		ulpi_reg = Record(ULPI_REG)
-		ulpi_data = Record(ULPI_DATA)
 		
 		Counter = Signal(8)
 		self.sync += Counter.eq(Counter + 1)
@@ -474,7 +475,7 @@ class TestULPI(Module):
 		self.comb += ulpi_bus_master.connect(ulpi_bus_slave)
 
 		self.submodules.ulpi = RenameClockDomains(
-			ULPI(ulpi_bus_master, ulpi_reg, ulpi_data),
+			ULPI(ulpi_bus_master, ulpi_reg),
 			{"sys": "ulpi"}
 		)
 		
@@ -496,7 +497,6 @@ class TestULPI(Module):
 		self.comb += ulpi_bus_slave.clk.eq(clock.clk)
 		self.comb += ulpi_bus_master.rst.eq(clock.rst)
 		
-		self.ulpi_data = ulpi_data
 		self.ulpi_reg = ulpi_reg
 
 	def do_simulation(self, s):
@@ -535,8 +535,8 @@ class TestULPI(Module):
 			print("%06d TestULPI REGW [%02x] = %02x" % (s.cycle_counter, s.rd(self.ulpi_reg.waddr), s.rd(self.ulpi_reg.wdata)))
 			s.wr(self.ulpi_reg.wreq, 0)
 
-		if s.rd(self.ulpi_data.wen):
-			print("%06d TestULPI [%02x] RXCMD=%d" % (s.cycle_counter, s.rd(self.ulpi_data.d), s.rd(self.ulpi_data.rxcmd)))
+		if s.rd(self.ulpi.data_out_source.stb):
+			print("%06d TestULPI [%02x] RXCMD=%d" % (s.cycle_counter, s.rd(self.ulpi.data_out_source.payload.d), s.rd(self.ulpi.data_out_source.payload.rxcmd)))
 
 	do_simulation.initialize = True
 
