@@ -230,11 +230,14 @@ class baseService:
     def matchMagic(self, byt):
         return byt == self.MAGIC
 
+    def getNeededSizeForMagic(self, byt):
+        return self.NEEDED_FOR_SIZE
+
     def presentBytes(self, b):
         if not self.matchMagic(b[0]):
             return UNMATCHED
 
-        if len(b) < self.NEEDED_FOR_SIZE:
+        if len(b) < self.getNeededSizeForMagic(b[0]):
             return INCOMPLETE
 
         size = self.getPacketSize(b)
@@ -349,64 +352,126 @@ def hd(x):
 
 class RXCSniff:
     class __RXCSniffService(baseService):
-        NEEDED_FOR_SIZE = 1
+        import crcmod
+        data_crc = staticmethod(crcmod.mkCrcFun(0x18005))
+
+        def getNeededSizeForMagic(self, b):
+            if b == 0xA0:
+                return 5
+            return 1
+
         def __init__(self):
             self.last_rxcmd = 0
 
             self.usbbuf = []
 
+            self.frameno = None
+            self.subframe = 0
+
         def matchMagic(self, byt):
-            return byt == 0xAC or byt == 0xAD
+            return byt == 0xAC or byt == 0xAD or byt == 0xA0
 
         def getPacketSize(self, buf):
-            return 2
+            if buf[0] != 0xA0:
+                return 2
+            else:
+                #print("SIZING: %s" % " ".join("%02x" %i for i in buf))
+                return (buf[4] << 8 | buf[3]) + 8
+
 
         def consume(self, buf):
             if buf[0] == 0xAC:
                 cmd = buf[1]
-                if self.last_rxcmd != cmd:
-                    #print("RXCMD: %02x" % cmd)
-                    if cmd & 0x10 == 1 or cmd == 0x40:
-                        assert not self.usbbuf
+                #print("RXCMD: %02x" % cmd)
+                if cmd == 0x40:
+                    assert not self.usbbuf
 
-                    elif (cmd & 0x10 == 0 or cmd == 0x41) and self.usbbuf:
-                        #print("\t%s" %  " ".join("%02x" % i for i in self.usbbuf))
-                        self.handle_usb(self.usbbuf)
-                        self.usbbuf = []
+                elif (cmd == 0x41) and self.usbbuf:
+                    #print("\t%s" %  " ".join("%02x" % i for i in self.usbbuf))
+                    self.handle_usb(self.usbbuf)
+                    self.usbbuf = []
 
-                    self.last_rxcmd = cmd
-            else:
+            elif buf[0] == 0xAD:
                 #print("USB: %02x" % buf[1])
                 self.usbbuf.append(buf[1])
+            elif buf[0] == 0xA0:
+                #print("PKT: %s" % " ".join("%02x" % i for i in buf))
+                #self.usbbuf = buf[8:]
+                flags = buf[1] | buf[2] << 8
 
-        def handle_usb(self, buf):
+                if flags != 0:
+                    print("PERR: %02X" % flags)
+                    #if flags & 0x2:
+                        #self.frameno = None
+                        #self.subframe = None
+                self.handle_usb(buf[8:], flags)
+
+        def handle_usb(self, buf, flags):
+            if len(buf) == 0:
+                return
+
             pid = buf[0] & 0xF
             if (buf[0] >> 4) ^ 0xF != pid:
                 print("Err - bad PID of %02x" % pid)
                 return
             
             if pid == 0x5:
-                frameno = buf[1] | (buf[2] << 8) & 0x7
-                #print("Frame %d" % frameno)
-            elif pid == 0x3:
-                print ("DATA0: %s" % hd(buf[1:]))
-            elif pid == 0xB:
-                print ("DATA1: %s" % hd(buf[1:]))
-            elif pid == 0x7:
-                print ("DATA2: %s" % hd(buf[1:]))
+                if len(buf) < 3:
+                    print("RUNT frame")
+                else:
+                    frameno = buf[1] | (buf[2] << 8) & 0x7
+                    if self.frameno == None:
+                        self.frameno = frameno
+                        self.subframe = None
+                    else:
+                        if self.subframe == None:
+                            if frameno == (self.frameno + 1) & 0xFF:
+                                self.subframe = 0
+                                self.frameno = frameno
+                        else:
+                            self.subframe += 1
+                            if self.subframe == 8:
+                                if frameno == (self.frameno + 1)&0xFF:
+                                    self.subframe = 0
+                                    self.frameno = frameno
+                                else:
+                                    print("WTF Subframe %d" % self.frameno)
+                                    self.subframe = None
+                                    self.frameno = frameno
+                            elif self.frameno != frameno:
+                                print("WTF frameno %d" % self.frameno)
+                                self.frameno = frameno
+                                self.subframe = None
+                    
+                    #print("Frame %d.%c" % (frameno, '?' if self.subframe == None else "%d" % self.subframe))
+            elif pid in [0x3, 0xB, 0x7]:
+                n = {3:0, 0xB:1, 0x7:2}[pid]
+
+                print ("DATA%d: %s" % (n,hd(buf[1:])))
+
+                calc_check = self.data_crc(buf[1:-2])^0xFFFF 
+                pkt_check = buf[-2] | buf[-1] << 8
+
+                if calc_check != pkt_check and not (flags & 0x2):
+                    print("\tUnexpected ERR CRC")
+
             elif pid == 0xF:
                 print ("MDATA: %s" % hd(buf[1:]))
             elif pid in [0x01, 0x09, 0x0D]:
-                addr = buf[1] & 0x7F
-                endp = (buf[2] & 0x7) << 1 | buf[1] >> 7
                 if pid == 1:
                     name = "OUT"
                 elif pid == 9:
                     name = "IN"
                 elif pid == 0xD:
                     name = "SETUP"
+                if len(buf) < 3:
+                    print("RUNT: %s %s" % (name, " ".join("%02x" % i for i in buf)))
+                else:
 
-                print("%-5s: %d.%d" % (name, addr, endp))
+                    addr = buf[1] & 0x7F
+                    endp = (buf[2] & 0x7) << 1 | buf[1] >> 7
+
+                    print("%-5s: %d.%d" % (name, addr, endp))
             elif pid == 2:
                 print("ACK")
             elif pid == 0xA:
@@ -424,6 +489,8 @@ class RXCSniff:
             elif pid == 0x4:
                 print("PING")
                 pass
+            else:
+                print("WUT")
 
     def __init__(self):
         self.service = RXCSniff.__RXCSniffService()
