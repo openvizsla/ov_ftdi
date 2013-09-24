@@ -17,7 +17,8 @@ from sdram import SDRAMFIFO
 from ulpi import ULPI, ULPI_BUS, ULPI_REG, ULPI_DATA
 from leds import LED_outputs
 from buttons import BTN_status
-
+from whacker.whacker import Whacker
+from ovf_insert import OverflowInserter
 from cmdproc import CmdProc
 from ftdi_bus import FTDI_sync245
 from ftdi_lfsr_test import FTDI_randtest
@@ -127,13 +128,18 @@ class OV3(Module):
 
 
         # Receive Path
+        self.submodules.ovf_insert = RenameClockDomains(OverflowInserter(),
+                {"sys": "ulpi"})
+
         self.submodules.udata_fifo = RenameClockDomains(al_fifo.AsyncFIFO(ULPI_DATA, 1024),
                 {"write":"ulpi", "read":"sys"})
 
+
         self.submodules.cfilt = RXCmdFilter()
-        self.submodules.cstream = RXCStream()
+        self.submodules.cstream = Whacker(1024)
         self.comb += [
-                self.udata_fifo.sink.connect(self.ulpi.data_out_source),
+                self.ovf_insert.sink.connect(self.ulpi.data_out_source),
+                self.udata_fifo.sink.connect(self.ovf_insert.source),
                 self.cfilt.sink.connect(self.udata_fifo.source),
                 self.cstream.sink.connect(self.cfilt.source)
                 ]

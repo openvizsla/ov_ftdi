@@ -4,6 +4,8 @@ from migen.genlib.record import Record, DIR_M_TO_S
 from migen.flow.actor import Source, Sink
 from migen.bank.description import AutoCSR, CSRStorage, CSRStatus
 
+from constants import *
+
 ULPI_DATA_D = [("d", 8, DIR_M_TO_S), ("rxcmd", 1, DIR_M_TO_S)]
 
 class RXCmdFilter(Module):
@@ -15,14 +17,16 @@ class RXCmdFilter(Module):
 
         is_sop = Signal()
         is_eop = Signal()
+        is_ovf = Signal()
         is_active = Signal()
         is_nactive = Signal()
         is_error = Signal()
 
 
         self.comb += [
-                is_sop.eq(self.sink.payload.rxcmd & (self.sink.payload.d == 0x40)),
-                is_eop.eq(self.sink.payload.rxcmd & (self.sink.payload.d == 0x41)),
+                is_sop.eq(self.sink.payload.rxcmd & (self.sink.payload.d == RXCMD_MAGIC_SOP)),
+                is_eop.eq(self.sink.payload.rxcmd & (self.sink.payload.d == RXCMD_MAGIC_EOP)),
+                is_ovf.eq(self.sink.payload.rxcmd & (self.sink.payload.d == RXCMD_MAGIC_OVF)),
 
                 is_active.eq(self.sink.payload.rxcmd & 
                     ~self.sink.payload.d[6] & 
@@ -75,9 +79,11 @@ class RXCmdFilter(Module):
 
         act("PACKET",
             If(is_eop | is_nactive,
-                send("NO_PACKET", 1, 0x41)
+                send("NO_PACKET", 1, RXCMD_MAGIC_EOP)
             ).Elif(is_error,
-                send("NO_PACKET", 1, 0x42)
+                send("NO_PACKET", 1, RXCMD_MAGIC_EOP_ERR)
+            ).Elif(is_ovf,
+                send("NO_PACKET", 1, RXCMD_MAGIC_OVF)
             ).Else(
                 skip("PACKET")
             ))
