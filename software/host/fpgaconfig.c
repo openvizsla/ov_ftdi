@@ -281,6 +281,52 @@ ConfigEnd(FTDIDevice *dev)
   }
 }
 
+int FPGA_GetConfigStatus(FTDIDevice * dev)
+{
+  uint8_t byte;
+  int err;
+
+  /*
+   * Initialize the FTDI chip using bit-bang and MPSSE mode.
+   * Interface A is a byte-wide parallel port for config data, and
+   * interface B is GPIO for the control signals.
+   */
+
+  err = FTDIDevice_SetMode(dev, FTDI_INTERFACE_A,
+			   FTDI_BITMODE_BITBANG, 0xFF,
+			   CONFIG_BIT_RATE);
+  if (err)
+    return err;
+
+  
+  /* Enable MPSSE mode */
+
+  err = FTDIDevice_MPSSE_Enable(dev, FTDI_INTERFACE_B); 
+  if (err)
+    return err;
+
+  // Set GPIOH pin state / direction
+  err = FTDIDevice_MPSSE_SetHighByte(dev, FTDI_INTERFACE_B, 
+    0,
+    0);
+  if (err)
+    return err;
+
+  err = FTDIDevice_MPSSE_GetHighByte(dev, FTDI_INTERFACE_B, &byte);
+
+  if (err)
+    return err;
+
+  if (!(byte & PORTB_INIT_BIT)) {
+    return -1;
+  }
+
+  if (byte & PORTB_DONE_BIT) {
+    return 0;
+  } else {
+    return -1;
+  }
+}
 
 int
 FPGAConfig_LoadFile(FTDIDevice *dev, const char *filename)

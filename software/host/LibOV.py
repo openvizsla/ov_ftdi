@@ -113,6 +113,12 @@ class FTDIDevice:
         
 
 
+_FPGA_GetConfigStatus = libov.FPGA_GetConfigStatus
+_FPGA_GetConfigStatus.restype = ctypes.c_int
+_FPGA_GetConfigStatus.argtypes = [pFTDI_Device]
+
+def FPGA_GetConfigStatus(dev):
+    return _FPGA_GetConfigStatus(dev._dev)
 
 _HW_Init = libov.HW_Init
 _HW_Init.argtypes = [pFTDI_Device, ctypes.c_char_p]
@@ -458,10 +464,6 @@ class OVDevice:
 
             service.write = write
     
-        self.commthread = threading.Thread(target=self.__comms, daemon=True)
-        self.__comm_term = False
-        self.__comm_exc = None
-    
     def __comms(self):
         self.__buf = b""
 
@@ -553,6 +555,10 @@ class OVDevice:
         if self.__is_open:
             self.close()
 
+    def isLoaded(self):
+        assert self.__is_open
+        return self.loaded
+
     def open(self, bitstream=None):
         if self.__is_open:
             raise ValueError("OVDevice doubly opened")
@@ -577,17 +583,30 @@ class OVDevice:
                 bitfile.close()
 
                 HW_Init(self.dev, bitfile.name.encode('ascii'))
+                self.loaded = True
            
             finally:
                 # Make sure we cleanup the tempfile
                 os.unlink(bitfile.name)
 
         elif isinstance(bitstream, bytes) or bitstream == None:
+            pre_load = FPGA_GetConfigStatus(self.dev) == 0
+
             HW_Init(self.dev, bitstream)
+            
+            if bitstream:
+                self.loaded = True
+            else:
+                self.loaded = pre_load
 
         else:
             raise TypeError("bitstream must be bytes or file-like")
         
+    
+        self.commthread = threading.Thread(target=self.__comms, daemon=True)
+        self.__comm_term = False
+        self.__comm_exc = None
+
         self.commthread.start()
 
         self.__comm_term = False

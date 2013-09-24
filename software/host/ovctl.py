@@ -209,6 +209,12 @@ def main():
 
     err = dev.open(bitstream=args.pkg.open('ov3.bit', 'r') if args.load else None)
 
+    if not dev.isLoaded():
+        print("FPGA not loaded, forcing reload")
+        dev.close()
+
+        err = dev.open(bitstream=args.pkg.open('ov3.bit','r'))
+
     if err:
         print("USB: Error opening device\n")
         return 1
