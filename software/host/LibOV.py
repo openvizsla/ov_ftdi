@@ -1,6 +1,7 @@
 import ctypes
 import re
 import os
+import sys
 import queue
 import threading
 import collections
@@ -8,7 +9,13 @@ import collections
 _lpath = (os.path.dirname(__file__))
 if _lpath == '':
     _lpath = '.'
-libov =  ctypes.cdll.LoadLibrary(_lpath + "/libov.so")
+
+if sys.platform == 'darwin':
+    _lib_suffix = 'dylib'
+else:
+    _lib_suffix = 'so'
+
+libov = ctypes.cdll.LoadLibrary(_lpath + "/libov." + _lib_suffix)
 
 class FTDI_Device(ctypes.Structure):
     _fields_ = [
