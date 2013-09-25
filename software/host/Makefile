@@ -11,7 +11,7 @@ ifeq ($(UNAME), Darwin)
 	CFLAGS += -DFILE_OFFSET_BITS=64
 
 	SO := $(LIBNAME).dylib
-	SO_LDFLAGS = -dynamiclib -lusb
+	SO_LDFLAGS = -dynamiclib -lusb-1.0
 
 else
         # Load libusb via pkg-config
