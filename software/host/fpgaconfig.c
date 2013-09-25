@@ -285,7 +285,6 @@ int FPGA_GetConfigStatus(FTDIDevice * dev)
 {
   uint8_t byte;
   int err;
-
   /*
    * Initialize the FTDI chip using bit-bang and MPSSE mode.
    * Interface A is a byte-wide parallel port for config data, and
@@ -295,27 +294,36 @@ int FPGA_GetConfigStatus(FTDIDevice * dev)
   err = FTDIDevice_SetMode(dev, FTDI_INTERFACE_A,
 			   FTDI_BITMODE_BITBANG, 0xFF,
 			   CONFIG_BIT_RATE);
-  if (err)
+  if (err) {
+    fprintf(stderr, "FPGA: GetConfigStatus SetMode (%s)\n", libusb_error_name(err));
     return err;
+  }
 
   
   /* Enable MPSSE mode */
 
   err = FTDIDevice_MPSSE_Enable(dev, FTDI_INTERFACE_B); 
-  if (err)
+  if (err) {
+    fprintf(stderr, "FPGA: GetConfigStatus MPSSE_Enable (%s)\n", libusb_error_name(err));
     return err;
+  }
 
   // Set GPIOH pin state / direction
   err = FTDIDevice_MPSSE_SetHighByte(dev, FTDI_INTERFACE_B, 
     0,
     0);
-  if (err)
+  if (err) {
+    fprintf(stderr, "FPGA: GetConfigStatus FTDIDevice_MPSSE_SetHighByte (%s)\n", libusb_error_name(err));
     return err;
+  }
 
-  err = FTDIDevice_MPSSE_GetHighByte(dev, FTDI_INTERFACE_B, &byte);
-
-  if (err)
-    return err;
+  do {
+    err = FTDIDevice_MPSSE_GetHighByte(dev, FTDI_INTERFACE_B, &byte);
+    if (err && err != LIBUSB_ERROR_IO) {
+      fprintf(stderr, "FPGA: GetConfigStatus MPSSE_GetHighByte (%s)\n", libusb_error_name(err));
+      return err;
+    }
+  } while (err == LIBUSB_ERROR_IO);
 
   if (!(byte & PORTB_INIT_BIT)) {
     return -1;
