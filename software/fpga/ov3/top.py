@@ -23,7 +23,6 @@ from cmdproc import CmdProc
 from ftdi_bus import FTDI_sync245
 from ftdi_lfsr_test import FTDI_randtest
 from ulpicfg import ULPICfg
-from rxcstream import RXCStream
 from cfilt import RXCmdFilter
 
 plat = ov3.Platform()
