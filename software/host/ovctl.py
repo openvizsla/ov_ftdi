@@ -110,8 +110,8 @@ def report(dev):
         else:
             print("\tUnknown PHY - skipping phy tests")
 
-@command('sniff')
-def sniff(dev):
+@command('sniff', ('speed', str), ('format', str))
+def sniff(dev, speed, format):
     # LEDs off
     dev.regs.LEDS_MUX_2.wr(0)
     dev.regs.LEDS_OUT.wr(0)
@@ -120,6 +120,27 @@ def sniff(dev):
     dev.regs.LEDS_MUX_0.wr(2)
     dev.regs.LEDS_MUX_1.wr(2)
 
+    assert speed in ["hs", "fs"]
+
+    if check_ulpi_clk(dev):
+        return
+
+    # set to non-drive, FS/HS
+    if speed == "hs":
+		    dev.ulpiregs.func_ctl.wr(0x48)
+		    dev.rxcsniff.service.highspeed = True
+    elif speed == "fs":
+		    dev.ulpiregs.func_ctl.wr(0x49)
+		    dev.rxcsniff.service.highspeed = False
+
+    assert format in ["verbose", "custom"]
+
+    # experimental custom support:
+    if format == "custom":
+        def dump_custom(pkt, flags):
+            pkthex = " ".join("%02x" % x for x in pkt)
+            print("data=%s speed=%s" % (pkthex, speed.upper()))
+        dev.rxcsniff.service.handlers = [dump_custom]
 
     try:
         dev.regs.CSTREAM_CFG.wr(1)

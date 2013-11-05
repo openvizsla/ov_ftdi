@@ -377,6 +377,9 @@ class RXCSniff:
 
             self.frameno = None
             self.subframe = 0
+            self.highspeed = False
+
+            self.handlers = [self.handle_usb_verbose]
 
         def matchMagic(self, byt):
             return byt == 0xAC or byt == 0xAD or byt == 0xA0
@@ -417,6 +420,10 @@ class RXCSniff:
                 self.handle_usb(buf[8:], flags)
 
         def handle_usb(self, buf, flags):
+            for handler in self.handlers:
+                handler(buf, flags)
+
+        def handle_usb_verbose(self, buf, flags):
             if len(buf) == 0:
                 return
 
@@ -436,7 +443,7 @@ class RXCSniff:
                     else:
                         if self.subframe == None:
                             if frameno == (self.frameno + 1) & 0xFF:
-                                self.subframe = 0
+                                self.subframe = 0 if self.highspeed else None
                                 self.frameno = frameno
                         else:
                             self.subframe += 1
