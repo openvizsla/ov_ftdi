@@ -74,9 +74,7 @@ class FTDIDevice:
         self._dev = FTDI_Device()
 
     def __del__(self):
-        if self.__is_open:
-            self.__is_open = False
-            FTDIDevice_Close(self._dev)
+        self.close()
 
     def open(self):
         err = FTDIDevice_Open(self._dev)
@@ -84,6 +82,11 @@ class FTDIDevice:
             self.__is_open = True
 
         return err
+
+    def close(self):
+        if self.__is_open:
+            self.__is_open = False
+            FTDIDevice_Close(self._dev)
 
     def write(self, intf, buf, async=False):
         if not isinstance(buf, bytes):
@@ -692,6 +695,8 @@ class OVDevice:
 
         self.__comm_term = True
         self.commthread.join()
+
+        self.dev.close()
 
         self.__is_open = False
 

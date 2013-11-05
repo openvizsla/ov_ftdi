@@ -66,6 +66,19 @@ DeviceInit(FTDIDevice *dev)
   return 0;
 }
 
+static int
+DeviceRelease(FTDIDevice *dev)
+{
+  int interface, err;
+
+  for (interface = 0; interface < 2; interface++) {
+    if ((err = libusb_release_interface(dev->handle, interface))) {
+      perror("Error releasing interface");
+      return err;
+    }
+  }
+  return 0;
+}
 
 int
 FTDIDevice_Open(FTDIDevice *dev)
@@ -101,6 +114,7 @@ FTDIDevice_Open(FTDIDevice *dev)
 void
 FTDIDevice_Close(FTDIDevice *dev)
 {
+  DeviceRelease(dev);
   libusb_close(dev->handle);
   libusb_exit(dev->libusb);
 }
@@ -110,8 +124,13 @@ int
 FTDIDevice_Reset(FTDIDevice *dev)
 {
   int err;
+  int interface;
 
   err = libusb_reset_device(dev->handle);
+
+  if (!err)
+    err = DeviceRelease(dev);
+
   if (err)
     return err;
 
