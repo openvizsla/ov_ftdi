@@ -33,12 +33,17 @@ def command(_name, *_args):
 
             @staticmethod
             def setup_args(sp):
-                for (name, typ) in _args:
-                    sp.add_argument(name, type=typ)
+                for (name, typ, *default) in _args:
+                    if len(default):
+                            name = "--" + name
+                            default = default[0]
+                    else:
+                        default = None
+                    sp.add_argument(name, type=typ, default=default)
 
             @staticmethod
             def go(dev, args):
-                aarray = dict([(i, getattr(args, i)) for (i, _) in _args])
+                aarray = dict([(i, getattr(args, i)) for (i, *_) in _args])
                 todeco(dev, **aarray)
         __cmd_keeper.append(_sub)
         return todeco
@@ -110,7 +115,7 @@ def report(dev):
         else:
             print("\tUnknown PHY - skipping phy tests")
 
-@command('sniff', ('speed', str), ('format', str))
+@command('sniff', ('speed', str), ('format', str, 'verbose'))
 def sniff(dev, speed, format):
     # LEDs off
     dev.regs.LEDS_MUX_2.wr(0)
@@ -127,11 +132,11 @@ def sniff(dev, speed, format):
 
     # set to non-drive, FS/HS
     if speed == "hs":
-		    dev.ulpiregs.func_ctl.wr(0x48)
-		    dev.rxcsniff.service.highspeed = True
+            dev.ulpiregs.func_ctl.wr(0x48)
+            dev.rxcsniff.service.highspeed = True
     elif speed == "fs":
-		    dev.ulpiregs.func_ctl.wr(0x49)
-		    dev.rxcsniff.service.highspeed = False
+            dev.ulpiregs.func_ctl.wr(0x49)
+            dev.rxcsniff.service.highspeed = False
 
     assert format in ["verbose", "custom"]
 
