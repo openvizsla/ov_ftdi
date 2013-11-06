@@ -11,6 +11,7 @@ import zipfile
 
 import sys
 import os
+import struct
 
 def as_ascii(arg):
     if arg == None:
@@ -115,8 +116,29 @@ def report(dev):
         else:
             print("\tUnknown PHY - skipping phy tests")
 
-@command('sniff', ('speed', str), ('format', str, 'verbose'))
-def sniff(dev, speed, format):
+
+class OutputCustom:
+    def __init__(self, output):
+        self.output = output
+
+    def handle_usb(self, pkt, flags):
+        pkthex = " ".join("%02x" % x for x in pkt)
+        self.output.write("data=%s speed=%s\n" % (pkthex, speed.upper()))
+
+
+class OutputPcap:
+    LINK_TYPE = 255 #FIXME
+
+    def __init__(self, output):
+        self.output = output
+        self.output.write(struct.pack("IHHIIII", 0xa1b2c3d4, 2, 4, 0, 0, 1<<20, self.LINK_TYPE))
+
+    def handle_usb(self, pkt, flags):
+        self.output.write(struct.pack("IIIIH", 0, 0, len(pkt) + 2, len(pkt) + 2, flags))
+        self.output.write(pkt)
+
+@command('sniff', ('speed', str), ('format', str, 'verbose'), ('out', str, None))
+def sniff(dev, speed, format, out):
     # LEDs off
     dev.regs.LEDS_MUX_2.wr(0)
     dev.regs.LEDS_OUT.wr(0)
@@ -130,7 +152,7 @@ def sniff(dev, speed, format):
     if check_ulpi_clk(dev):
         return
 
-    # set to non-drive, FS/HS
+    # set to non-drive; set FS or HS as requested
     if speed == "hs":
             dev.ulpiregs.func_ctl.wr(0x48)
             dev.rxcsniff.service.highspeed = True
@@ -138,14 +160,19 @@ def sniff(dev, speed, format):
             dev.ulpiregs.func_ctl.wr(0x49)
             dev.rxcsniff.service.highspeed = False
 
-    assert format in ["verbose", "custom"]
+    assert format in ["verbose", "custom", "pcap"]
 
-    # experimental custom support:
+    output_handler = None
+    out = out and open(out, "wb")
+
     if format == "custom":
-        def dump_custom(pkt, flags):
-            pkthex = " ".join("%02x" % x for x in pkt)
-            print("data=%s speed=%s" % (pkthex, speed.upper()))
-        dev.rxcsniff.service.handlers = [dump_custom]
+        output_handler = OutputCustom(out or sys.stdout)
+    elif format == "pcap":
+        assert out, "can't output pcap to stdout, use --out"
+        output_handler = OutputPcap(out)
+
+    if output_handler is not None:
+      dev.rxcsniff.service.handlers = [output_handler.handle_usb]
 
     try:
         dev.regs.CSTREAM_CFG.wr(1)
@@ -156,6 +183,9 @@ def sniff(dev, speed, format):
     finally:
         pass
         dev.regs.CSTREAM_CFG.wr(0)
+
+    if out is not None:
+        out.close()
 
 @command('debug-stream')
 def debug_stream(dev):
@@ -272,7 +302,7 @@ def main():
 
     if args.config_only:
         return
-    
+
     dev.dev.write(LibOV.FTDI_INTERFACE_A, b'\x00' * 512, async=False)
 
     try:
