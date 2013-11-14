@@ -3,15 +3,14 @@ from migen.flow.actor import Source, Sink
 from migen.fhdl.size import bits_for
 from migen.genlib.fsm import FSM, NextState
 
-from ulpi import ULPI_DATA
-from whacker.util import *
-
+from ov_types import ULPI_DATA_TAG
 from constants import *
+from whacker.util import *
 
 class Producer(Module):
 
     def __init__(self, wrport, depth, consume_watermark, ena, la_filters=[]):
-        self.ulpi_sink = Sink(ULPI_DATA)
+        self.ulpi_sink = Sink(ULPI_DATA_TAG)
 
         self.out_addr = Source(dmatpl(depth))
 
@@ -46,6 +45,19 @@ class Producer(Module):
 
         self.comb += has_space.eq(((consume_watermark - self.produce_write.v - 1) & (depth - 1)) > 8)
 
+        # Grab packet timestamp at SOP
+        pkt_timestamp = Signal(flen(self.ulpi_sink.payload.ts))
+        self.sync += If(self.ulpi_sink.payload.is_start & self.ulpi_sink.ack,
+                pkt_timestamp.eq(self.ulpi_sink.payload.ts))
+
+
+        payload_is_rxcmd = Signal()
+        self.comb += payload_is_rxcmd.eq(
+            self.ulpi_sink.payload.is_start | 
+            self.ulpi_sink.payload.is_end | 
+            self.ulpi_sink.payload.is_err |
+            self.ulpi_sink.payload.is_ovf)
+
         # Combine outputs of filters
         la_resets = [f.reset.eq(1) for f in la_filters]
         filter_done = 1
@@ -65,8 +77,8 @@ class Producer(Module):
 
                     la_resets,
 
-                    If(self.ulpi_sink.payload.rxcmd & 
-                        (self.ulpi_sink.payload.d == RXCMD_MAGIC_SOP) | self.to_start.v,
+                    If(self.ulpi_sink.payload.is_start | self.to_start.v,
+                        
                         NextState("WH0")
                     )
                 )
@@ -100,24 +112,25 @@ class Producer(Module):
                     NextState("WRF0")
                 ).Elif(has_space & self.ulpi_sink.stb,
                     self.ulpi_sink.ack.eq(1),
-                    If(self.ulpi_sink.payload.rxcmd,
+                    If(payload_is_rxcmd,
 
                         # Got another start-of-packet
-                        If(self.ulpi_sink.payload.d == RXCMD_MAGIC_SOP,
+                        If(self.ulpi_sink.payload.is_start,
                             self.flags._or(HF0_OVF),
 
                             # If we got a SOP, we need to skip RXCMD det in IDLE
                             self.to_start.set(1)
 
                         # Mark error if we hit an error
-                        ).Elif(self.ulpi_sink.payload.d == RXCMD_MAGIC_EOP_ERR,
+                        ).Elif(self.ulpi_sink.payload.is_err,
                             self.flags._or(HF0_ERR),
 
                         # Mark overflow if we got a stuffed overflow
-                        ).Elif(self.ulpi_sink.payload.d == RXCMD_MAGIC_OVF,
+                        ).Elif(self.ulpi_sink.payload.is_ovf,
                             self.flags._or(HF0_OVF)
                         ),
 
+                        # In any case (including END), we're done RXing
                         NextState("waitdone")
                     ).Else(
                         self.size.inc(),
@@ -145,12 +158,11 @@ class Producer(Module):
 
         # Write size field
         write_hdr("WRSL", "WRSH", 3, self.size.v[:8])
-        write_hdr("WRSH", "pad0", 4, self.size.v[8:16])
+        write_hdr("WRSH", "WRTL", 4, self.size.v[8:16])
 
-
-        write_hdr("pad0", "pad1", 5, 0)
-        write_hdr("pad1", "pad2", 6, 0)
-        write_hdr("pad2", "SEND", 7, 0)
+        write_hdr("WRTL", "WRTM", 5, pkt_timestamp[:8])
+        write_hdr("WRTM", "WRTH", 6, pkt_timestamp[8:16])
+        write_hdr("WRTH", "SEND", 7, pkt_timestamp[16:24])
 
         self.fsm.act("SEND",
             self.out_addr.stb.eq(1),

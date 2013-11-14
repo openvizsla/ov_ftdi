@@ -65,11 +65,11 @@ class ULPI(Module):
 		ulpi_rx_stuff   = Signal()
 		ulpi_rx_stuff_d = Signal(8)
 
-		self.sync += self.data_out_source.stb.eq(ulpi_state_rx & ulpi.dir | ulpi_rx_stuff)
+		self.sync += self.data_out_source.stb.eq(1)
 		self.sync += If(ulpi_rx_stuff, 
 						self.data_out_source.payload.d.eq(ulpi_rx_stuff_d),
 						self.data_out_source.payload.rxcmd.eq(1)
-					 ).Else(
+					 ).Elif(ulpi_state_rx & ulpi.dir,
 						If(~ulpi.nxt,
 							self.data_out_source.payload.d.eq(ulpi.di & RXCMD_MASK),
 							self.data_out_source.payload.rxcmd.eq(1)
@@ -77,7 +77,11 @@ class ULPI(Module):
 							self.data_out_source.payload.d.eq(ulpi.di),
 							self.data_out_source.payload.rxcmd.eq(0)
 						)
-					 )
+					 ).Else(
+                        self.data_out_source.payload.d.eq(RXCMD_MAGIC_NOP),
+                        self.data_out_source.payload.rxcmd.eq(1)
+                    )
+
 		# capture register reads at the end of RRD
 		self.sync += If(ulpi_state_rrd,ulpi_reg.rdata.eq(ulpi.di))
 
