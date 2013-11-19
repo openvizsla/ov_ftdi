@@ -32,7 +32,6 @@ class OV3(Module):
         clk_ref = plat.request("clk50")
         self.submodules.clockgen = clocking.ClockGen(clk_ref)
         self.clock_domains.cd_sys = self.clockgen.cd_sys
-        self.clock_domains.cd_c33 = self.clockgen.cd_c33
 
         led1 = plat.request("led", 1)
         led2 = plat.request("led", 2)
@@ -43,10 +42,6 @@ class OV3(Module):
         ftdi_io = plat.request("ftdi")
         self.submodules.ftdi_bus = ftdi_bus = FTDI_sync245(self.clockgen.cd_sys.rst,
                 ftdi_io)
-
-
-
-
 
         # Synchronize button to sys clock domain (and invert while we're at it)
         btn_sync = Signal()
@@ -63,35 +58,11 @@ class OV3(Module):
                       inbuf=1024, outbuf=1024, burst=512,
                       tRESET=20000, tCL=3, tRP=4, tRFC=12, tRCD=4,
                       tREFI=780),
-            {"read": "sys", "write": "c33"})
+            {"read": "sys", "write": "sys"})
 
-        # Test the SDRAM: write incrementing 16-bit words
-        # Do this at 33MHz
-        word_ctr = Signal(23)
-        self.sync.c33 += If(self.sdram.writable & self.sdram.we,
-                            word_ctr.eq(word_ctr + 1))
-        self.comb += [
-            self.sdram.we.eq(1),
-            self.sdram.din.eq(word_ctr[:16]),
-            #led1.eq(~word_ctr[22])
-        ]
 
-        # Read back what was written and check for errors
-        # Do this at 100MHz (limited by SDRAM timesliced bandwidth)
-        word_ctr2 = Signal(23)
-        valid = Signal(reset=1)
-        self.sync += If(self.sdram.readable & self.sdram.re,
-                        word_ctr2.eq(word_ctr2 + 1),
-                        If(self.sdram.dout != word_ctr2[:16],
-                           valid.eq(0))).Elif(btn_sync,
-                            valid.eq(1))
-        self.comb += [
-            self.sdram.re.eq(~btn_sync),
-            #led2.eq(~word_ctr2[22]),
-            #led3.eq(~valid),
-        ]
-        
         # ULPI
+        # TODO - integrate all below into ULPI module
         
         ulpi_bus = Record(ULPI_BUS)
         ulpi_reg = Record(ULPI_REG)
@@ -102,7 +73,6 @@ class OV3(Module):
         self.cd_ulpi.clk = ulpi_bus.clk
         self.cd_ulpi.rst = cd_rst
 
-        # TODO - integrate all below into ULPI module
         ulpi_pins = plat.request("ulpi")
         
         stp_ovr = Signal(1)
@@ -143,22 +113,41 @@ class OV3(Module):
                 self.cstream.sink.connect(self.cfilt.source)
                 ]
 
+        # cstream to sdram buffer
+        self.comb += [
+            self.sdram.we.eq(self.cstream.source.stb),
+            self.sdram.din.eq(self.cstream.source.payload.raw_bits()),
+            self.cstream.source.ack.eq(self.sdram.writable)
+            ]
+
+        class DummyStreamSource(Module):
+            def __init__(self):
+                self.source = Source([("d", 8), ("last", 1)])
+
+        self.submodules.sdram_adaptor = DummyStreamSource()
+
+        self.comb += [
+            self.sdram_adaptor.source.stb.eq(self.sdram.readable),
+            self.sdram.re.eq(self.sdram_adaptor.source.ack),
+            self.sdram_adaptor.source.payload.raw_bits().eq(self.sdram.dout)
+            ]
+
         # GPIOs (leds/buttons)
         leds_v = Signal(3)
         self.comb += Cat(led1, led2, led3).eq(~leds_v)
 
         self.submodules.leds = LED_outputs(leds_v,
                 [
-                    [word_ctr[22], self.ftdi_bus.tx_ind],
-                    [word_ctr2[22], self.ftdi_bus.rx_ind],
-                    [valid]
+                    [0, self.ftdi_bus.tx_ind],
+                    [0, self.ftdi_bus.rx_ind],
+                    []
                 ])
         self.submodules.buttons = BTN_status(~btn)
         
         # FTDI Command processor
         self.submodules.randtest = FTDI_randtest()
         self.submodules.cmdproc = CmdProc(self.ftdi_bus, 
-                [self.randtest, self.cstream])
+                [self.randtest, self.sdram_adaptor])
 
 
         # Bind all device CSRs
