@@ -74,16 +74,18 @@ class SDRAMFIFO(Module):
         ba = Signal(bankbits)
         a = Signal(max(colabits, rowbits))
         cke = Signal()
-        self.comb += [
+        self.sync += [
             sdram.dqm.eq(Replicate(dqm, dqmbits)),
             sdram.cs_n.eq(cmd[3]),
             sdram.ras_n.eq(cmd[2]),
             sdram.cas_n.eq(cmd[1]),
             sdram.we_n.eq(cmd[0]),
-            sdram.clk.eq(clk_out),
             sdram.ba.eq(ba),
             sdram.a.eq(a),
             sdram.cke.eq(cke),
+        ]
+        self.comb += [
+            sdram.clk.eq(clk_out),
         ]
 
         # Counter to time reset cycle of the SDRAM
@@ -128,13 +130,6 @@ class SDRAMFIFO(Module):
             self.dout_bits.eq(fifo_out.dout),
         ]
 
-        # short circuit FIFOs for testing
-        #self.comb += [
-            #fifo_out.din.eq(fifo_in.dout),
-            #fifo_out.we.eq(fifo_in.readable),
-            #fifo_in.re.eq(fifo_out.writable),
-        #]
-
         # SDRAM FIFO pointer regs
         write_ptr = Signal(addrbits)
         read_ptr = Signal(addrbits)
@@ -149,8 +144,9 @@ class SDRAMFIFO(Module):
 
         # Read cycle state signals
         issuing_read = Signal()
+
         # Reads come back tCL clocks later
-        returning_read = delay_clocks(issuing_read, tCL)
+        returning_read = delay_clocks(issuing_read, tCL + 1)
         can_read = Signal()
         can_continue_read = Signal()
         kill_read = Signal()
@@ -188,14 +184,18 @@ class SDRAMFIFO(Module):
         issuing_write = Signal()
         can_write = Signal()
         can_continue_write = Signal()
+
+        self.sync += [
+            dq.o.eq(fifo_in.dout),
+            dq.oe.eq(issuing_write),
+        ]
+
         self.comb += [
             can_write.eq((write_ptr + 1 != read_ptr) & fifo_in.readable),
             can_continue_write.eq((write_ptr + 2 != read_ptr) &
                                   fifo_in.readable &
                                   (write_ptr[:colbits] != max_col)),
 
-            dq.o.eq(fifo_in.dout),
-            dq.oe.eq(issuing_write),
             fifo_in.re.eq(issuing_write),
         ]
         self.sync += [
