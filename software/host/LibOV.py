@@ -5,6 +5,7 @@ import sys
 import queue
 import threading
 import collections
+from usb_interp import USBInterpreter
 
 _lpath = (os.path.dirname(__file__))
 if _lpath == '':
@@ -360,6 +361,20 @@ class LFSRTest:
 def hd(x):
     return " ".join("%02x" % i for i in x)
 
+#  Physical layer error
+HF0_ERR =  0x01
+# RX Path Overflow
+HF0_OVF =  0x02
+# Clipped by Filter
+HF0_CLIP = 0x04
+# Clipped due to packet length (> 800 bytes)
+HF0_TRUNC = 0x08
+# First packet of capture session; IE, when the cap hardware was enabled
+HF0_FIRST = 0x10
+# Last packet of capture session; IE, when the cap hardware was disabled
+HF0_LAST = 0x20
+
+
 class RXCSniff:
     class __RXCSniffService(baseService):
         import crcmod
@@ -375,11 +390,14 @@ class RXCSniff:
 
             self.usbbuf = []
 
-            self.frameno = None
-            self.subframe = 0
             self.highspeed = False
 
+            self.ui = USBInterpreter(self.highspeed)
+
             self.handlers = [self.handle_usb_verbose]
+
+            self.got_start = False
+
 
         def matchMagic(self, byt):
             return byt == 0xAC or byt == 0xAD or byt == 0xA0
@@ -393,122 +411,31 @@ class RXCSniff:
 
 
         def consume(self, buf):
-            if buf[0] == 0xAC:
-                cmd = buf[1]
-                #print("RXCMD: %02x" % cmd)
-                if cmd == 0x40:
-                    assert not self.usbbuf
-
-                elif (cmd == 0x41) and self.usbbuf:
-                    #print("\t%s" %  " ".join("%02x" % i for i in self.usbbuf))
-                    self.handle_usb(self.usbbuf)
-                    self.usbbuf = []
-
-            elif buf[0] == 0xAD:
-                #print("USB: %02x" % buf[1])
-                self.usbbuf.append(buf[1])
-            elif buf[0] == 0xA0:
-                #print("PKT: %s" % " ".join("%02x" % i for i in buf))
-                #self.usbbuf = buf[8:]
+            if buf[0] == 0xA0:
                 flags = buf[1] | buf[2] << 8
 
+                ts = buf[5] | buf[6] << 8 | buf[7] << 16
+
                 if flags != 0:
-                    print("PERR: %02X" % flags)
-                    #if flags & 0x2:
-                        #self.frameno = None
-                        #self.subframe = None
-                self.handle_usb(buf[8:], flags)
+                    print("PERR: %04X" % flags)
+               
+                if flags & HF0_FIRST:
+                    self.got_start = True
 
-        def handle_usb(self, buf, flags):
+                if self.got_start:
+                    self.handle_usb(ts, buf[8:], flags)
+
+                if flags & HF0_LAST:
+                    self.got_start = False
+
+        def handle_usb(self, ts, buf, flags):
             for handler in self.handlers:
-                handler(buf, flags)
+                handler(ts, buf, flags)
 
-        def handle_usb_verbose(self, buf, flags):
-            if len(buf) == 0:
-                return
+        def handle_usb_verbose(self, ts, buf, flags):
+                self.ui.handlePacket(ts, buf, flags)
 
-            pid = buf[0] & 0xF
-            if (buf[0] >> 4) ^ 0xF != pid:
-                print("Err - bad PID of %02x" % pid)
-                return
             
-            if pid == 0x5:
-                if len(buf) < 3:
-                    print("RUNT frame")
-                else:
-                    frameno = buf[1] | (buf[2] << 8) & 0x7
-                    if self.frameno == None:
-                        self.frameno = frameno
-                        self.subframe = None
-                    else:
-                        if self.subframe == None:
-                            if frameno == (self.frameno + 1) & 0xFF:
-                                self.subframe = 0 if self.highspeed else None
-                                self.frameno = frameno
-                        else:
-                            self.subframe += 1
-                            if self.subframe == 8:
-                                if frameno == (self.frameno + 1)&0xFF:
-                                    self.subframe = 0
-                                    self.frameno = frameno
-                                else:
-                                    print("WTF Subframe %d" % self.frameno)
-                                    self.subframe = None
-                                    self.frameno = frameno
-                            elif self.frameno != frameno:
-                                print("WTF frameno %d" % self.frameno)
-                                self.frameno = frameno
-                                self.subframe = None
-                    
-                    #print("Frame %d.%c" % (frameno, '?' if self.subframe == None else "%d" % self.subframe))
-            elif pid in [0x3, 0xB, 0x7]:
-                n = {3:0, 0xB:1, 0x7:2}[pid]
-
-                print ("DATA%d: %s" % (n,hd(buf[1:])))
-
-                calc_check = self.data_crc(buf[1:-2])^0xFFFF 
-                pkt_check = buf[-2] | buf[-1] << 8
-
-                if calc_check != pkt_check and not (flags & 0x2):
-                    print("\tUnexpected ERR CRC")
-
-            elif pid == 0xF:
-                print ("MDATA: %s" % hd(buf[1:]))
-            elif pid in [0x01, 0x09, 0x0D]:
-                if pid == 1:
-                    name = "OUT"
-                elif pid == 9:
-                    name = "IN"
-                elif pid == 0xD:
-                    name = "SETUP"
-                if len(buf) < 3:
-                    print("RUNT: %s %s" % (name, " ".join("%02x" % i for i in buf)))
-                else:
-
-                    addr = buf[1] & 0x7F
-                    endp = (buf[2] & 0x7) << 1 | buf[1] >> 7
-
-                    print("%-5s: %d.%d" % (name, addr, endp))
-            elif pid == 2:
-                print("ACK")
-            elif pid == 0xA:
-                print("NAK")
-            elif pid == 0xE:
-                print("STALL")
-            elif pid == 0x6:
-                print("NYET")
-            elif pid == 0xC:
-                print("PRE-ERR")
-                pass
-            elif pid == 0x8:
-                print("SPLIT")
-                pass
-            elif pid == 0x4:
-                print("PING")
-                pass
-            else:
-                print("WUT")
-
     def __init__(self):
         self.service = RXCSniff.__RXCSniffService()
 

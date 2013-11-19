@@ -159,6 +159,8 @@ def sniff(dev, speed, format, out):
     elif speed == "fs":
             dev.ulpiregs.func_ctl.wr(0x49)
             dev.rxcsniff.service.highspeed = False
+    else:
+        assert 0,"Invalid Speed"
 
     assert format in ["verbose", "custom", "pcap"]
 
@@ -181,7 +183,6 @@ def sniff(dev, speed, format, out):
     except KeyboardInterrupt:
         pass
     finally:
-        pass
         dev.regs.CSTREAM_CFG.wr(0)
 
     if out is not None:
