@@ -58,6 +58,35 @@ class Producer(Module):
             self.ulpi_sink.payload.is_err |
             self.ulpi_sink.payload.is_ovf)
 
+        # Packet first/last bits
+        clear_acc_flags = Signal()
+
+        en_last = Signal()
+        self.sync += en_last.eq(ena)
+        self.submodules.packet_first = Acc(1)
+        self.submodules.packet_last = Acc(1)
+
+        # Stuff-packet bit
+        # At start-of-capture or end-of-capture, we stuff a packet to
+        # indicate the exact time of capture
+        stuff_packet = Signal()
+        self.comb += stuff_packet.eq(self.packet_first.v | self.packet_last.v)
+
+        self.comb += If(ena & ~en_last, 
+            self.packet_first.set(1)).Elif(clear_acc_flags,
+            self.packet_first.set(0))
+
+        self.comb += If(~ena & en_last, 
+            self.packet_last.set(1)).Elif(clear_acc_flags,
+            self.packet_last.set(0))
+
+        flags_ini = Signal(16)
+        self.comb += flags_ini.eq(
+            Mux(self.packet_last.v, HF0_LAST, 0) |
+            Mux(self.packet_first.v, HF0_FIRST, 0)
+            )
+
+
         # Combine outputs of filters
         la_resets = [f.reset.eq(1) for f in la_filters]
         filter_done = 1
@@ -67,20 +96,30 @@ class Producer(Module):
             filter_reject = f.reject | filter_reject
 
         self.fsm.act("IDLE",
-                If((self.ulpi_sink.stb | self.to_start.v) & has_space & ena,
-                    If(~self.to_start.v, self.ulpi_sink.ack.eq(1)),
+                If(
+                    ((self.ulpi_sink.stb | self.to_start.v) & ena 
+                     | stuff_packet) & has_space,
+
+                    If(~(self.to_start.v | stuff_packet), self.ulpi_sink.ack.eq(1)),
 
                     self.produce_write.set(self.produce_header.v+8),
                     self.size.set(0),
-                    self.flags.set(0),
+                    self.flags.set(flags_ini),
                     self.to_start.set(0),
 
                     la_resets,
-
+                    
                     If(self.ulpi_sink.payload.is_start | self.to_start.v,
-                        
-                        NextState("WH0")
+                        NextState("DATA")
+
+                    ).Elif(stuff_packet,
+                        NextState("WH0"),
+                        clear_acc_flags.eq(1),
                     )
+
+                # If not enabled, we just dump RX'ed data
+                ).Elif(~ena,
+                    self.ulpi_sink.ack.eq(1)
                 )
         )
 
@@ -92,7 +131,6 @@ class Producer(Module):
                     wrport.we.eq(1)
                     )
         
-        write_hdr("WH0", "DATA", 0, 0xA0)
 
         do_filter_write = Signal()
 
@@ -149,8 +187,11 @@ class Producer(Module):
                     If(filter_reject,
                         NextState("IDLE")
                     ).Else(
-                        NextState("WRF0"))
+                        clear_acc_flags.eq(1),
+                        NextState("WH0"))
                 ))
+
+        write_hdr("WH0", "WRF0", 0, 0xA0)
 
         # Write flags field
         write_hdr("WRF0", "WRF1", 1, self.flags.v[:8])
