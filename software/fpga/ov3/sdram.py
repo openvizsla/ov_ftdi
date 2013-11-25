@@ -63,7 +63,7 @@ class SDRAMFIFO(Module):
         self.sync.sample += dq_r.eq(dq.i)
 
         # Signals used for driving SDRAM control signals
-        # These are not registers, they are functions of the current FSM state.
+        # These registered and derived from the current FSM state.
         # However, the reset state actually determines the default value for
         # states where they are not explicitly assigned. For example, cmd is
         # INHIBIT at reset (because the FSM is in RESET state at reset and that
@@ -145,7 +145,8 @@ class SDRAMFIFO(Module):
         # Read cycle state signals
         issuing_read = Signal()
 
-        # Reads come back tCL clocks later
+        # Reads come back tCL + 1 clocks later. The extra cycle
+        # is due to the registration of FIFO outputs
         returning_read = delay_clocks(issuing_read, tCL + 1)
         can_read = Signal()
         can_continue_read = Signal()
