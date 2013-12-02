@@ -86,7 +86,7 @@ def report(dev):
 
     print("USB PHY Tests")
     if check_ulpi_clk(dev):
-        print("\tWARNING: ULPI PHY clock not started; skipping ULPI data")
+        print("\tWARNING: ULPI PHY clock not started; skipping ULPI tests")
     else:
         # display the ULPI identifier
         ident = 0
@@ -116,6 +116,13 @@ def report(dev):
         else:
             print("\tUnknown PHY - skipping phy tests")
 
+    print ("SDRAM tests")
+    def cb(n, ok):
+        print("\t... %d: %s" % (n, "OK" if ok else "FAIL"))
+    stat = do_sdramtests(dev, cb)
+    if stat == -1:
+        print("\t... all passed")
+
 
 class OutputCustom:
     def __init__(self, output):
@@ -136,6 +143,36 @@ class OutputPcap:
     def handle_usb(self, pkt, flags):
         self.output.write(struct.pack("IIIIH", 0, 0, len(pkt) + 2, len(pkt) + 2, flags))
         self.output.write(pkt)
+
+def do_sdramtests(dev, cb=None):
+    
+    for i in range(0,6):
+        dev.regs.SDRAM_TEST_CMD.wr(0x80 | i)
+        stat = 0x40
+        while (stat & 0x40):
+            time.sleep(0.1)
+            stat = dev.regs.SDRAM_TEST_CMD.rd() 
+
+        ok = stat & 0x20
+        cb(i, ok)
+
+        if not ok:
+            return i
+    else:
+        return -1
+
+@command('sdramtest')
+def sdramtest(dev):
+    # LEDS select
+    dev.regs.LEDS_MUX_0.wr(1)
+
+    stat = do_sdramtests(dev)
+    if stat != -1:
+        print("SDRAM test failed on test %d\n" % stat)
+    else:
+        print("SDRAM test passed")
+
+    dev.regs.LEDS_MUX_0.wr(0)
 
 @command('sniff', ('speed', str), ('format', str, 'verbose'), ('out', str, None))
 def sniff(dev, speed, format, out):

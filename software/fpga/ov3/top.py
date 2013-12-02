@@ -10,10 +10,13 @@ from migen.flow.actor import Source, Sink
 import migen.actorlib.fifo as al_fifo
 from migen.bus.csr import Interconnect
 from migen.bank.csrgen import BankArray
-from migen.bank.description import AutoCSR, CSRStorage, CSRStatus
+from migen.bank.description import AutoCSR, CSRStorage, CSRStatus, CSR
 
 import ov3, clocking
-from sdram import SDRAMFIFO
+from sdramctl import SDRAMCTL
+from sdram_mux import SdramMux
+from sdram_bist import SdramBist
+from sdrambistcfg import SdramBistCfg
 from ulpi import ULPI, ULPI_BUS, ULPI_REG, ULPI_DATA
 from leds import LED_outputs
 from buttons import BTN_status
@@ -55,44 +58,22 @@ class OV3(Module):
             MultiReg(~btn, btn_sync, "sys")
         ]
 
-        self.submodules.sdram = RenameClockDomains(
-            SDRAMFIFO(plat.request("sdram"),
+        self.submodules.sdramctl = SDRAMCTL(plat.request("sdram"),
                       clk_out=self.clockgen.clk_sdram,
                       clk_sample=self.clockgen.clk_sdram_sample,
                       databits=16, rowbits=13, colbits=9, bankbits=2,
-                      inbuf=1024, outbuf=1024, burst=512,
+                      burst=512,
                       tRESET=20000, tCL=3, tRP=4, tRFC=12, tRCD=4,
-                      tREFI=780),
-            {"read": "sys", "write": "c33"})
+                      tREFI=780, tWR=2)
 
-        # Test the SDRAM: write incrementing 16-bit words
-        # Do this at 33MHz
-        word_ctr = Signal(23)
-        self.sync.c33 += If(self.sdram.writable & self.sdram.we,
-                            word_ctr.eq(word_ctr + 1))
-        self.comb += [
-            self.sdram.we.eq(1),
-            self.sdram.din.eq(word_ctr[:16]),
-            #led1.eq(~word_ctr[22])
-        ]
+        self.submodules.sdram_mux = SdramMux(self.sdramctl.hostif)
 
-        # Read back what was written and check for errors
-        # Do this at 100MHz (limited by SDRAM timesliced bandwidth)
-        word_ctr2 = Signal(23)
-        valid = Signal(reset=1)
-        self.sync += If(self.sdram.readable & self.sdram.re,
-                        word_ctr2.eq(word_ctr2 + 1),
-                        If(self.sdram.dout != word_ctr2[:16],
-                           valid.eq(0))).Elif(btn_sync,
-                            valid.eq(1))
-        self.comb += [
-            self.sdram.re.eq(~btn_sync),
-            #led2.eq(~word_ctr2[22]),
-            #led3.eq(~valid),
-        ]
-        
-        # ULPI
-        
+        self.submodules.bist = SdramBist(self.sdram_mux.getPort(), 0x2000000)
+
+
+        self.submodules.sdram_test = SdramBistCfg(self.bist)
+
+        ######## VALID
         ulpi_bus = Record(ULPI_BUS)
         ulpi_reg = Record(ULPI_REG)
 
@@ -149,9 +130,9 @@ class OV3(Module):
 
         self.submodules.leds = LED_outputs(leds_v,
                 [
-                    [word_ctr[22], self.ftdi_bus.tx_ind],
-                    [word_ctr2[22], self.ftdi_bus.rx_ind],
-                    [valid]
+                    [self.bist.busy, self.ftdi_bus.tx_ind],
+                    [0, self.ftdi_bus.rx_ind],
+                    [0]
                 ])
         self.submodules.buttons = BTN_status(~btn)
         
@@ -168,6 +149,7 @@ class OV3(Module):
                 'ucfg' : 2,
                 'randtest' : 3,
                 'cstream' : 4,
+                'sdram_test' : 5,
                 }
 
         self.submodules.csrbankarray = BankArray(self,

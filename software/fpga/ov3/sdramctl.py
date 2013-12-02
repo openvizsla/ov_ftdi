@@ -124,15 +124,18 @@ class SDRAMCTL(Module):
         # Read cycle state signals
         read_cycle = Signal()
 
-        # Reads come back tCL + 1 clocks later. The extra cycle
-        # is due to the registration of FIFO outputs
-        returning_read = delay_clocks(read_cycle, tCL + 1)
+        # Reads come back tCL + 1 clocks later. The extra two cycles
+        # are due to the registration of FIFO outputs and inputs
+        dq_r_sample = Signal(databits)
+        self.sync += dq_r_sample.eq(dq_r)
+
+        returning_read = delay_clocks(read_cycle, tCL + 2)
         can_continue_read = Signal()
         kill_read = Signal()
         self.comb += [
             can_continue_read.eq(~self.hostif.d_term & ~last_col & ~kill_read),
 
-            self.hostif.d_read.eq(dq_r),
+            self.hostif.d_read.eq(dq_r_sample),
         ]
         self.sync += [
             # If the output FIFO becomes full, kill the current read
