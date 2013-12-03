@@ -2,8 +2,8 @@ from migen.fhdl.std import *
 from migen.flow.actor import Source, Sink
 from migen.genlib.record import Record
 
-from ulpi import ULPI_DATA
-from constants import RXCMD_MAGIC_OVF
+from ovhw.ulpi import ULPI_DATA
+from ovhw.constants import RXCMD_MAGIC_OVF
 
 class OverflowInserter(Module):
     def __init__(self):
@@ -36,5 +36,4 @@ class OverflowInserter(Module):
             self.source.stb.eq(valid),
             self.source.payload.eq(data)
             ]
-
 

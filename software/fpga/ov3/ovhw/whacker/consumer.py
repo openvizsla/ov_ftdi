@@ -3,12 +3,11 @@ from migen.flow.actor import Source, Sink
 from migen.fhdl.size import bits_for
 from migen.genlib.fsm import FSM, NextState
 
-from whacker.util import dmatpl
+from ovhw.whacker.util import dmatpl
+from ovhw.ulpi import ULPI_DATA
+from ovhw.constants import *
 
-from ulpi import ULPI_DATA
 D_LAST = [("d", 8), ("last", 1)]
-
-from constants import *
 
 
 def _inc(signal, modulo, dest_signal=None):

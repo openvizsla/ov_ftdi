@@ -1,11 +1,10 @@
 from migen.fhdl.std import *
 from migen.genlib.record import Record
 from migen.flow.actor import Source, Sink
-from csr_master import CMD_REC
-
 from migen.genlib.fsm import FSM, NextState
 from migen.genlib.roundrobin import RoundRobin, SP_CE
-
+    
+from ovhw.csr_master import CMD_REC
 
 # Simple statemachine to turn incoming datastream
 # into CSR bus accesses

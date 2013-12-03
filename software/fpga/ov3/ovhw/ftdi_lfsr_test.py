@@ -1,7 +1,6 @@
 # Module for generating a pseudorandom bitstream for testing data backhaul from FTDI chip
 # Packets are of form 0xAA n* rand
 
-
 from migen.genlib.cdc import MultiReg
 from migen.bank import description, csrgen
 from migen.bus.csr import Initiator, Interconnect
@@ -81,7 +80,7 @@ class FTDI_randtest(Module, description.AutoCSR):
 
 class TestRandom(Module):
     def __init__(self, clock):
-        from cmdproc import CmdProc
+        from ovhw.cmdproc import CmdProc
 
         self.submodules.tr = FTDI_randtest()
 

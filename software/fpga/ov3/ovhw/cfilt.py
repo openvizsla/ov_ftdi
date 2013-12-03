@@ -4,8 +4,8 @@ from migen.genlib.record import Record, DIR_M_TO_S
 from migen.flow.actor import Source, Sink
 from migen.bank.description import AutoCSR, CSRStorage, CSRStatus
 
-from constants import *
-from ov_types import ULPI_DATA_D, ULPI_DATA_TAG
+from ovhw.constants import *
+from ovhw.ov_types import ULPI_DATA_D, ULPI_DATA_TAG
 
 class RXCmdFilter(Module):
     # Merges/drops unnecessary RXCMDs for packet parsing

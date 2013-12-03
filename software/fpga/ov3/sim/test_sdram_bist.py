@@ -1,6 +1,6 @@
 from migen.fhdl.std import *
 from sim.test_sdramctl import TestSDRAMComplex
-from sdram_bist import SdramBist
+from ovhw.sdram_bist import SdramBist
 import unittest
 
 class BISTTester(Module):
@@ -58,7 +58,7 @@ class SDRAMSingleMasterTests(unittest.TestCase):
         if not os.path.exists(SDRAM_MODEL):
             raise ValueError("Please download and save the vendor sdram model in %s (not redistributable)" % SDRAM_MODEL)
 
-        runner = icarus.Runner(extra_files=["sim/mt48lc16m16a2.v"], keep_files=1)
+        runner = icarus.Runner(extra_files=["sim/mt48lc16m16a2.v"])
         args = []
         args += ["sdramctl.vcd"]
 

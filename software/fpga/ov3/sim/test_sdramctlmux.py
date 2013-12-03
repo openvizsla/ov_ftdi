@@ -1,6 +1,6 @@
 from migen.fhdl.std import *
 from sim.test_sdramctl import M, TestSDRAMComplex, TestMaster
-from sdram_mux import SdramMux
+from ovhw.sdram_mux import SdramMux
 import unittest
 
 class MultiMasterTester(Module):
@@ -26,7 +26,7 @@ class SDRAMMultiMasterTests(unittest.TestCase):
         from migen.sim import icarus
         from migen.sim.generic import Simulator, TopLevel
 
-        runner = icarus.Runner(extra_files=["sim/mt48lc16m16a2.v"], keep_files=1)
+        runner = icarus.Runner(extra_files=["sim/mt48lc16m16a2.v"])
         args = []
         #args += ["sdramctl.vcd"]
 

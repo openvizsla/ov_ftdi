@@ -1,7 +1,8 @@
 from migen.genlib.roundrobin import RoundRobin, SP_CE
 from migen.fhdl.std import *
 from migen.genlib.record import Record
-from ov_types import sdramHostIf
+
+from ovhw.ov_types import sdramHostIf
 
 class SdramMux(Module):
     def __init__(self, sdctl_port):

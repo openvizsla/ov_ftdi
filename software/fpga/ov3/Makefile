@@ -7,19 +7,18 @@ FWPKG := $(BUILD)/ov3.fwpkg
 
 PYTHON := python3.3
 
+PY_FILES := $(shell find ovhw ovplatform -name '*.py')
+
 all: $(BITFILE) $(FWPKG)
 
 $(FWPKG): $(BITFILE)
 	$(PYTHON) -m zipfile -c $@ $< $(BUILD)/map.txt
 
-$(BITFILE): *.py
-	$(PYTHON) top.py --build-dir $(BUILD) --build-name ov3
+$(BITFILE): $(PY_FILES)
+	$(PYTHON) build.py --build-dir $(BUILD) --build-name ov3
 
 clean:
 	rm -rf $(BUILD)/*
 
 run: $(OVCTL) $(BITFILE)
 	$(OVCTL) -C -b $(BITFILE) none
-
-sim_sdram:
-	$(PYTHON) sdram.py

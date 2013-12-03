@@ -1,7 +1,8 @@
 from migen.fhdl.std import *
 from migen.genlib.fsm import FSM, NextState, AnonymousState
 from migen.genlib.record import Record
-from ov_types import sdramHostIf
+
+from ovhw.ov_types import sdramHostIf
 
 #                   CS# RAS# CAS# WE# DQM ADDR DQ
 # COMMAND INHIBIT     1    x    x   x   x    x  x

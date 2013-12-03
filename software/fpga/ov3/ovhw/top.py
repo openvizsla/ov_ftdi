@@ -12,26 +12,24 @@ from migen.bus.csr import Interconnect
 from migen.bank.csrgen import BankArray
 from migen.bank.description import AutoCSR, CSRStorage, CSRStatus, CSR
 
-import ov3, clocking
-from sdramctl import SDRAMCTL
-from sdram_mux import SdramMux
-from sdram_bist import SdramBist
-from sdrambistcfg import SdramBistCfg
-from ulpi import ULPI, ULPI_BUS, ULPI_REG, ULPI_DATA
-from leds import LED_outputs
-from buttons import BTN_status
-from whacker.whacker import Whacker
-from ovf_insert import OverflowInserter
-from cmdproc import CmdProc
-from ftdi_bus import FTDI_sync245
-from ftdi_lfsr_test import FTDI_randtest
-from ulpicfg import ULPICfg
-from cfilt import RXCmdFilter
-
-plat = ov3.Platform()
+import ovhw.clocking as clocking
+from ovhw.sdramctl import SDRAMCTL
+from ovhw.sdram_mux import SdramMux
+from ovhw.sdram_bist import SdramBist
+from ovhw.sdrambistcfg import SdramBistCfg
+from ovhw.ulpi import ULPI, ULPI_BUS, ULPI_REG, ULPI_DATA
+from ovhw.leds import LED_outputs
+from ovhw.buttons import BTN_status
+from ovhw.whacker.whacker import Whacker
+from ovhw.ovf_insert import OverflowInserter
+from ovhw.cmdproc import CmdProc
+from ovhw.ftdi_bus import FTDI_sync245
+from ovhw.ftdi_lfsr_test import FTDI_randtest
+from ovhw.ulpicfg import ULPICfg
+from ovhw.cfilt import RXCmdFilter
 
 class OV3(Module):
-    def __init__(self):
+    def __init__(self, plat):
         clk_ref = plat.request("clk50")
         self.submodules.clockgen = clocking.ClockGen(clk_ref)
         self.clock_domains.cd_sys = self.clockgen.cd_sys
@@ -170,7 +168,3 @@ class OV3(Module):
 
         # FIXME: build dir should come from command line arg
         open("build/map.txt", "w").write(r)
-
-
-if __name__ == "__main__":
-    plat.build_cmdline(OV3())

@@ -1,17 +1,13 @@
-from bus_interleave import BusDecode, BusEncode, BusInterleave
-from csr_master import CSR_Master
-
 from migen.fhdl.std import *
-from ftdi_bus import FTDI_sync245
-
 from migen.genlib.cdc import NoRetiming, MultiReg
-
 from migen.flow.network import DataFlowGraph, CompositeActor
 from migen.flow.actor import Source
-
 from migen.bus.csr import Interconnect
 from migen.bank.csrgen import BankArray
 
+from ovhw.ftdi_bus import FTDI_sync245
+from ovhw.bus_interleave import BusDecode, BusEncode, BusInterleave
+from ovhw.csr_master import CSR_Master
 
 # CmdProc (perhaps misnamed) handles command parsing on the ftdi interface
 # inserting cmd responses, and multiplexing the cmd responses with the streaming data

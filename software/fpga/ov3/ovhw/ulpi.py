@@ -4,7 +4,8 @@ from migen.sim.generic import Simulator, TopLevel
 from migen.genlib.fsm import FSM, NextState
 from migen.genlib.record import *
 from migen.flow.actor import Source
-from constants import *
+
+from ovhw.constants import *
 
 class ULPI(Module):
 	def __init__(self, ulpi, ulpi_reg):

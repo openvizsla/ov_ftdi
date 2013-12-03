@@ -1,5 +1,4 @@
 from migen.fhdl.std import *
-import ov3
 
 class ClockGen(Module):
     def __init__(self, clkin):

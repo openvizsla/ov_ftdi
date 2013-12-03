@@ -1,17 +1,17 @@
 from migen.fhdl.std import *
 from migen.bank.description import AutoCSR, CSRStatus, CSRStorage
-
 from migen.flow.actor import Source, Sink
 from migen.fhdl.size import bits_for
 from migen.genlib.fsm import FSM, NextState
 
-from whacker.consumer import Consumer
-from whacker.producer import Producer
+from ovhw.whacker.consumer import Consumer
+from ovhw.whacker.producer import Producer
 
-from ulpi import ULPI_DATA
+from ovhw.ulpi import ULPI_DATA
+from ovhw.constants import *
+
 D_LAST = [("d", 8), ("last", 1)]
 
-from constants import *
 class Whacker(Module, AutoCSR):
     def __init__(self, depth):
         self._cfg = CSRStorage(1)

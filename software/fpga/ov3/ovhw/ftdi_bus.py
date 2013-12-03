@@ -1,5 +1,4 @@
 from migen.fhdl.std import *
-
 from migen.genlib.fsm import *
 from migen.genlib.fifo import *
 

@@ -3,9 +3,9 @@ from migen.flow.actor import Source, Sink
 from migen.fhdl.size import bits_for
 from migen.genlib.fsm import FSM, NextState
 
-from ov_types import ULPI_DATA_TAG
-from constants import *
-from whacker.util import *
+from ovhw.ov_types import ULPI_DATA_TAG
+from ovhw.constants import *
+from ovhw.whacker.util import *
 
 class Producer(Module):
 

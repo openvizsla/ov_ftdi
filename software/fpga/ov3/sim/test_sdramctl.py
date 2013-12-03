@@ -1,5 +1,5 @@
 from migen.fhdl.std import *
-from sdramctl import SDRAMCTL
+from ovhw.sdramctl import SDRAMCTL
 
 class M(Module):
     def __init__(self):
@@ -143,7 +143,7 @@ class SDRAMSingleMasterTests(unittest.TestCase):
         if not os.path.exists(SDRAM_MODEL):
             raise ValueError("Please download and save the vendor sdram model in %s (not redistributable)" % SDRAM_MODEL)
 
-        runner = icarus.Runner(extra_files=["sim/mt48lc16m16a2.v"], keep_files=1)
+        runner = icarus.Runner(extra_files=["sim/mt48lc16m16a2.v"])
         args = []
         #args += ["sdramctl.vcd"]
 
