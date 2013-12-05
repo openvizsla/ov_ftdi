@@ -1,5 +1,5 @@
 from migen.fhdl.std import *
-from migen.fhdl.size import bits_for
+from migen.fhdl.bitcontainer import bits_for
 from ovhw.ulpi import ULPI_DATA
 
 def dmatpl(depth):

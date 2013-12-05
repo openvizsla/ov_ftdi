@@ -1,6 +1,6 @@
 from migen.fhdl.std import *
 from migen.flow.actor import Source, Sink
-from migen.fhdl.size import bits_for
+from migen.fhdl.bitcontainer import bits_for
 from migen.genlib.fsm import FSM, NextState
 
 from ovhw.whacker.util import dmatpl

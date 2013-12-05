@@ -1,7 +1,6 @@
 from migen.fhdl.std import *
 from migen.bank.description import AutoCSR, CSRStatus, CSRStorage
 from migen.flow.actor import Source, Sink
-from migen.fhdl.size import bits_for
 from migen.genlib.fsm import FSM, NextState
 
 from ovhw.whacker.consumer import Consumer
