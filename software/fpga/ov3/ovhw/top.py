@@ -31,13 +31,10 @@ import ovplatform.sdram_params
 
 class OV3(Module):
     def __init__(self, plat):
+        # Clocking
         clk_ref = plat.request("clk50")
         self.submodules.clockgen = clocking.ClockGen(clk_ref)
         self.clock_domains.cd_sys = self.clockgen.cd_sys
-
-        ftdi_io = plat.request("ftdi")
-        self.submodules.ftdi_bus = ftdi_bus = FTDI_sync245(self.clockgen.cd_sys.rst,
-                ftdi_io)
 
         # SDRAM Controller
         sd_param = ovplatform.sdram_params.getSDRAMParams('mt48lc16m16a2')
@@ -48,25 +45,26 @@ class OV3(Module):
             **sd_param._asdict()
         )
 
+        # SDRAM Master arbiter
         self.submodules.sdram_mux = SdramMux(self.sdramctl.hostif)
 
         # SDRAM BIST
-        self.submodules.bist = SdramBist(self.sdram_mux.getPort(), 0x2000000)
+        memsize = 2 ** (sd_param.colbits + sd_param.rowbits + sd_param.bankbits)
+        self.submodules.bist = SdramBist(self.sdram_mux.getPort(), memsize)
         self.submodules.sdram_test = SdramBistCfg(self.bist)
 
-        ######## VALID
+        # ULPI Interfce
         ulpi_bus = Record(ULPI_BUS)
         ulpi_reg = Record(ULPI_REG)
 
         self.clock_domains.cd_ulpi = ClockDomain()
-
-        cd_rst = Signal()
+        ulpi_cd_rst = Signal()
         self.cd_ulpi.clk = ulpi_bus.clk
-        self.cd_ulpi.rst = cd_rst
+        self.cd_ulpi.rst = ulpi_cd_rst
 
         # TODO - integrate all below into ULPI module
         ulpi_pins = plat.request("ulpi")
-        
+
         stp_ovr = Signal(1)
 
         self.comb += ulpi_pins.rst.eq(~ulpi_bus.rst)
@@ -79,22 +77,25 @@ class OV3(Module):
         self.comb += ulpi_bus.di.eq(dq.i)
         self.comb += dq.o.eq(ulpi_bus.do)
         self.comb += dq.oe.eq(ulpi_bus.doe)
-        
+
         self.submodules.ulpi = RenameClockDomains(
           ULPI(ulpi_bus, ulpi_reg),
           {"sys": "ulpi"}
         )
-        
-        self.submodules.ucfg = ULPICfg(self.cd_ulpi.clk, cd_rst, ulpi_bus.rst, stp_ovr, ulpi_reg)
 
+        self.submodules.ucfg = ULPICfg(
+            self.cd_ulpi.clk, ulpi_cd_rst, ulpi_bus.rst, stp_ovr, ulpi_reg)
 
         # Receive Path
-        self.submodules.ovf_insert = RenameClockDomains(OverflowInserter(),
-                {"sys": "ulpi"})
+        self.submodules.ovf_insert = RenameClockDomains(
+            OverflowInserter(),
+            {"sys": "ulpi"}
+        )
 
-        self.submodules.udata_fifo = RenameClockDomains(al_fifo.AsyncFIFO(ULPI_DATA, 1024),
-                {"write":"ulpi", "read":"sys"})
-
+        self.submodules.udata_fifo = RenameClockDomains(
+            al_fifo.AsyncFIFO(ULPI_DATA, 1024),
+            {"write":"ulpi", "read":"sys"}
+        )
 
         self.submodules.cfilt = RXCmdFilter()
         self.submodules.cstream = Whacker(1024)
@@ -105,6 +106,17 @@ class OV3(Module):
                 self.cstream.sink.connect(self.cfilt.source)
                 ]
 
+
+        # FTDI bus interface
+        ftdi_io = plat.request("ftdi")
+        self.submodules.ftdi_bus = ftdi_bus = FTDI_sync245(self.clockgen.cd_sys.rst,
+                ftdi_io)
+
+        # FTDI command processor
+        self.submodules.randtest = FTDI_randtest()
+        self.submodules.cmdproc = CmdProc(self.ftdi_bus,
+                [self.randtest, self.cstream])
+
         # GPIOs (leds/buttons)
         self.submodules.leds = LED_outputs(plat.request('leds'),
                 [
@@ -114,11 +126,6 @@ class OV3(Module):
                 ], active=0)
 
         self.submodules.buttons = BTN_status(~plat.request('btn'))
-        
-        # FTDI Command processor
-        self.submodules.randtest = FTDI_randtest()
-        self.submodules.cmdproc = CmdProc(self.ftdi_bus, 
-                [self.randtest, self.cstream])
 
 
         # Bind all device CSRs

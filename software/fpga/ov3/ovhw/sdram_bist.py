@@ -51,21 +51,19 @@ class SdramBist(Module):
             self.addr.eq(self.addr + 1)
         )
 
-        # Pattern derivation
+        # Pattern selection
 
         self.comb += [
             Case(self.lat_test, {
                 TEST_ALT0: pat.eq(Replicate(self.addr[0], width)),
                 TEST_ALT1: pat.eq(Replicate(self.addr[0], width) ^ 0xAAAA),
                 TEST_LFSR: pat.eq(0), # STUB
-                TEST_ADDR: pat.eq(self.addr[:width]),
+                TEST_ADDR: pat.eq(self.addr[:width] ^ self.addr[width:width*2]),
                 TEST_ZERO: pat.eq(0),
                 TEST_ONES: pat.eq(0xFFFF)
             }),
 
-            If(self.fsm.ongoing("WRITE") | self.fsm.ongoing("WAIT_ISSUE_WR"),
-                hostif.d_write.eq(pat)
-              )
+            hostif.d_write.eq(pat)
         ]
 
         lastaddr = self.addr == (mem_size - 1)
