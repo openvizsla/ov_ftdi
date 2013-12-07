@@ -7,9 +7,63 @@ from migen.flow.actor import Source
 
 from ovhw.constants import *
 
-class ULPI(Module):
-	def __init__(self, ulpi, ulpi_reg):
-		
+ULPI_BUS = [
+	("rst", 1, DIR_M_TO_S),
+	("nxt", 1, DIR_S_TO_M),
+	("dir", 1, DIR_S_TO_M),
+	("stp", 1, DIR_M_TO_S),
+	("do", 8, DIR_M_TO_S),
+	("di", 8, DIR_S_TO_M),
+	("doe", 1, DIR_M_TO_S)
+]
+
+ULPI_REG = [
+	("waddr", 6, DIR_M_TO_S),
+	("raddr", 6, DIR_M_TO_S),
+	("wdata", 8, DIR_M_TO_S),
+	("rdata", 8, DIR_S_TO_M),
+	("wreq", 1, DIR_M_TO_S),
+	("wack", 1, DIR_S_TO_M),
+	("rreq", 1, DIR_M_TO_S),
+	("rack", 1, DIR_S_TO_M)
+]
+
+ULPI_DATA = [
+	("d", 8, DIR_M_TO_S),
+	("rxcmd", 1, DIR_M_TO_S),
+]
+
+class ULPI_pl(Module):
+    """
+    ULPI Physical layer interface. Connects internal unidirectional busses to
+    bidirectional ULPI interface. Instantiated as as separate module to allow
+    simulation testing of unidirectional controller
+    """
+    def __init__(self, ulpi_pins, ulpi_cd_rst=0, stp_ovr=0):
+        self.clock_domains.cd_ulpi = ClockDomain()
+        self.cd_ulpi.clk = ulpi_pins.clk
+        self.cd_ulpi.rst = ulpi_cd_rst
+
+        self.ulpi_bus = ulpi_bus = Record(ULPI_BUS)
+
+        # CTRL->PHY
+        self.comb += ulpi_pins.rst.eq(~ulpi_bus.rst)
+        self.comb += ulpi_pins.stp.eq(ulpi_bus.stp | stp_ovr)
+
+        # PHY->CTRL
+        self.comb += ulpi_bus.nxt.eq(ulpi_pins.nxt)
+        self.comb += ulpi_bus.dir.eq(ulpi_pins.dir)
+
+        # BIDIR
+        dq = TSTriple(8)
+        self.specials += dq.get_tristate(ulpi_pins.d)
+        self.comb += ulpi_bus.di.eq(dq.i)
+        self.comb += dq.o.eq(ulpi_bus.do)
+        self.comb += dq.oe.eq(ulpi_bus.doe)
+
+
+class ULPI_ctrl(Module):
+	def __init__(self, ulpi_bus, ulpi_reg):
 
 		ulpi_data_out = Signal(8)
 		ulpi_data_tristate = Signal()
@@ -48,11 +102,11 @@ class ULPI(Module):
 		exp = If(~RegWriteReqR, ulpi_reg.wack.eq(0)).Elif(RegWriteAckSet, ulpi_reg.wack.eq(1))
 
 		# output data if required by state
-		self.comb += ulpi.stp.eq(ulpi_stp_next)
+		self.comb += ulpi_bus.stp.eq(ulpi_stp_next)
 		self.comb += ulpi_data_out.eq(ulpi_data_next)
 		self.comb += ulpi_data_tristate.eq(ulpi_data_tristate_next)
-		self.comb += ulpi.do.eq(ulpi_data_out)
-		self.comb += ulpi.doe.eq(~ulpi_data_tristate)
+		self.comb += ulpi_bus.do.eq(ulpi_data_out)
+		self.comb += ulpi_bus.doe.eq(~ulpi_data_tristate)
 		
 
 
@@ -70,12 +124,12 @@ class ULPI(Module):
 		self.sync += If(ulpi_rx_stuff, 
 						self.data_out_source.payload.d.eq(ulpi_rx_stuff_d),
 						self.data_out_source.payload.rxcmd.eq(1)
-					 ).Elif(ulpi_state_rx & ulpi.dir,
-						If(~ulpi.nxt,
-							self.data_out_source.payload.d.eq(ulpi.di & RXCMD_MASK),
+					 ).Elif(ulpi_state_rx & ulpi_bus.dir,
+						If(~ulpi_bus.nxt,
+							self.data_out_source.payload.d.eq(ulpi_bus.di & RXCMD_MASK),
 							self.data_out_source.payload.rxcmd.eq(1)
 						).Else(
-							self.data_out_source.payload.d.eq(ulpi.di),
+							self.data_out_source.payload.d.eq(ulpi_bus.di),
 							self.data_out_source.payload.rxcmd.eq(0)
 						)
 					 ).Else(
@@ -84,7 +138,7 @@ class ULPI(Module):
                     )
 
 		# capture register reads at the end of RRD
-		self.sync += If(ulpi_state_rrd,ulpi_reg.rdata.eq(ulpi.di))
+		self.sync += If(ulpi_state_rrd,ulpi_reg.rdata.eq(ulpi_bus.di))
 
 		fsm = FSM()
 		self.submodules += fsm
@@ -93,13 +147,13 @@ class ULPI(Module):
 			ulpi_data_next.eq(0x00), # NOOP
 			ulpi_data_tristate_next.eq(0),
 			ulpi_stp_next.eq(0),
-			If(~ulpi.dir & ~ulpi.nxt & ~(RegWriteReq | RegReadReq), 
+			If(~ulpi_bus.dir & ~ulpi_bus.nxt & ~(RegWriteReq | RegReadReq), 
 				NextState("IDLE")
-			).Elif(ulpi.dir, # TA, and then either RXCMD or Data
+			).Elif(ulpi_bus.dir, # TA, and then either RXCMD or Data
 				NextState("RX"),
 				ulpi_data_tristate_next.eq(1),
 				# If dir & nxt, we're starting a packet, so stuff a custom SOP
-				If(ulpi.nxt,
+				If(ulpi_bus.nxt,
 					ulpi_rx_stuff.eq(1),
 					ulpi_rx_stuff_d.eq(RXCMD_MAGIC_SOP)
 				)
@@ -118,7 +172,7 @@ class ULPI(Module):
 			))
 
 		fsm.act("RX", 
-			If(ulpi.dir, # stay in RX
+			If(ulpi_bus.dir, # stay in RX
 				NextState("RX"),
 				ulpi_state_rx.eq(1),
 				ulpi_data_tristate_next.eq(1)
@@ -131,23 +185,23 @@ class ULPI(Module):
 			))
 	
 		fsm.act("RW0", 
-			If(ulpi.dir,
+			If(ulpi_bus.dir,
 				NextState("RX"),
 				ulpi_data_tristate_next.eq(1),
-			).Elif(~ulpi.dir,
+			).Elif(~ulpi_bus.dir,
 				ulpi_data_next.eq(0x80 | ulpi_reg.waddr), # REGW
 				ulpi_data_tristate_next.eq(0),
 				ulpi_stp_next.eq(0),
-				If(ulpi.nxt, NextState("RWD")).Else(NextState("RW0")),
+				If(ulpi_bus.nxt, NextState("RWD")).Else(NextState("RW0")),
 			).Else(
 				NextState("ERROR")
 			))
 		
 		fsm.act("RWD",
-			If(ulpi.dir,
+			If(ulpi_bus.dir,
 				NextState("RX"),
 				ulpi_data_tristate_next.eq(1)
-			).Elif(~ulpi.dir & ulpi.nxt,
+			).Elif(~ulpi_bus.dir & ulpi_bus.nxt,
 				NextState("RWS"),
 				ulpi_data_next.eq(ulpi_reg.wdata),
 				ulpi_data_tristate_next.eq(0),
@@ -158,23 +212,23 @@ class ULPI(Module):
 			)
 		
 		fsm.act("RWS",
-			If(~ulpi.dir,
+			If(~ulpi_bus.dir,
 				NextState("IDLE"),
 				ulpi_data_next.eq(0x00), # NOOP
 				ulpi_data_tristate_next.eq(0),
 				ulpi_stp_next.eq(1),
 				RegWriteAckSet.eq(1)
-			).Elif(ulpi.dir,
+			).Elif(ulpi_bus.dir,
 				NextState("RX"),
 				ulpi_data_tristate_next.eq(1),
 			),
 			)
 		
 		fsm.act("RR0",
-			If(~ulpi.dir,
+			If(~ulpi_bus.dir,
 				ulpi_data_next.eq(0xC0 | ulpi_reg.raddr), # REGR
 				NextState("RR1")
-			).Elif(ulpi.dir,
+			).Elif(ulpi_bus.dir,
 				NextState("RX"),
 				RegWriteAckSet.eq(1)
 			).Else(
@@ -182,13 +236,13 @@ class ULPI(Module):
 			))
 		
 		fsm.act("RR1",
-			If(~ulpi.dir & ulpi.nxt, # PHY accepts REGR
+			If(~ulpi_bus.dir & ulpi_bus.nxt, # PHY accepts REGR
 				ulpi_data_tristate_next.eq(1), # TA
 				NextState("RR2")
-			).Elif(~ulpi.dir & ~ulpi.nxt, # PHY delays REGR
+			).Elif(~ulpi_bus.dir & ~ulpi_bus.nxt, # PHY delays REGR
 				ulpi_data_next.eq(0xC0 | ulpi_reg.raddr), # REGR
 				NextState("RR1")
-			).Elif(ulpi.dir,
+			).Elif(ulpi_bus.dir,
 				NextState("RX"),
 				RegWriteAckSet.eq(1)
 			).Else(
@@ -197,9 +251,9 @@ class ULPI(Module):
 		
 		fsm.act("RR2",
 			ulpi_data_tristate_next.eq(1),
-			If(~ulpi.nxt, # REGR continue
+			If(~ulpi_bus.nxt, # REGR continue
 				NextState("RRD")
-			).Elif(ulpi.dir, # PHY indicates RX
+			).Elif(ulpi_bus.dir, # PHY indicates RX
 				NextState("RX"),
 				RegWriteAckSet.eq(1)
 			).Else(
@@ -207,11 +261,11 @@ class ULPI(Module):
 			))
 		
 		fsm.act("RRD",
-			If(ulpi.dir & ~ulpi.nxt,
+			If(ulpi_bus.dir & ~ulpi_bus.nxt,
 				NextState("IDLE"),
 				RegReadAckSet.eq(1),
 				ulpi_state_rrd.eq(1),
-			).Elif(ulpi.dir & ulpi.nxt,
+			).Elif(ulpi_bus.dir & ulpi_bus.nxt,
 				NextState("RX"),
 				RegWriteAckSet.eq(1)
 			).Else(
@@ -222,32 +276,7 @@ class ULPI(Module):
 
 		fsm.act("ERROR", NextState("IDLE"))
 
-ULPI_BUS = [
-	("rst", 1, DIR_M_TO_S),
-	("nxt", 1, DIR_S_TO_M),
-	("clk", 1, DIR_S_TO_M),
-	("dir", 1, DIR_S_TO_M),
-	("stp", 1, DIR_M_TO_S),
-	("do", 8, DIR_M_TO_S),
-	("di", 8, DIR_S_TO_M),
-	("doe", 1, DIR_M_TO_S)
-]
 
-ULPI_REG = [
-	("waddr", 6, DIR_M_TO_S),
-	("raddr", 6, DIR_M_TO_S),
-	("wdata", 8, DIR_M_TO_S),
-	("rdata", 8, DIR_S_TO_M),
-	("wreq", 1, DIR_M_TO_S),
-	("wack", 1, DIR_S_TO_M),
-	("rreq", 1, DIR_M_TO_S),
-	("rack", 1, DIR_S_TO_M)
-]
-
-ULPI_DATA = [
-	("d", 8, DIR_M_TO_S),
-	("rxcmd", 1, DIR_M_TO_S),
-]
 
 class FakeULPI(Module):
 	def __init__(self, ulpi_bus):

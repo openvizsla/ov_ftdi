@@ -17,7 +17,7 @@ from ovhw.sdramctl import SDRAMCTL
 from ovhw.sdram_mux import SdramMux
 from ovhw.sdram_bist import SdramBist
 from ovhw.sdrambistcfg import SdramBistCfg
-from ovhw.ulpi import ULPI, ULPI_BUS, ULPI_REG, ULPI_DATA
+from ovhw.ulpi import ULPI_ctrl, ULPI_pl, ULPI_BUS, ULPI_REG, ULPI_DATA
 from ovhw.leds import LED_outputs
 from ovhw.buttons import BTN_status
 from ovhw.whacker.whacker import Whacker
@@ -53,38 +53,30 @@ class OV3(Module):
         self.submodules.bist = SdramBist(self.sdram_mux.getPort(), memsize)
         self.submodules.sdram_test = SdramBistCfg(self.bist)
 
+
         # ULPI Interfce
-        ulpi_bus = Record(ULPI_BUS)
-        ulpi_reg = Record(ULPI_REG)
 
-        self.clock_domains.cd_ulpi = ClockDomain()
+        # Diagnostics/Testing signals
         ulpi_cd_rst = Signal()
-        self.cd_ulpi.clk = ulpi_bus.clk
-        self.cd_ulpi.rst = ulpi_cd_rst
-
-        # TODO - integrate all below into ULPI module
-        ulpi_pins = plat.request("ulpi")
-
-        stp_ovr = Signal(1)
-
-        self.comb += ulpi_pins.rst.eq(~ulpi_bus.rst)
-        self.comb += ulpi_bus.nxt.eq(ulpi_pins.nxt)
-        self.comb += ulpi_bus.clk.eq(ulpi_pins.clk)
-        self.comb += ulpi_bus.dir.eq(ulpi_pins.dir)
-        self.comb += ulpi_pins.stp.eq(ulpi_bus.stp | stp_ovr)
-        dq = TSTriple(8)
-        self.specials += dq.get_tristate(ulpi_pins.d)
-        self.comb += ulpi_bus.di.eq(dq.i)
-        self.comb += dq.o.eq(ulpi_bus.do)
-        self.comb += dq.oe.eq(ulpi_bus.doe)
-
+        ulpi_stp_ovr = Signal(1)
+        
+        # ULPI physical layer
+        self.submodules.ulpi_pl = ULPI_pl(
+            plat.request("ulpi"), ulpi_cd_rst, ulpi_stp_ovr)
+        self.clock_domains.cd_ulpi = self.ulpi_pl.cd_ulpi
+        
+        # ULPI controller
+        ulpi_reg = Record(ULPI_REG)
         self.submodules.ulpi = RenameClockDomains(
-          ULPI(ulpi_bus, ulpi_reg),
+          ULPI_ctrl(self.ulpi_pl.ulpi_bus, ulpi_reg),
           {"sys": "ulpi"}
         )
 
+        # ULPI register R/W CSR interface
         self.submodules.ucfg = ULPICfg(
-            self.cd_ulpi.clk, ulpi_cd_rst, ulpi_bus.rst, stp_ovr, ulpi_reg)
+            self.cd_ulpi.clk, ulpi_cd_rst, self.ulpi_pl.ulpi_bus.rst,
+            ulpi_stp_ovr, ulpi_reg)
+
 
         # Receive Path
         self.submodules.ovf_insert = RenameClockDomains(
