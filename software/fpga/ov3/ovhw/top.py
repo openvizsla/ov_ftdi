@@ -34,9 +34,6 @@ class OV3(Module):
         clk_ref = plat.request("clk50")
         self.submodules.clockgen = clocking.ClockGen(clk_ref)
         self.clock_domains.cd_sys = self.clockgen.cd_sys
-        self.clock_domains.cd_c33 = self.clockgen.cd_c33
-
-
 
         ftdi_io = plat.request("ftdi")
         self.submodules.ftdi_bus = ftdi_bus = FTDI_sync245(self.clockgen.cd_sys.rst,
