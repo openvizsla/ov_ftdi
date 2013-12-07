@@ -27,6 +27,7 @@ from ovhw.ftdi_bus import FTDI_sync245
 from ovhw.ftdi_lfsr_test import FTDI_randtest
 from ovhw.ulpicfg import ULPICfg
 from ovhw.cfilt import RXCmdFilter
+import ovplatform.sdram_params
 
 class OV3(Module):
     def __init__(self, plat):
@@ -35,40 +36,25 @@ class OV3(Module):
         self.clock_domains.cd_sys = self.clockgen.cd_sys
         self.clock_domains.cd_c33 = self.clockgen.cd_c33
 
-        led1 = plat.request("led", 1)
-        led2 = plat.request("led", 2)
-        led3 = plat.request("led", 3)
-        btn = plat.request("btn")
 
 
         ftdi_io = plat.request("ftdi")
         self.submodules.ftdi_bus = ftdi_bus = FTDI_sync245(self.clockgen.cd_sys.rst,
                 ftdi_io)
 
-
-
-
-
-        # Synchronize button to sys clock domain (and invert while we're at it)
-        btn_sync = Signal()
-        self.specials += [
-            NoRetiming(btn),
-            MultiReg(~btn, btn_sync, "sys")
-        ]
-
-        self.submodules.sdramctl = SDRAMCTL(plat.request("sdram"),
-                      clk_out=self.clockgen.clk_sdram,
-                      clk_sample=self.clockgen.clk_sdram_sample,
-                      databits=16, rowbits=13, colbits=9, bankbits=2,
-                      burst=512,
-                      tRESET=20000, tCL=3, tRP=4, tRFC=12, tRCD=4,
-                      tREFI=780, tWR=2)
+        # SDRAM Controller
+        sd_param = ovplatform.sdram_params.getSDRAMParams('mt48lc16m16a2')
+        self.submodules.sdramctl = SDRAMCTL(
+            plat.request("sdram"),
+            clk_out=self.clockgen.clk_sdram,
+            clk_sample=self.clockgen.clk_sdram_sample,
+            **sd_param._asdict()
+        )
 
         self.submodules.sdram_mux = SdramMux(self.sdramctl.hostif)
 
+        # SDRAM BIST
         self.submodules.bist = SdramBist(self.sdram_mux.getPort(), 0x2000000)
-
-
         self.submodules.sdram_test = SdramBistCfg(self.bist)
 
         ######## VALID
@@ -123,16 +109,14 @@ class OV3(Module):
                 ]
 
         # GPIOs (leds/buttons)
-        leds_v = Signal(3)
-        self.comb += Cat(led1, led2, led3).eq(~leds_v)
-
-        self.submodules.leds = LED_outputs(leds_v,
+        self.submodules.leds = LED_outputs(plat.request('leds'),
                 [
                     [self.bist.busy, self.ftdi_bus.tx_ind],
                     [0, self.ftdi_bus.rx_ind],
                     [0]
-                ])
-        self.submodules.buttons = BTN_status(~btn)
+                ], active=0)
+
+        self.submodules.buttons = BTN_status(~plat.request('btn'))
         
         # FTDI Command processor
         self.submodules.randtest = FTDI_randtest()
@@ -153,5 +137,5 @@ class OV3(Module):
         self.submodules.csrbankarray = BankArray(self,
             lambda name, _: self.csr_map[name])
 
+        # Connect FTDI CSR Master to CSR bus
         self.submodules.incon = Interconnect(self.cmdproc.master, self.csrbankarray.get_buses())
-

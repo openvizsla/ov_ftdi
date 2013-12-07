@@ -3,9 +3,7 @@ from mibuild.xilinx_ise import XilinxISEPlatform
 from mibuild.crg import SimpleCRG
 
 _io = [
-    ("led", 1, Pins("P57"), IOStandard("LVCMOS33"), Drive(24), Misc("SLEW=QUIETIO")),
-    ("led", 2, Pins("P58"), IOStandard("LVCMOS33"), Drive(24), Misc("SLEW=QUIETIO")),
-    ("led", 3, Pins("P59"), IOStandard("LVCMOS33"), Drive(24), Misc("SLEW=QUIETIO")),
+    ("leds", 0, Pins("P57 P58 P59"), IOStandard("LVCMOS33"), Drive(24), Misc("SLEW=QUIETIO")),
 
     ("btn", 0, Pins("P67"), IOStandard("LVCMOS33")),
 

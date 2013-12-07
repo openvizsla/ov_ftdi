@@ -9,7 +9,9 @@ from migen.sim.generic import Simulator
 from itertools import zip_longest
 
 class LED_outputs(Module, description.AutoCSR):
-    def __init__(self, leds, leds_muxes=None):
+    def __init__(self, leds_raw, leds_muxes=None, active=1):
+
+        leds = Signal(flen(leds_raw))
 
         self._out = description.CSRStorage(flen(leds), atomic_write=True)
 
@@ -37,6 +39,10 @@ class LED_outputs(Module, description.AutoCSR):
             self.comb += [
                 leds.eq(self._out.storage),
             ]
+
+        self.comb += [
+            leds_raw.eq(leds if active else ~leds)
+        ]
 
 def my_gen():
     for x in range(10):

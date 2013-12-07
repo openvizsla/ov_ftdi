@@ -28,9 +28,7 @@ class _BTN_status_CSR(Module, description.CSR):
                 self.btn_edge.eq(self.btn_cur)).Else(
                 self.btn_edge.eq(self.btn_edge | self.btn_cur))
 
-        for i in range(flen(btns)):
-            self.comb += self.btn_cur[i].eq(btns[i])
-        #self.specials += MultiReg(btns, self.btn_cur)
+        self.specials += MultiReg(btns, self.btn_cur)
 
 
 class BTN_status(Module, description.AutoCSR):
