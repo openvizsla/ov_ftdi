@@ -20,5 +20,14 @@ $(BITFILE): $(PY_FILES)
 clean:
 	rm -rf $(BUILD)/*
 
+# Full test of tests anywhere in source tree, including basic sanity 
+# tests on per-module basis
+testall:
+	nosetests --all-modules -v
+
+# Just the explicit testsuite
+test:
+	nosetests sim -v
+
 run: $(OVCTL) $(BITFILE)
 	$(OVCTL) -C -b $(BITFILE) none

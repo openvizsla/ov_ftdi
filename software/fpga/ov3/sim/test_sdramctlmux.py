@@ -1,142 +1,122 @@
 from migen.fhdl.std import *
-from sim.test_sdramctl import M, TestSDRAMComplex, TestMaster
 from ovhw.sdram_mux import SdramMux
 import unittest
+import sim.sdram_test_util
 
-class MultiMasterTester(Module):
-    def __init__(self, gens):
-        self.submodules.ctl = TestSDRAMComplex()
-        self.submodules.mux = SdramMux(self.ctl.hostif)
+class SDRAMMultiTester(sim.sdram_test_util.SDRAMUTFramework):
+    class TestBench(Module):
+        """ 
+        Test module consisting of the Emulated SDRAM + Controller complex, and an
+        SDRAM mux.
 
-        self.masters = []
-        for n, gen in enumerate(gens):
-            port = self.mux.getPort()
-            master = TestMaster(port, gen, stop_on_finish=False)
+        For each generator passed as an argument, a master will be created and
+        attached to the SDRAM mux
+        """
+        def __init__(self, sdram_modname):
+            self.submodules.cpx = sim.sdram_test_util.TestSDRAMComplex(sdram_modname)
+            self.submodules.mux = SdramMux(self.cpx.hostif)
+
+            self.complete = False
+
+            # Create and attach the masters
+            self.masters = []
+
+        def bind(self, gen):
+            master = sim.sdram_test_util.TestMaster(
+                self.mux.getPort(), stop_on_finish=False)
+            master.setSeq(gen(master))
+
             self.masters.append(master)
-            setattr(self.submodules, "host_%d" % n, master)
+            setattr(self.submodules, "master_%d" % len(self.masters), master)
 
-    def do_simulation(self, s):
-        if all(m.complete for m in self.masters):
-            s.interrupt = 1
+        def do_simulation(self, s):
+            # Finalize simulation when all masters have run to completion
+            self.complete = all(m.complete for m in self.masters)
+            if self.complete:
+                s.interrupt = 1
 
 
+    def setUp(self):
+        self.tb = self.TestBench(self.SDRAM_MODNAME)
 
-class SDRAMMultiMasterTests(unittest.TestCase):
-    def __run_gen(self, gens, n=25000):
-        from migen.sim import icarus
-        from migen.sim.generic import Simulator, TopLevel
+    def _run_gen(self, gens, n=25000):
+        # wrapper function that calls a series of generators
+        # in sequence while binding masters through
+        def wrap(gl):
+            if not isinstance(gl, list):
+                gl = [gl]
 
-        runner = icarus.Runner(extra_files=["sim/mt48lc16m16a2.v"])
-        args = []
-        #args += ["sdramctl.vcd"]
+            return lambda master: (g(master) for g in gl)
 
-        tl = TopLevel(*args, vcd_level=0)
+        for gen in gens:
+            self.tb.bind(wrap(gen))
 
-        def wrap(gg):
-            def _gen(test):
-                gl = gg
-                if not isinstance(gl, list):
-                    gl = [gl]
+        # We defer the inner setup to here as the fragment emitted will
+        # depend on how many master generators we're using
+        self._inner_setup()
 
-                for g in gl:
-                    yield from g(test)
-                test.complete = True
+        with self.sim as sim:
+            sim.run(n)
 
-            return _gen
-
-        
-        test = MultiMasterTester(wrap(i) for i in gens)
-
-        # Inject complete variable thats monitored
-        for m in test.masters:
-            m.complete = False
-
-        sim = Simulator(test, tl, runner)
-        sim.run(n)
-
+    def tearDown(self):
         # Test ran to completion
-        self.assertTrue(all(m.complete for m in test.masters))
-
-    def __create_rw_txn(self, s, l):
-        def gen(test):
-            yield from test.write_txn(s, range(0, l))
-            res = yield from test.read_txn(s, l)
-
-            self.assertEqual(res, list(range(0, l)))
-        return gen
-
-    def __create_overlap_txn(self, s, l):
-        def gen(test):
-            yield from test.write_txn(s, [0xCAFE] * l)
-            yield from test.write_txn(s + 1, range(s+1, s + l - 1) )
-            res = yield from test.read_txn(s, l)
-
-            self.assertEqual(res, 
-                [0xCAFE] + list(range(s+1, s+l-1)) + [0xCAFE])
-        return gen
-
-    def __create_b2b_read_txn(self, s, l):
-        def gen(test):
-            yield from test.write_txn(s, range(l))
-            res1 = yield from test.read_txn(s, l//2)
-            res2 = yield from test.read_txn(s+l//2, l//2)
-
-            self.assertEqual(res1, list(range(l//2)))
-            self.assertEqual(res2, list(range(l//2,l)))
-        return gen
-
-    def __wait(self, n):
-        def gen(test):
-            for i in range(0, n):
-                yield
-        return gen
+        self.assertTrue(all(m.complete for m in self.tb.masters))
         
+
+class SDRAMMultiMasterTests:
     def testBytes0(self):
-        self.__run_gen(
+        self._run_gen(
             [
                 [
-                    self.__create_rw_txn(0, 128), 
-                    self.__create_rw_txn(800, 10), 
-                    self.__create_rw_txn(900, 10), 
+                    self._rw(0, 128), 
+                    self._rw(800, 10), 
+                    self._rw(900, 10), 
                 ],
                 [
-                    self.__create_rw_txn(128,128),
-                    self.__wait(1000),
-                    self.__create_rw_txn(700,10),
+                    self._rw(128,128),
+                    self._wait(1000),
+                    self._rw(700,10),
                 ],
-                self.__create_rw_txn(256, 128),
-                self.__create_rw_txn(256+128,128),    
+                self._rw(256, 128),
+                self._rw(256+128,128),    
             ])
 
     def testBytesEndOfMem(self):
-        self.__run_gen([
-            self.__create_rw_txn(480, 50),
-            self.__create_rw_txn(480+512, 50)
+        self._run_gen([
+            self._rw(480, 50),
+            self._rw(480+512, 50)
             ])
 
     def testWriteTermination(self):
-        self.__run_gen([
-            self.__create_overlap_txn(80,100),
-            self.__create_overlap_txn(80+512,100),
+        self._run_gen([
+            self._overlap(80,100),
+            self._overlap(80+512,100),
             ])
 
     def testWriteEOMTermination(self):
-        self.__run_gen([
-            self.__create_overlap_txn(500,13),
-            self.__create_overlap_txn(1012, 13)
+        self._run_gen([
+            self._overlap(500,13),
+            self._overlap(1012, 13)
             ])
 
     def testBackBackReads(self):
-        self.__run_gen([
-            self.__create_b2b_read_txn(0,128),
-            self.__create_b2b_read_txn(512,128)
+        self._run_gen([
+            self._b2b_read(0,128),
+            self._b2b_read(512,128)
         ])
 
     def testBackBackReadsOVL(self):
-        self.__run_gen([
-            self.__create_b2b_read_txn(512-64,128),
-            self.__create_b2b_read_txn(1024-64,128)
+        self._run_gen([
+            self._b2b_read(512-64,128),
+            self._b2b_read(1024-64,128)
         ])
+
+class SDRAMMuxTests_mt48lc16m16a2(SDRAMMultiMasterTests,
+                                  sim.sdram_test_util.SDRAMTestSequences,
+                                  SDRAMMultiTester,
+                                  unittest.TestCase):
+    SDRAM_MODNAME = "mt48lc16m16a2"
+
 if __name__ == "__main__":
     unittest.main()
      

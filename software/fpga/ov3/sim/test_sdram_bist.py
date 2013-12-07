@@ -1,41 +1,35 @@
 from migen.fhdl.std import *
-from sim.test_sdramctl import TestSDRAMComplex
-from ovhw.sdram_bist import SdramBist
+from sim.sdram_test_util import TestSDRAMComplex, SDRAMUTFramework
+import ovhw.sdram_bist
 import unittest
 
 class BISTTester(Module):
-    def __init__(self, unit):
-        self.submodules.ctl = TestSDRAMComplex()
-        self.submodules.master = SdramBist(self.ctl.hostif, 3000)
+    def __init__(self, unit, sdram_modname):
+        self.submodules.ctl = TestSDRAMComplex(sdram_modname)
+        self.submodules.master = ovhw.sdram_bist.SdramBist(self.ctl.hostif,
+                                                           3000)
 
         self.gen = self.__gen()
         self.unit = unit
 
+        self.pat = 0
+
     def __gen(self):
 
-        for pat in range(0, 6):
-            yield
-            yield
-            yield
-            self.s.wr(self.master.start, 1)
-            self.s.wr(self.master.sel_test, pat)
+        yield from (None for _ in range(3))
+        self.s.wr(self.master.start, 1)
+        self.s.wr(self.master.sel_test, self.pat)
 
-            while not self.s.rd(self.master.busy):
-                yield
-            self.s.wr(self.master.start, 0)
+        while not self.s.rd(self.master.busy): yield
 
-            while self.s.rd(self.master.busy):
-                yield
+        self.s.wr(self.master.start, 0)
 
-            yield
-            self.unit.assertTrue(self.s.rd(self.master.ok))
+        while self.s.rd(self.master.busy): yield
+
+        yield
+        self.unit.assertTrue(self.s.rd(self.master.ok))
 
         self.s.interrupt = 1
-
-
-
-
-
 
     def do_simulation(self, s):
         self.s = s
@@ -46,30 +40,29 @@ class BISTTester(Module):
             self.gen = None
 
 
-class SDRAMSingleMasterTests(unittest.TestCase):
-    def __run_gen(self, n=35000):
-        from migen.sim import icarus
-        from migen.sim.generic import Simulator, TopLevel
+class SDRAMBistTests(
+    SDRAMUTFramework,
+    unittest.TestCase):
 
-        import os.path
+    def setUp(self):
+        self.tb = BISTTester(self, "mt48lc16m16a2")
+        self._inner_setup()
 
-        SDRAM_MODEL="sim/mt48lc16m16a2.v"
+# Inject BIST testcases based on defined BIST enums
+for tname in dir(ovhw.sdram_bist):
+    if not tname.startswith("TEST_"):
+        continue
 
-        if not os.path.exists(SDRAM_MODEL):
-            raise ValueError("Please download and save the vendor sdram model in %s (not redistributable)" % SDRAM_MODEL)
+    tno = getattr(ovhw.sdram_bist, tname)
 
-        runner = icarus.Runner(extra_files=["sim/mt48lc16m16a2.v"])
-        args = []
-        args += ["sdramctl.vcd"]
+    def closure():
+        _tno = tno
+        def testfn(self, n=35000):
+            self.tb.pat = _tno
+            with self.sim as sim:
+                sim.run(35000)
+        return testfn
 
-        tl = TopLevel(*args, vcd_level=0)
-        test = BISTTester(self)
-
-
-        sim = Simulator(test, tl, runner)
-        sim.run(n)
-
-
-    def testX(self):
-        self.__run_gen()
-
+    setattr(SDRAMBistTests, 
+            "test_%s" % tname.replace("TEST_",""),
+            closure())
