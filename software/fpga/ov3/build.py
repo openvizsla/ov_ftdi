@@ -1,6 +1,26 @@
 from ovplatform.ov3 import Platform
 from ovhw.top import OV3
 
+def gen_mapfile(ov3_mod):
+    # Generate mapfile for tool / sw usage
+    r = ""
+    for name, csrs, mapaddr, rmap in ov3_mod.csrbankarray.banks:
+        r += "\n# "+name+"\n"
+        reg_base = 0x200 * mapaddr
+        r += name.upper()+"_BASE = "+hex(reg_base)+"\n"
+
+        for n, csr in enumerate(csrs):
+            nr = (csr.size + 7)//8
+            r += "%s = %#x\n" % ((name + "_" + csr.name).upper(), reg_base + n)
+
+    return r
+
 if __name__ == "__main__":
     plat = Platform()
-    plat.build_cmdline(OV3(plat))
+    top = OV3(plat)
+
+    # Build the register map
+    # FIXME: build dir should come from command line arg
+    open("build/map.txt", "w").write(gen_mapfile(top))
+
+    plat.build_cmdline(top)

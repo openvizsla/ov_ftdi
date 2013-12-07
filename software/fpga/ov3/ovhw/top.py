@@ -155,16 +155,3 @@ class OV3(Module):
 
         self.submodules.incon = Interconnect(self.cmdproc.master, self.csrbankarray.get_buses())
 
-        # Generate mapfile for tool / sw usage
-        r = ""
-        for name, csrs, mapaddr, rmap in self.csrbankarray.banks:
-            r += "\n# "+name+"\n"
-            reg_base = 0x200 * mapaddr
-            r += name.upper()+"_BASE = "+hex(reg_base)+"\n"
-
-            for n, csr in enumerate(csrs):
-                nr = (csr.size + 7)//8
-                r += "%s = %#x\n" % ((name + "_" + csr.name).upper(), reg_base + n)
-
-        # FIXME: build dir should come from command line arg
-        open("build/map.txt", "w").write(r)
