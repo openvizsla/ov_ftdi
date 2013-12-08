@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 
 from migen.fhdl.std import *
-from migen.genlib.cdc import NoRetiming, MultiReg
-from migen.genlib.fifo import AsyncFIFO
-from migen.genlib.fsm import FSM, NextState
-from migen.genlib.record import Record, DIR_M_TO_S
-from migen.flow.network import DataFlowGraph, CompositeActor
-from migen.flow.actor import Source, Sink
+from migen.genlib.record import Record
 import migen.actorlib.fifo as al_fifo
 from migen.bus.csr import Interconnect
 from migen.bank.csrgen import BankArray
@@ -17,7 +12,7 @@ from ovhw.sdramctl import SDRAMCTL
 from ovhw.sdram_mux import SdramMux
 from ovhw.sdram_bist import SdramBist
 from ovhw.sdrambistcfg import SdramBistCfg
-from ovhw.ulpi import ULPI_ctrl, ULPI_pl, ULPI_BUS, ULPI_REG, ULPI_DATA
+from ovhw.ulpi import ULPI_ctrl, ULPI_pl, ULPI_REG, ULPI_DATA
 from ovhw.leds import LED_outputs
 from ovhw.buttons import BTN_status
 from ovhw.whacker.whacker import Whacker
