@@ -4,7 +4,7 @@ from migen.genlib.record import Record
 
 from ovhw.ov_types import sdramHostIf
 
-class SdramMux(Module):
+class SDRAMMux(Module):
     def __init__(self, sdctl_port):
         self.ports = []
         self.downstream = sdctl_port

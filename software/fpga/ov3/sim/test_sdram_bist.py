@@ -6,7 +6,7 @@ import unittest
 class BISTTester(Module):
     def __init__(self, unit, sdram_modname):
         self.submodules.ctl = TestSDRAMComplex(sdram_modname)
-        self.submodules.master = ovhw.sdram_bist.SdramBist(self.ctl.hostif,
+        self.submodules.master = ovhw.sdram_bist.SDRAMBIST(self.ctl.hostif,
                                                            3000)
 
         self.gen = self.__gen()
@@ -40,7 +40,7 @@ class BISTTester(Module):
             self.gen = None
 
 
-class SDRAMBistTests(
+class SDRAMBISTTests(
     SDRAMUTFramework,
     unittest.TestCase):
 
@@ -63,6 +63,6 @@ for tname in dir(ovhw.sdram_bist):
                 sim.run(35000)
         return testfn
 
-    setattr(SDRAMBistTests, 
+    setattr(SDRAMBISTTests, 
             "test_%s" % tname.replace("TEST_",""),
             closure())

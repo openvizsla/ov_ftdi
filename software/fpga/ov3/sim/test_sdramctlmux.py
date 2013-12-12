@@ -1,5 +1,5 @@
 from migen.fhdl.std import *
-from ovhw.sdram_mux import SdramMux
+from ovhw.sdram_mux import SDRAMMux
 import unittest
 import sim.sdram_test_util
 
@@ -14,7 +14,7 @@ class SDRAMMultiTester(sim.sdram_test_util.SDRAMUTFramework):
         """
         def __init__(self, sdram_modname):
             self.submodules.cpx = sim.sdram_test_util.TestSDRAMComplex(sdram_modname)
-            self.submodules.mux = SdramMux(self.cpx.hostif)
+            self.submodules.mux = SDRAMMux(self.cpx.hostif)
 
             self.complete = False
 

@@ -8,7 +8,7 @@ TEST_ADDR = 3   # ADDR
 TEST_ZERO = 4   # 0000
 TEST_ONES = 5   # FFFF
 
-class SdramBist(Module):
+class SDRAMBIST(Module):
     def __init__(self, hostif, mem_size):
         width = flen(hostif.d_write)
         assert width == 16

@@ -32,7 +32,7 @@ class _bist_cmd_reg(Module, CSR):
             _o[:4].eq(self.cmd),
             ]
 
-class SdramBistCfg(Module, AutoCSR):
+class SDRAMBISTCfg(Module, AutoCSR):
     def __init__(self, bist):
         self.submodules.cmd = _bist_cmd_reg(bist.start, bist.busy, bist.sel_test, bist.ok)
 

@@ -9,9 +9,9 @@ from migen.bank.description import AutoCSR, CSRStorage, CSRStatus, CSR
 
 import ovhw.clocking as clocking
 from ovhw.sdramctl import SDRAMCTL
-from ovhw.sdram_mux import SdramMux
-from ovhw.sdram_bist import SdramBist
-from ovhw.sdrambistcfg import SdramBistCfg
+from ovhw.sdram_mux import SDRAMMux
+from ovhw.sdram_bist import SDRAMBIST
+from ovhw.sdrambistcfg import SDRAMBISTCfg
 from ovhw.ulpi import ULPI_ctrl, ULPI_pl, ULPI_REG, ULPI_DATA
 from ovhw.leds import LED_outputs
 from ovhw.buttons import BTN_status
@@ -41,12 +41,12 @@ class OV3(Module):
         )
 
         # SDRAM Master arbiter
-        self.submodules.sdram_mux = SdramMux(self.sdramctl.hostif)
+        self.submodules.sdram_mux = SDRAMMux(self.sdramctl.hostif)
 
         # SDRAM BIST
         memsize = 2 ** (sd_param.colbits + sd_param.rowbits + sd_param.bankbits)
-        self.submodules.bist = SdramBist(self.sdram_mux.getPort(), memsize)
-        self.submodules.sdram_test = SdramBistCfg(self.bist)
+        self.submodules.bist = SDRAMBIST(self.sdram_mux.getPort(), memsize)
+        self.submodules.sdram_test = SDRAMBISTCfg(self.bist)
 
 
         # ULPI Interfce
