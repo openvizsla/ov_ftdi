@@ -53,12 +53,17 @@ class SdramBist(Module):
 
         # Pattern selection
 
+        if (flen(self.addr) >= 2*width):
+            addr_ext = self.addr
+        else:
+            addr_ext = Cat(self.addr, Replicate(0, 2*width - flen(self.addr)))
+
         self.comb += [
             Case(self.lat_test, {
                 TEST_ALT0: pat.eq(Replicate(self.addr[0], width)),
                 TEST_ALT1: pat.eq(Replicate(self.addr[0], width) ^ 0xAAAA),
                 TEST_LFSR: pat.eq(0), # STUB
-                TEST_ADDR: pat.eq(self.addr[:width] ^ self.addr[width:width*2]),
+                TEST_ADDR: pat.eq(addr_ext[:width] ^ addr_ext[width:width*2]),
                 TEST_ZERO: pat.eq(0),
                 TEST_ONES: pat.eq(0xFFFF)
             }),
