@@ -1,6 +1,5 @@
 from migen.fhdl.std import *
 from migen.fhdl.bitcontainer import bits_for
-from ovhw.ulpi import ULPI_DATA
 
 def dmatpl(depth):
     b = bits_for(depth-1)

@@ -2,6 +2,8 @@ import migen
 
 from migen.genlib.record import DIR_M_TO_S, DIR_S_TO_M
 
+D_LAST = [("d", 8), ("last", 1)]
+
 ULPI_DATA_D = [("d", 8, DIR_M_TO_S), ("rxcmd", 1, DIR_M_TO_S)]
 
 ULPI_DATA_TAG = [

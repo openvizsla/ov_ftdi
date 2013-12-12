@@ -6,10 +6,9 @@ from migen.genlib.fsm import FSM, NextState
 from ovhw.whacker.consumer import Consumer
 from ovhw.whacker.producer import Producer
 
-from ovhw.ulpi import ULPI_DATA
 from ovhw.constants import *
 
-D_LAST = [("d", 8), ("last", 1)]
+from ovhw.ov_types import D_LAST, ULPI_DATA_D
 
 class Whacker(Module, AutoCSR):
     def __init__(self, depth):
@@ -106,7 +105,7 @@ class TestWhacker(Module):
 
         class SimSource(SimActor):
             def __init__(self):
-                self.source = Source(ULPI_DATA)
+                self.source = Source(ULPI_DATA_D)
                 SimActor.__init__(self, gen())
     
         self.submodules.w = Whacker(1024)

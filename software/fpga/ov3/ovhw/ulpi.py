@@ -6,6 +6,7 @@ from migen.genlib.record import *
 from migen.flow.actor import Source
 
 from ovhw.constants import *
+from ovhw.ov_types import ULPI_DATA_D
 
 ULPI_BUS = [
 	("rst", 1, DIR_M_TO_S),
@@ -28,10 +29,6 @@ ULPI_REG = [
 	("rack", 1, DIR_S_TO_M)
 ]
 
-ULPI_DATA = [
-	("d", 8, DIR_M_TO_S),
-	("rxcmd", 1, DIR_M_TO_S),
-]
 
 class ULPI_pl(Module):
     """
@@ -75,7 +72,7 @@ class ULPI_ctrl(Module):
 		ulpi_state_rx = Signal()
 		ulpi_state_rrd = Signal()
 		
-		self.data_out_source = Source(ULPI_DATA)
+		self.data_out_source = Source(ULPI_DATA_D)
 
 		RegWriteReqR = Signal()
 		RegReadReqR = Signal()

@@ -2,16 +2,16 @@ from migen.fhdl.std import *
 from migen.flow.actor import Source, Sink
 from migen.genlib.record import Record
 
-from ovhw.ulpi import ULPI_DATA
+from ovhw.ov_types import ULPI_DATA_D
 from ovhw.constants import RXCMD_MAGIC_OVF
 
 class OverflowInserter(Module):
     def __init__(self):
-        self.sink = Sink(ULPI_DATA)
-        self.source = Source(ULPI_DATA)
+        self.sink = Sink(ULPI_DATA_D)
+        self.source = Source(ULPI_DATA_D)
 
         valid = Signal()
-        data = Record(ULPI_DATA)
+        data = Record(ULPI_DATA_D)
 
 
         self.comb += [

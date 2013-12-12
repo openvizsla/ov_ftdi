@@ -4,11 +4,9 @@ from migen.fhdl.bitcontainer import bits_for
 from migen.genlib.fsm import FSM, NextState
 
 from ovhw.whacker.util import dmatpl
-from ovhw.ulpi import ULPI_DATA
 from ovhw.constants import *
 
-D_LAST = [("d", 8), ("last", 1)]
-
+from ovhw.ov_types import D_LAST, ULPI_DATA_D
 
 def _inc(signal, modulo, dest_signal=None):
     if type(dest_signal) == type(None):

@@ -12,7 +12,7 @@ from ovhw.sdramctl import SDRAMCTL
 from ovhw.sdram_mux import SDRAMMux
 from ovhw.sdram_bist import SDRAMBIST
 from ovhw.sdrambistcfg import SDRAMBISTCfg
-from ovhw.ulpi import ULPI_ctrl, ULPI_pl, ULPI_REG, ULPI_DATA
+from ovhw.ulpi import ULPI_ctrl, ULPI_pl, ULPI_REG
 from ovhw.leds import LED_outputs
 from ovhw.buttons import BTN_status
 from ovhw.whacker.whacker import Whacker
@@ -22,6 +22,7 @@ from ovhw.ftdi_bus import FTDI_sync245
 from ovhw.ftdi_lfsr_test import FTDI_randtest
 from ovhw.ulpicfg import ULPICfg
 from ovhw.cfilt import RXCmdFilter
+from ovhw.ov_types import ULPI_DATA_D
 import ovplatform.sdram_params
 
 class OV3(Module):
@@ -80,7 +81,7 @@ class OV3(Module):
         )
 
         self.submodules.udata_fifo = RenameClockDomains(
-            al_fifo.AsyncFIFO(ULPI_DATA, 1024),
+            al_fifo.AsyncFIFO(ULPI_DATA_D, 1024),
             {"write":"ulpi", "read":"sys"}
         )
 
