@@ -1,3 +1,6 @@
 *~
 *.o
 ovctl
+libov.so
+libov.dylib
+ov3.fwpkg
