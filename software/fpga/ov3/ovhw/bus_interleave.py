@@ -158,17 +158,3 @@ class BusInterleave(Module):
                 self.rr.request[i].eq(port.source.stb)
                 ]
 
-
-
-                    
-
-
-                    
-if __name__ == "__main__":
-    from migen.fhdl import verilog
-    
-    m = Module()
-    m.submodules.dec = BusDecode()
-    #m.submodules.enc = BusEncode()
-
-    print(verilog.convert(m))

@@ -49,3 +49,33 @@ def run(arg):
         return si.value
 
 
+class TIProxy:
+    """
+    Transaction Initiator proxy; for sequencing CSR writes from a separate
+    generator
+    """
+    def __init__(self):
+        self.tl = []
+        self.done = False
+
+    def issue(self, arg):
+        self.tl.append(arg)
+
+    def wait(self):
+        while self.tl:
+            yield
+
+    def fini(self):
+        self.done = True
+
+    def _ini_iterator(self):
+        while 1:
+            if self.done:
+                raise StopIteration()
+
+            if self.tl:
+                yield self.tl[0]
+                self.tl = self.tl[1:]
+            else:
+                yield
+

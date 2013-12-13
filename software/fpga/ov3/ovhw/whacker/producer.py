@@ -7,6 +7,7 @@ from ovhw.ov_types import ULPI_DATA_TAG
 from ovhw.constants import *
 from ovhw.whacker.util import *
 
+MAX_PACKET_SIZE = 800
 class Producer(Module):
 
     def __init__(self, wrport, depth, consume_watermark, ena, la_filters=[]):
@@ -100,7 +101,7 @@ class Producer(Module):
                     ((self.ulpi_sink.stb | self.to_start.v) & ena 
                      | stuff_packet) & has_space,
 
-                    If(~(self.to_start.v | stuff_packet), self.ulpi_sink.ack.eq(1)),
+                    If(~self.to_start.v | (self.ulpi_sink.stb & stuff_packet), self.ulpi_sink.ack.eq(1)),
 
                     self.produce_write.set(self.produce_header.v+8),
                     self.size.set(0),
@@ -142,12 +143,12 @@ class Producer(Module):
             ]
             
         packet_too_long = Signal()
-        self.comb += packet_too_long.eq(self.size.v > 800)
+        self.comb += packet_too_long.eq(self.size.v >= MAX_PACKET_SIZE)
 
         self.fsm.act("DATA",
                 If(packet_too_long,
                     self.flags._or(HF0_TRUNC),
-                    NextState("WRF0")
+                    NextState("WH0")
                 ).Elif(has_space & self.ulpi_sink.stb,
                     self.ulpi_sink.ack.eq(1),
                     If(payload_is_rxcmd,
@@ -215,141 +216,3 @@ class Producer(Module):
             )
         )
 
-
-class TestProducer(Module):
-    def __init__(self):
-        from migen.actorlib.sim import SimActor, Dumper, Token
-        
-
-        class PORT(Module):
-            def __init__(self, aw, dw):
-                self.adr = Signal(aw)
-                self.dat_w = Signal(dw)
-                self.we = Signal(1)
-
-                import array
-                self.mem = array.array('B', [0] * 2**aw)
-
-            def do_simulation(self, s):
-                writing, w_addr, w_data = s.multiread([self.we, self.adr, self.dat_w])
-                if writing:
-                    assert w_addr < 1024
-                    self.mem[w_addr] = w_data
-
-
-        self.submodules.port = PORT(bits_for(1024), 8)
-
-        def packet(size=0, st=0, end=1):
-            yield  Token('source', {'rxcmd':1, 'd':0x40})
-            for i in range(size):
-                yield  Token('source', {'rxcmd':0, 'd':(i+st)&0xFF})
-            
-            if end != 4:
-                yield  Token('source', {'rxcmd':1, 'd':0x40 | end})
-
-            print("Complete")
-
-        def gen():
-            for i in packet(530, 0, 1):
-                yield i
-
-            for i in packet(530, 0x10, 1):
-                yield i
-
-            for i in packet(10, 0x20, 4):
-                yield i
-            
-            for i in packet(10, 0x30, 2):
-                yield i
-
-            for i in packet(900, 0x30, 4):
-                yield i
-
-            for i in packet(10, 0x30, 2):
-                yield i
-
-        class SimSource(SimActor):
-            def __init__(self):
-                self.source = Source(ULPI_DATA)
-                SimActor.__init__(self, gen())
-
-        class SimDMASink(SimActor):
-            def __init__(self, mem, cw):
-                self.sink = Sink(dmatpl(1024))
-                SimActor.__init__(self, self.gen())
-
-                self.mem = mem
-                self.cw = cw
-
-            def gen(self):
-                import constants
-                _fn = {}
-                for k,v in constants.__dict__.items():
-                    if k.startswith("HF0_"):
-                        _fn[v] = k[4:]
-
-                while 1:
-                    t  = Token('sink')
-                    yield t
-
-                    # Long delay between packet readout
-                    for i in range(600):
-                        yield None
-                    
-                    print("DMAFROM: %04x (%02x)" % (t.value['start'], t.value['count']))
-
-
-                    i = t.value['start']
-                    psize = self.mem[i+3] | self.mem[i+4] << 8
-                    pflags = self.mem[i+1] | self.mem[i+2] 
-                    
-
-                    e = []
-                    for i in range(0,16):
-                        if pflags & 1<<i and 1<<i in _fn:
-                            e.append(_fn[1<<i])
-                    print("\tFlag: %s" % ", ".join(e))
-
-                    d = [self.mem[i%1024] 
-                        for i in range(t.value['start'], t.value['start'] + t.value['count'])]
-                    print("\t%s" % " ".join("%02x" % i for i in d))
-
-                    assert t.value['count'] == psize + 8
-                    self.s.wr(self.cw, (t.value['start'] + t.value['count']) & (1024-1))
-
-                    b = d[8]
-                    rem = d[9:]
-                    c = [(i+b+1) & 0xFF for i in range(0, len(rem))]
-                    assert c == rem
-
-                    print()
-
-            def do_simulation(self, s):
-                SimActor.do_simulation(self, s)
-                self.s = s
-
-
-
-        self.consume_watermark  =Signal(max=1024)
-
-        self.submodules.src = SimSource()
-        self.submodules.p = Producer(self.port, 1024, self.consume_watermark)
-        self.comb += self.p.ulpi_sink.connect(self.src.source)
-        self.comb += self.src.busy.eq(0)
-
-        self.submodules.dmp = SimDMASink(self.port.mem, self.consume_watermark)
-        self.comb += self.p.out_addr.connect(self.dmp.sink)
-        self.comb += self.dmp.busy.eq(0)
-
-
-
-if __name__ == '__main__':
-    from migen.sim.generic import Simulator, TopLevel
-    from migen.sim.icarus import Runner
-    tl = TopLevel("testprod.vcd")
-    test = TestProducer()
-    sim = Simulator(test, tl, Runner(keep_files=True))
-    sim.run(8000)
-    
-
-        
