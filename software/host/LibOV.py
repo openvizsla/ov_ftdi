@@ -63,6 +63,15 @@ FTDIDevice_ReadStream.argtypes = [
         ]
 FTDIDevice_ReadStream.restype = ctypes.c_int
 
+# void ChandlePacket(unsigned int ts, unsigned int flags, unsigned char *buf, unsigned int len)
+ChandlePacket = libov.ChandlePacket
+ChandlePacket.argtypes = [
+    ctypes.c_ulonglong, # ts
+    ctypes.c_int, # flags
+    ctypes.c_char_p, # buf
+    ctypes.c_int, # len
+]
+
 FTDI_INTERFACE_A = 1
 FTDI_INTERFACE_B = 2
 
@@ -121,6 +130,9 @@ class FTDIDevice:
 
         return FTDIDevice_ReadStream(self._dev, intf, cb, 
                 None, packetsPerTransfer, numTransfers)
+        # uncomment next lines to use C code to parse packets
+        #return FTDIDevice_ReadStream(self._dev, intf, p_cb_StreamCallback(libov.CStreamCallback), 
+        #        cb, packetsPerTransfer, numTransfers)
         
 
 
@@ -433,6 +445,7 @@ class RXCSniff:
                 handler(ts, buf, flags)
 
         def handle_usb_verbose(self, ts, buf, flags):
+#                ChandlePacket(ts, flags, buf, len(buf))
                 self.ui.handlePacket(ts, buf, flags)
 
             
