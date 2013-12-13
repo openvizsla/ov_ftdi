@@ -75,11 +75,12 @@ class USBInterpreter(object):
 
                 msg += "DATA%d: %s" % (n,hd(buf[1:]))
 
-                calc_check = self.data_crc(buf[1:-2])^0xFFFF 
-                pkt_check = buf[-2] | buf[-1] << 8
+                if len(buf) > 2:
+                    calc_check = self.data_crc(buf[1:-2])^0xFFFF 
+                    pkt_check = buf[-2] | buf[-1] << 8
 
-                if calc_check != pkt_check:
-                    msg += "\tUnexpected ERR CRC"
+                    if calc_check != pkt_check:
+                        msg += "\tUnexpected ERR CRC"
 
             elif pid == 0xF:
                 msg += "MDATA: %s" % hd(buf[1:])
