@@ -175,8 +175,8 @@ def sdramtest(dev):
 
     dev.regs.LEDS_MUX_0.wr(0)
 
-@command('sniff', ('speed', str), ('format', str, 'verbose'), ('out', str, None))
-def sniff(dev, speed, format, out):
+@command('sniff', ('speed', str), ('format', str, 'verbose'), ('out', str, None), ('timeout', int, None))
+def sniff(dev, speed, format, out, timeout):
     # LEDs off
     dev.regs.LEDS_MUX_2.wr(0)
     dev.regs.LEDS_OUT.wr(0)
@@ -217,10 +217,14 @@ def sniff(dev, speed, format, out):
     if output_handler is not None:
       dev.rxcsniff.service.handlers = [output_handler.handle_usb]
 
+    elapsed_time = 0
     try:
         dev.regs.CSTREAM_CFG.wr(1)
         while 1:
+            if timeout and elapsed_time > timeout:
+                break
             time.sleep(1)
+            elapsed_time = elapsed_time + 1
     except KeyboardInterrupt:
         pass
     finally:
