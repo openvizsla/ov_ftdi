@@ -386,6 +386,15 @@ HF0_FIRST = 0x10
 # Last packet of capture session; IE, when the cap hardware was disabled
 HF0_LAST = 0x20
 
+def decode_flags(flags):
+    ret = ""
+    ret += "Error " if flags & HF0_ERR else ""
+    ret += "Overflow" if flags & HF0_OVF else ""
+    ret += "Clipped " if flags & HF0_CLIP else ""
+    ret += "Truncated " if flags & HF0_TRUNC else ""
+    ret += "First " if flags & HF0_FIRST else ""
+    ret += "Last " if flags & HF0_LAST else ""
+    return ret.rstrip()
 
 class RXCSniff:
     class __RXCSniffService(baseService):
@@ -428,8 +437,8 @@ class RXCSniff:
 
                 ts = buf[5] | buf[6] << 8 | buf[7] << 16
 
-                if flags != 0:
-                    print("PERR: %04X" % flags)
+                if flags != 0 and flags != HF0_FIRST and flags != HF0_LAST:
+                    print("PERR: %04X (%s)" % (flags, decode_flags(flags)))
                
                 if flags & HF0_FIRST:
                     self.got_start = True
