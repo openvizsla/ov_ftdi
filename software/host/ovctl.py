@@ -257,6 +257,14 @@ def iowrite(dev, addr, value):
 def ledtest(dev, v):
     dev.regs.leds_out.wr(v)
 
+@command('eep-erase')
+def eeperase(dev):
+    dev.dev.eeprom_erase()
+
+@command('eep-program', ('serialno', int))
+def eepprogram(dev, serialno):
+    dev.dev.eeprom_program(serialno)
+
 class LB_Test(Command):
     name = "lb-test"
 

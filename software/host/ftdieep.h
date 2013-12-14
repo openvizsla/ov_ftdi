@@ -32,7 +32,7 @@
  * Public Functions
  */
 
-int FTDIEEP_CheckAndProgram(FTDIDevice *dev);
+int FTDIEEP_CheckAndProgram(FTDIDevice *dev, unsigned int number);
 int FTDIEEP_Erase(FTDIDevice *dev);
 
 #endif /* __FTDIEEP_H */

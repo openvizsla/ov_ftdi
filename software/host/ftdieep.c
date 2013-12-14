@@ -154,32 +154,12 @@ static int FTDIEEP_MakeStringDescriptor(uint16_t *data, uint8_t id, uint8_t *add
 	return 0;
 }
 
-static void FTDIEEP_GenerateSerial(char *serial)
+static void FTDIEEP_GenerateSerial(char *serial, unsigned int number)
 {
-	int i;
-	uint32_t t;
-	serial[0] = 'O';
-	serial[1] = 'V';
-
-	/* FTDI's algo is some stupid weird and wasteful and clashable concoction of D/M/Y/h/m/s,
-	   but that's lame, so we use UNIX time instead. Should be good 'till 2036. */
-
-	/* 6 chars can hold just over 31 bits */
-	t = time(NULL) & 0x7FFFFFFF;
-
-	for ( i=7; i>1; i-- ) {
-		uint32_t v = t % 36;
-		t = t / 36;
-		if (v > 10)
-			serial[i] = v - 10 + 'A';
-		else
-			serial[i] = v + '0';
-	}
-
-	serial[8] = 0;
+	snprintf(serial, 9, "OV%06u", number);
 }
 
-static int FTDIEEP_WriteDefaults(FTDIDevice *dev)
+static int FTDIEEP_WriteDefaults(FTDIDevice *dev, unsigned int number)
 {
 	int err;
 	uint16_t data[EEP_SIZE];
@@ -208,7 +188,7 @@ static int FTDIEEP_WriteDefaults(FTDIDevice *dev)
 
 	addr = EEP_STRINGSTART;
 
-	FTDIEEP_GenerateSerial(serial);
+	FTDIEEP_GenerateSerial(serial, number);
 	fprintf(stderr, "EEPROM: Generated serial %s\n", serial);
 
 	err = FTDIEEP_MakeStringDescriptor(data, EEP_MANUFACTURER, &addr, "OpenVizsla");
@@ -258,7 +238,7 @@ int FTDIEEP_Erase(FTDIDevice *dev)
 	return 0;
 }
 
-int FTDIEEP_CheckAndProgram(FTDIDevice *dev)
+int FTDIEEP_CheckAndProgram(FTDIDevice *dev, unsigned int number)
 {
 	int err;
 	uint8_t addr;
@@ -279,7 +259,7 @@ int FTDIEEP_CheckAndProgram(FTDIDevice *dev)
 //		fprintf(stderr, "EEPROM: Device blank or checksum incorrect, programming\n");
 		fprintf(stderr, "EEPROM: Device blank or checksum incorrect\n");
 
-		err = FTDIEEP_WriteDefaults(dev);
+		err = FTDIEEP_WriteDefaults(dev, number);
 		if (err)
 			return err;
 		err = FTDIDevice_Reset(dev);

@@ -72,6 +72,21 @@ ChandlePacket.argtypes = [
     ctypes.c_int, # len
 ]
 
+# int FTDIEEP_Erase(FTDIDevice *dev)
+FTDIEEP_Erase = libov.FTDIEEP_Erase
+FTDIEEP_Erase.argtypes = [
+        pFTDI_Device,    # dev
+        ]
+FTDIEEP_Erase.restype = ctypes.c_int
+
+# int FTDIEEP_CheckAndProgram(FTDIDevice *dev, unsigned int number)
+FTDIEEP_CheckAndProgram = libov.FTDIEEP_CheckAndProgram
+FTDIEEP_CheckAndProgram.argtypes = [
+        pFTDI_Device,    # dev
+        ctypes.c_int,    # serial number
+        ]
+FTDIEEP_CheckAndProgram.restype = ctypes.c_int
+
 FTDI_INTERFACE_A = 1
 FTDI_INTERFACE_B = 2
 
@@ -134,7 +149,11 @@ class FTDIDevice:
         #return FTDIDevice_ReadStream(self._dev, intf, p_cb_StreamCallback(libov.CStreamCallback), 
         #        cb, packetsPerTransfer, numTransfers)
         
+    def eeprom_erase(self):
+        return FTDIEEP_Erase(self._dev)
 
+    def eeprom_program(self, serialno):
+        return FTDIEEP_CheckAndProgram(self._dev, serialno)
 
 _FPGA_GetConfigStatus = libov.FPGA_GetConfigStatus
 _FPGA_GetConfigStatus.restype = ctypes.c_int
