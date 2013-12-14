@@ -12,6 +12,7 @@ import zipfile
 import sys
 import os
 import struct
+#import yappi
 
 def as_ascii(arg):
     if arg == None:
@@ -184,7 +185,7 @@ def sniff(dev, speed, format, out):
     dev.regs.LEDS_MUX_0.wr(2)
     dev.regs.LEDS_MUX_1.wr(2)
 
-    assert speed in ["hs", "fs"]
+    assert speed in ["hs", "fs", "ls"]
 
     if check_ulpi_clk(dev):
         return
@@ -195,6 +196,9 @@ def sniff(dev, speed, format, out):
             dev.rxcsniff.service.highspeed = True
     elif speed == "fs":
             dev.ulpiregs.func_ctl.wr(0x49)
+            dev.rxcsniff.service.highspeed = False
+    elif speed == "ls":
+            dev.ulpiregs.func_ctl.wr(0x4a)
             dev.rxcsniff.service.highspeed = False
     else:
         assert 0,"Invalid Speed"
@@ -350,4 +354,7 @@ def main():
         dev.close()
 
 if  __name__ == "__main__":
+#    yappi.start()
     main()
+#    yappi.print_stats()
+
