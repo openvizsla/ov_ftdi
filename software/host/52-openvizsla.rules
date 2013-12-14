@@ -1,0 +1,2 @@
+# allow all users to access OpenVizsla devices
+SUBSYSTEM=="usb", ATTR{idVendor}=="1d50", ATTR{idProduct}=="607c", MODE="0666", GROUP="plugdev"
