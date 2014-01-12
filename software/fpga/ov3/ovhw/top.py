@@ -28,7 +28,7 @@ import ovplatform.sdram_params
 class OV3(Module):
     def __init__(self, plat):
         # Clocking
-        clk_ref = plat.request("clk50")
+        clk_ref = plat.request("clk12")
         self.submodules.clockgen = clocking.ClockGen(clk_ref)
         self.clock_domains.cd_sys = self.clockgen.cd_sys
 
