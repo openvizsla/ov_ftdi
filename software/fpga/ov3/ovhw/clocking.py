@@ -19,6 +19,7 @@ class ClockGen(Module):
             Instance.Input("CLKIN", clkin),
             Instance.Input("CLKFB", clkdcm),
             Instance.Input("RST", 0),
+            Instance.Input("PSEN", 0),
             Instance.Output("CLK2X", clkdcm),
             Instance.Output("LOCKED", dcm_locked),
             Instance.Parameter("CLK_FEEDBACK", "2X"),
