@@ -31,10 +31,11 @@ class FTDI_sync245(Module):
         dbus.oe.reset = 0
         assert io.d.nbits == 8
         self.specials += dbus.get_tristate(io.d)
-                
+
         io.wr_n.reset = 1
         io.rd_n.reset = 1
         io.oe_n.reset = 1
+        self.comb += io.siwua_n.eq(1)
 
         next_RD = Signal(reset=0)
         next_WR = Signal(reset=0)
