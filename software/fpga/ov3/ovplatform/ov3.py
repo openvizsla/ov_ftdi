@@ -75,6 +75,9 @@ _io = [
         Subsignal("dqm", Pins("P141 P23")),
         IOStandard("LVCMOS33"), Drive(8), Misc("SLEW=FAST")
     ),
+
+    # Just disable the pull-down
+    ("init_b", 0, Pins("P39"), IOStandard("LVCMOS33")),
 ]
 
 class Platform(XilinxISEPlatform):
@@ -89,6 +92,9 @@ class Platform(XilinxISEPlatform):
             ("ulpi", "clk"): 60.0,
             ("ftdi", "clk"): 60.0
         }
+
+        # Make sure init_b is used / added to the UCF
+        self.request("init_b")
 
         for name, mhz in clocks.items():
             period = 1000.0 / mhz
