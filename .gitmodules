@@ -1,6 +1,3 @@
-[submodule "software/fpga/mibuild"]
-	path = software/fpga/mibuild
-	url = git://github.com/milkymist/mibuild.git
 [submodule "software/fpga/migen"]
 	path = software/fpga/migen
-	url = git://github.com/milkymist/migen.git
+	url = git://github.com/m-labs/migen.git
