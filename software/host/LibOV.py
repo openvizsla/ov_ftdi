@@ -176,18 +176,24 @@ class TimeoutError(Exception):
     pass
 
 class _mapped_reg:
-    def __init__(self, readfn, writefn, name, addr):
+    def __init__(self, readfn, writefn, name, addr, size):
         self.readfn = readfn
         self.writefn = writefn
         self.addr = addr
+        self.size = size
         self.shadow = 0
 
     def rd(self):
-        self.shadow = self.readfn(self.addr)
+        self.shadow = 0
+        for i in range(self.size):
+            self.shadow <<= 8
+            self.shadow |= self.readfn(self.addr + i)
         return self.shadow
 
     def wr(self, value):
-        self.shadow = self.writefn(self.addr, value)
+        self.shadow = value
+        for i in range(self.size):
+            self.writefn(self.addr + self.size - 1 - i, (value >> (i * 8)) & 0xFF)
 
 class _mapped_regs:
     def __init__(self, d):
@@ -494,7 +500,7 @@ class OVDevice:
 
 
         self.regs = self.__build_map(self.__addrmap, self.ioread, self.iowrite)
-        self.ulpiregs = self.__build_map(SMSC_334x_MAP, self.ulpiread, self.ulpiwrite)
+        self.ulpiregs = self.__build_map({x: (y, 1) for x, y in SMSC_334x_MAP.items()}, self.ulpiread, self.ulpiwrite)
 
 
         self.clkup = False
@@ -555,8 +561,8 @@ class OVDevice:
             
     def __build_map(self, addrmap, readfn, writefn):
         d = {}
-        for name, addr in addrmap.items():
-            d[name] = _mapped_reg(readfn, writefn, name, addr)
+        for name, (addr, size) in addrmap.items():
+            d[name] = _mapped_reg(readfn, writefn, name, addr, size)
 
         return _mapped_regs(d)
 
@@ -579,14 +585,19 @@ class OVDevice:
             if not line:
                 continue
 
-            m = re.match('\s*(\w+)\s*=\s*(\w+)\s*', line)
+            m = re.match('\s*(\w+)\s*=\s*(\w+)(:\w+)?\s*', line)
             if not m:
                 raise ValueError("Mapfile - could not parse %s" % line)
 
             name = m.group(1)
             value = int(m.group(2), 16)
+            if m.group(3) is None:
+                size = 1
+            else:
+                size = int(m.group(3)[1:], 16) + 1 - value
+                assert size > 1
 
-            self.__addrmap[name] = value
+            self.__addrmap[name] = value, size
 
 
     def resolve_addr(self, sym):

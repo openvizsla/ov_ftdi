@@ -11,7 +11,11 @@ def gen_mapfile(ov3_mod):
 
         for n, csr in enumerate(csrs):
             nr = (csr.size + 7)//8
-            r += "%s = %#x\n" % ((name + "_" + csr.name).upper(), reg_base + n)
+            if nr == 1:
+                r += "%s = %#x\n" % ((name + "_" + csr.name).upper(), reg_base)
+            else:
+                r += "%s = %#x:%#x\n" % ((name + "_" + csr.name).upper(), reg_base, reg_base + nr - 1)
+            reg_base += nr
 
     return r
 
