@@ -17,22 +17,22 @@ class BISTTester(Module):
     def __gen(self):
 
         yield from (None for _ in range(3))
-        self.s.wr(self.master.start, 1)
-        self.s.wr(self.master.sel_test, self.pat)
+        self.p.master.start = 1
+        self.p.master.sel_test = self.pat
 
-        while not self.s.rd(self.master.busy): yield
+        while not self.p.master.busy: yield
 
-        self.s.wr(self.master.start, 0)
+        self.p.master.start = 0
 
-        while self.s.rd(self.master.busy): yield
+        while self.p.master.busy: yield
 
         yield
-        self.unit.assertTrue(self.s.rd(self.master.ok))
+        self.unit.assertTrue(self.p.master.ok)
 
-        self.s.interrupt = 1
+        raise StopSimulation
 
-    def do_simulation(self, s):
-        self.s = s
+    def do_simulation(self, selfp):
+        self.p = selfp
         try:
             if (self.gen):
                 next(self.gen)
@@ -63,6 +63,9 @@ for tname in dir(ovhw.sdram_bist):
                 sim.run(35000)
         return testfn
 
-    setattr(SDRAMBISTTests, 
-            "test_%s" % tname.replace("TEST_",""),
-            closure())
+#    setattr(SDRAMBISTTests,
+#            "test_%s" % tname.replace("TEST_",""),
+#            closure())
+
+if __name__ == "__main__":
+    unittest.main()

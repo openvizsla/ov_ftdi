@@ -29,11 +29,11 @@ class SDRAMMultiTester(sim.sdram_test_util.SDRAMUTFramework):
             self.masters.append(master)
             setattr(self.submodules, "master_%d" % len(self.masters), master)
 
-        def do_simulation(self, s):
+        def do_simulation(self, selfp):
             # Finalize simulation when all masters have run to completion
             self.complete = all(m.complete for m in self.masters)
             if self.complete:
-                s.interrupt = 1
+                raise StopSimulation
 
 
     def setUp(self):
