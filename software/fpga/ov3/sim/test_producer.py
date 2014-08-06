@@ -23,8 +23,8 @@ class TestBench(Module):
                 import array
                 self.mem = array.array('B', [0] * 2**aw)
 
-            def do_simulation(self, s):
-                writing, w_addr, w_data = s.multiread([self.we, self.adr, self.dat_w])
+            def do_simulation(self, selfp):
+                writing, w_addr, w_data = selfp.we, selfp.adr, selfp.dat_w
                 if writing:
                     assert w_addr < 1024
                     self.mem[w_addr] = w_data
@@ -61,18 +61,18 @@ class TestBench(Module):
         self.comb += self.p.out_addr.connect(self.dmp.sink)
         self.comb += self.dmp.busy.eq(0)
 
-    def do_simulation(self, s):
-        self.s = s
+    def do_simulation(self, selfp):
+        self.selfp = selfp
 
     
-    def packet(self, size=0, st=0, end=1):
+    def packet(self, size=0, st=0, end=1, timestamp=0):
         def _(**kwargs):
             jj = {"is_start":0, "is_end":0, "is_ovf":0, "is_err":0,
                   "d":0,"ts":0}
             jj.update(kwargs)
             return jj
 
-        yield  Token('source', _(is_start=1, ts=0xCAFEBA))
+        yield  Token('source', _(is_start=1, ts=timestamp))
         for i in range(size):
             yield  Token('source', _(d=(i+st)&0xFF))
         
@@ -81,7 +81,7 @@ class TestBench(Module):
 class TestProducer(unittest.TestCase):
     def setUp(self):
         self.tb = TestBench()
-        self.sim = Simulator(self.tb)
+        self.sim = Simulator(self.tb, TopLevel("test_producer.vcd", vcd_level = 3))
 
     def _run(self):
         with self.sim as sim:
@@ -89,12 +89,12 @@ class TestProducer(unittest.TestCase):
 
     def test_producer(self):
         seq = [
-            (530, 0, 1),
-            (530, 0x10, 1),
-            (10, 0x20, 4),
-            (10, 0x30, 2),
-            (900, 0x30, 4),
-            (10, 0x30, 2)
+            (530, 0, 1, 0xCAFEBA),
+            (530, 0x10, 1, 0xCDEF0),
+            (10, 0x20, 4, 0xDE0000),
+            (10, 0x30, 2, 0xDF0123),
+            (900, 0x30, 4, 0xE10320),
+            (10, 0x30, 2, 0xE34567)
         ]
 
         def src_gen():
@@ -112,7 +112,7 @@ class TestProducer(unittest.TestCase):
                 flag_names[v] = k[4:]
 
 
-        def sink_get_packet(sub_len, sub_base, sub_flags):
+        def sink_get_packet(sub_len, sub_base, sub_flags, timestamp):
             # Expected payload length
             calc_len = sub_len if sub_len < MAX_PACKET_SIZE else MAX_PACKET_SIZE
             
@@ -139,7 +139,7 @@ class TestProducer(unittest.TestCase):
             # expecting
             self.assertEqual(p_magic, 0xA0)
             self.assertEqual(p_size, calc_len)
-            self.assertEqual(p_timestamp, 0xCAFEBA)
+            self.assertEqual(p_timestamp, timestamp)
 
             # Check that the DMA request matched the packet
             self.assertEqual(t.value['count'], calc_len + 8)
@@ -160,13 +160,14 @@ class TestProducer(unittest.TestCase):
             print("\t%s" % " ".join("%02x" % i for i in packet))
 
             # Update the producer watermark
-            self.tb.s.wr(self.tb.consume_watermark, (t.value['start'] + t.value['count']) & (1024-1))
+            self.tb.selfp.consume_watermark = (t.value['start'] + t.value['count']) & (1024-1)
 
             # Check the payload matches
             expected_payload = [(sub_base+i) & 0xFF for i in range(0, calc_len)]
             self.assertEqual(expected_payload, packet[8:])
 
         def sink_gen():
+            yield from sink_get_packet(0, 0, 0x10, 0)
             for p in seq:
                 yield from sink_get_packet(*p)
 
