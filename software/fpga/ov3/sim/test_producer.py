@@ -81,7 +81,9 @@ class TestBench(Module):
 class TestProducer(unittest.TestCase):
     def setUp(self):
         self.tb = TestBench()
-        self.sim = Simulator(self.tb, TopLevel("test_producer.vcd", vcd_level = 3))
+        vcd = None
+        #vcd = "test_producer.vcd"
+        self.sim = Simulator(self.tb, TopLevel(vcd, vcd_level = 3))
 
     def _run(self):
         with self.sim as sim:

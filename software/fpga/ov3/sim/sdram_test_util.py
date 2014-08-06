@@ -76,45 +76,45 @@ class TestMaster(Module):
 
     def __issue(self, addr, wr):
         # Issue the command and wait for ack
-        self.s.multiwrite(
-            self.hostif,
-            {"i_wr": wr, "i_addr": addr, "i_stb": 1})
+        self.p.hostif.i_wr = wr
+        self.p.hostif.i_addr = addr
+        self.p.hostif.i_stb = 1
 
         yield
-        while not self.s.rd(self.hostif.i_ack): yield
+        while not self.p.hostif.i_ack: yield
 
-        self.s.wr(self.hostif.i_stb, 0)
+        self.p.hostif.i_stb = 0
 
     # Data pipe - wait for the controller to strobe
     def __d_step(self):
         yield
-        while (not self.s.rd(self.hostif.d_stb)):
+        while (not self.p.hostif.d_stb):
             yield
 
     # Data pipe - send and wait for a termination cycle
     def __d_term(self):
-        self.s.wr(self.hostif.d_term, 1)
+        self.p.hostif.d_term = 1
         yield from self.__d_step()
-        self.s.wr(self.hostif.d_term, 0)
+        self.p.hostif.d_term = 0
     
     # Data pipe - handle a write stream
     def __d_write(self, buf):
-        self.s.wr(self.hostif.d_term, 0)
+        self.p.hostif.d_term = 0
 
         for val in buf:
-            self.s.wr(self.hostif.d_write, val)
+            self.p.hostif.d_write = val
             yield from self.__d_step()
 
         yield from self.__d_term()
 
     # Data pipe - handle a read stream
     def __d_read(self, ct):
-        self.s.wr(self.hostif.d_term, 0)
+        self.p.hostif.d_term = 0
 
         buf = []
         for n in range(ct):
             yield from self.__d_step()
-            buf.append(self.s.rd(self.hostif.d_read))
+            buf.append(self.p.hostif.d_read)
 
         yield from self.__d_term()
 
@@ -136,16 +136,16 @@ class TestMaster(Module):
         )
         return buf[1]
 
-    def do_simulation(self, s): 
-        self.s = s
+    def do_simulation(self, selfp):
+        self.p = selfp
         if self.geninst:
             try:
                 next(self.geninst)
             except StopIteration:
                 self.geninst = None
-                if self.stop_on_finish:
-                    s.interrupt = True
                 self.complete = True
+                if self.stop_on_finish:
+                    raise StopSimulation
         else:
             self.complete = True
 
@@ -203,8 +203,7 @@ class SDRAMUTFramework:
                                         "SDRAM model in %s (not redistributable)"
                                         % i)
 
-        runner = icarus.Runner(extra_files=files)
-        self.sim = Simulator(self.tb, sim_runner=runner) 
-
-
-
+        runner = icarus.Runner(extra_files=files, keep_files= True)
+        #vcd = "test_%s.vcd" % self.__class__.__name__
+        vcd = None
+        self.sim = Simulator(self.tb, TopLevel(None), sim_runner=runner) 
