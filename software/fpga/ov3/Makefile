@@ -23,11 +23,11 @@ clean:
 # Full test of tests anywhere in source tree, including basic sanity 
 # tests on per-module basis
 testall:
-	nosetests --all-modules -v
+	nosetests3 --all-modules -v
 
 # Just the explicit testsuite
 test:
-	nosetests sim -v
+	nosetests3 sim -v
 
 run: $(OVCTL) $(BITFILE)
 	$(OVCTL) -C -b $(BITFILE) none
