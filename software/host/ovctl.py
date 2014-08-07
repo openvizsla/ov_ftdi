@@ -151,9 +151,9 @@ class OutputPcap:
         self.output.write(struct.pack("IIIIH", 0, 0, len(pkt) + 2, len(pkt) + 2, flags))
         self.output.write(pkt)
 
-def do_sdramtests(dev, cb=None):
+def do_sdramtests(dev, cb=None, tests = range(0, 6)):
     
-    for i in range(0,6):
+    for i in tests:
         dev.regs.SDRAM_TEST_CMD.wr(0x80 | i)
         stat = 0x40
         while (stat & 0x40):
@@ -161,7 +161,8 @@ def do_sdramtests(dev, cb=None):
             stat = dev.regs.SDRAM_TEST_CMD.rd() 
 
         ok = stat & 0x20
-        cb(i, ok)
+        if cb is not None:
+            cb(i, ok)
 
         if not ok:
             return i
@@ -173,7 +174,7 @@ def sdramtest(dev):
     # LEDS select
     dev.regs.LEDS_MUX_0.wr(1)
 
-    stat = do_sdramtests(dev)
+    stat = do_sdramtests(dev, tests = [3])
     if stat != -1:
         print("SDRAM test failed on test %d\n" % stat)
     else:
@@ -274,6 +275,34 @@ def eeperase(dev):
 @command('eep-program', ('serialno', int))
 def eepprogram(dev, serialno):
     dev.dev.eeprom_program(serialno)
+
+@command('sdram_host_read_test')
+def sdram_host_read_test(dev):
+    dev.regs.SDRAM_HOST_READ_RPTR.wr(0)
+
+    cnt = 0
+    while True:
+        rptr = dev.regs.SDRAM_HOST_READ_RPTR_STATUS.rd()
+        cnt += 1
+        if cnt == 10:
+            print("GO")
+            dev.regs.SDRAM_HOST_READ_GO.wr(1)
+
+        print("rptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x" % (
+            rptr,
+            dev.regs.SDRAM_HOST_READ_DEBUG_I_STB.rd(),
+            dev.regs.SDRAM_HOST_READ_DEBUG_I_ACK.rd(),
+            dev.regs.SDRAM_HOST_READ_DEBUG_D_STB.rd(),
+            dev.regs.SDRAM_HOST_READ_DEBUG_D_TERM.rd(),
+            dev.regs.SDRAM_HOST_READ_DEBUG_S0.rd(),
+            dev.regs.SDRAM_HOST_READ_DEBUG_S1.rd(),
+            dev.regs.SDRAM_HOST_READ_DEBUG_S2.rd()))
+
+        if cnt == 20:
+            print("STOP")
+            dev.regs.SDRAM_HOST_READ_GO.wr(0)
+#            print("STOP: %d" % dev.regs.SDRAM_HOST_READ_GO.rd())
+
 
 class LB_Test(Command):
     name = "lb-test"

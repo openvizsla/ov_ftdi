@@ -486,6 +486,46 @@ class RXCSniff:
     def __init__(self):
         self.service = RXCSniff.__RXCSniffService()
 
+
+class SDRAMRead:
+    class __SDRAMReadService(baseService):
+        def getNeededSizeForMagic(self, b):
+            return 1
+
+        def __init__(self):
+            self.output = open("memdump", "wb")
+            pass
+
+        def matchMagic(self, byt):
+            return byt == 0xD0
+
+        def getPacketSize(self, buf):
+            return 33
+
+        def consume(self, buf):
+#            print("SDRAM", ''.join("%02x"% r for r in buf))
+            self.output.write(buf[1:])
+            pass
+        
+    def __init__(self):
+        self.service = SDRAMRead.__SDRAMReadService()
+
+class Dummy:
+    class __DummyService(baseService):
+        def getNeededSizeForMagic(self, b):
+            return 1
+        def __init__(self):
+            pass
+        def matchMagic(self, byt):
+            return byt == 0xE0 or byt == 0xe8
+        def getPacketSize(self, buf):
+            return 3
+        def consume(self, buf):
+            assert ''.join("%02x"% r for r in buf) in ["e0e1e2", "e8e9ea"], buf
+        
+    def __init__(self):
+        self.service = Dummy.__DummyService()
+
 class OVDevice:
     def __init__(self, mapfile=None, verbose=False):
         self.__is_open = False
@@ -509,8 +549,10 @@ class OVDevice:
         self.io = IO()
         self.lfsrtest = LFSRTest()
         self.rxcsniff = RXCSniff()
+        self.sdram_read = SDRAMRead()
+        self.dummy = Dummy()
 
-        self.__services = [self.io.service, self.lfsrtest.service, self.rxcsniff.service]
+        self.__services = [self.io.service, self.lfsrtest.service, self.rxcsniff.service, self.sdram_read.service, self.dummy.service]
 
         # Inject a write function to the services
         for service in self.__services:
