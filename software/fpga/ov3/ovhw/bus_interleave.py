@@ -146,8 +146,8 @@ class BusInterleave(Module):
             _grant = Signal(name="grant_to_%d" % i)
 
             self.comb += [
-                _grant.eq(granted == i),
-                If(granted == i,
+                _grant.eq((granted == i) &~ self.rr.ce),
+                If((granted == i) &~ self.rr.ce,
                     self.source.payload.d.eq(port.source.payload.d),
                     release.eq(self.source.ack & port.source.stb & port.source.payload.last),
                     self.source.stb.eq(port.source.stb),
