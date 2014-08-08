@@ -105,18 +105,17 @@ class TestRandom(Module):
         self.ff.output_fifo.writable = Signal(reset=1)
         self.ff.output_fifo.din = Signal(8)
 
-        self.submodules.cm = CmdProc(self.ff, self.tr)
+        self.submodules.cm = CmdProc(self.ff, [self.tr])
 
         #self.tr.source.ack.reset = 1
+    def do_simulation(self, selfp):
+        if selfp.simulator.cycle_counter in range(3,8):
+            print ("set %d" % selfp.simulator.cycle_counter)
+            selfp.ff.incoming_fifo.readable = 1
 
-    def do_simulation(self, s):
-        if s.cycle_counter in range(3,8):
-            print ("set %d" % s.cycle_counter)
-            s.wr(self.ff.incoming_fifo.readable, 1)
-
-            s.wr(self.ff.incoming_fifo.dout,
-                    [0x55, 0x0, 0x0, 0x0, 0x0][s.cycle_counter - 3])
+            selfp.ff.incoming_fifo.dout = [0x55, 0x0, 0x0, 0x0, 0x0][selfp.simulator.cycle_counter - 3]
             #s.wr(self.tr._cfg.storage, 0)
+        selfp.ff.incoming_fifo.dout = selfp.ff.incoming_fifo.dout
 
         
 if __name__ == "__main__":
