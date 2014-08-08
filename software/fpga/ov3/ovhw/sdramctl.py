@@ -170,7 +170,7 @@ class SDRAMCTL(Module):
             If(write_cycle | read_cycle, i_col_cnt.eq(i_col_cnt + 1)),
             If(~self.hostif.d_term & last_col & write_cycle | 
                read_cycle & last_col & ~kill_read & ~(returning_read & self.hostif.d_term),
-               cmd_needs_reissue.eq(1)).Elif(cmd_reissue, cmd_needs_reissue.eq(0))
+               cmd_needs_reissue.eq(1)).Elif(cmd_reissue | kill_read, cmd_needs_reissue.eq(0))
                
         ]
 
@@ -223,7 +223,7 @@ class SDRAMCTL(Module):
         # Main loop
         fsm.act("IDLE", If(refresh_ctr >= refresh_interval,
                             NextState("REFRESH")
-                        ).Elif(cmd_needs_reissue,
+                        ).Elif(cmd_needs_reissue &~ kill_read &~ (returning_read & self.hostif.d_term),
                             cmd_reissue.eq(1),
                             If(iwr, 
                                 NextState("WRITE_ACTIVE")
