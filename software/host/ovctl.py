@@ -129,7 +129,7 @@ class OutputCustom:
     def __init__(self, output):
         self.output = output
 
-    def handle_usb(self, pkt, flags):
+    def handle_usb(self, ts, pkt, flags):
         pkthex = " ".join("%02x" % x for x in pkt)
         self.output.write("data=%s speed=%s\n" % (pkthex, speed.upper()))
 
@@ -141,7 +141,7 @@ class OutputPcap:
         self.output = output
         self.output.write(struct.pack("IHHIIII", 0xa1b2c3d4, 2, 4, 0, 0, 1<<20, self.LINK_TYPE))
 
-    def handle_usb(self, pkt, flags):
+    def handle_usb(self, ts, pkt, flags):
         self.output.write(struct.pack("IIIIH", 0, 0, len(pkt) + 2, len(pkt) + 2, flags))
         self.output.write(pkt)
 
