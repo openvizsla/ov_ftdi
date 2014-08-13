@@ -10,9 +10,15 @@ class DummySource(Module):
         
         self.submodules.dummy = FSM()
         
+        dummy_count = Signal(12)
+        dummy_count_next = Signal(12)
+        self.sync += dummy_count.eq(dummy_count_next)
+        self.comb += dummy_count_next.eq(dummy_count)
+
         self.dummy.act("S0",
             self.source.payload.d.eq(base + 0),
             self.source.stb.eq(1),
+            dummy_count_next.eq(0),
             If(self.source.ack,
                 NextState("S1")
             )
@@ -27,10 +33,22 @@ class DummySource(Module):
         )
 
         self.dummy.act("S2",
-            self.source.payload.d.eq(base + 2),
-            self.source.payload.last.eq(1),
+            self.source.payload.d.eq(dummy_count[0:8]),
             self.source.stb.eq(1),
             If(self.source.ack,
-                NextState("S0")
+                If(dummy_count != 300,
+                    dummy_count_next.eq(dummy_count_next+1)
+                ).Else(dummy_count_next.eq(0),
+                    self.source.payload.last.eq(1),
+                    NextState("S3")
+                )
             )
         )
+
+        self.dummy.act("S3",
+                If(dummy_count != 1000,
+                    dummy_count_next.eq(dummy_count_next+1)
+                ).Else(dummy_count_next.eq(0),
+                    NextState("S0")
+                )
+            )

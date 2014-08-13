@@ -278,17 +278,28 @@ def eepprogram(dev, serialno):
 
 @command('sdram_host_read_test')
 def sdram_host_read_test(dev):
-    dev.regs.SDRAM_HOST_READ_RPTR.wr(0)
 
+    ring_start = 0x10000
+    ring_end = ring_start + 1024*1024
+
+    dev.regs.SDRAM_SINK_RING_BASE.wr(ring_start)
+    dev.regs.SDRAM_SINK_RING_END.wr(ring_end - 1)
+
+    dev.regs.SDRAM_HOST_READ_RING_BASE.wr(ring_start)
+    dev.regs.SDRAM_HOST_READ_RING_END.wr(ring_end - 1)
+    
     cnt = 0
     while True:
         rptr = dev.regs.SDRAM_HOST_READ_RPTR_STATUS.rd()
         cnt += 1
+        if cnt == 5:
+            print("GO SINK")
+            dev.regs.SDRAM_SINK_GO.wr(1)
         if cnt == 10:
-            print("GO")
+            print("GO SOURCE")
             dev.regs.SDRAM_HOST_READ_GO.wr(1)
 
-        print("rptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x" % (
+        print("rptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x | wptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x wrap=%x" % (
             rptr,
             dev.regs.SDRAM_HOST_READ_DEBUG_I_STB.rd(),
             dev.regs.SDRAM_HOST_READ_DEBUG_I_ACK.rd(),
@@ -296,7 +307,17 @@ def sdram_host_read_test(dev):
             dev.regs.SDRAM_HOST_READ_DEBUG_D_TERM.rd(),
             dev.regs.SDRAM_HOST_READ_DEBUG_S0.rd(),
             dev.regs.SDRAM_HOST_READ_DEBUG_S1.rd(),
-            dev.regs.SDRAM_HOST_READ_DEBUG_S2.rd()))
+            dev.regs.SDRAM_HOST_READ_DEBUG_S2.rd(),
+            dev.regs.SDRAM_SINK_WPTR.rd(),
+            dev.regs.SDRAM_SINK_DEBUG_I_STB.rd(),
+            dev.regs.SDRAM_SINK_DEBUG_I_ACK.rd(),
+            dev.regs.SDRAM_SINK_DEBUG_D_STB.rd(),
+            dev.regs.SDRAM_SINK_DEBUG_D_TERM.rd(),
+            dev.regs.SDRAM_SINK_DEBUG_S0.rd(),
+            dev.regs.SDRAM_SINK_DEBUG_S1.rd(),
+            dev.regs.SDRAM_SINK_DEBUG_S2.rd(),
+            dev.regs.SDRAM_SINK_WRAP_COUNT.rd(),
+            ))
 
         if cnt == 20:
             print("STOP")

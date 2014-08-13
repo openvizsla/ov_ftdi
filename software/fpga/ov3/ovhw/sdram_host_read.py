@@ -21,8 +21,10 @@ class SDRAM_Host_Read(Module, description.AutoCSR):
         go = Signal()
         gor = Signal()
         rptr = Signal(awidth)
+        self.rptr = rptr
         rptr_w = Signal(awidth)
         rptr_we = Signal()
+        self.wptr = Signal(awidth)
         
         # CSRs
         
@@ -60,12 +62,8 @@ class SDRAM_Host_Read(Module, description.AutoCSR):
         
         ##
         
-        
-        self._rptr = description.CSRStorage(awidth)
-        
-        # rising edge of "go" updates rptr
-        self.comb += rptr_w.eq(self._rptr.storage)
-        self.comb += rptr_we.eq(go &~ gor)
+        self._ring_base = description.CSRStorage(awidth)
+        self._ring_end = description.CSRStorage(awidth)
         
         # rptr readback
         self._rptr_status = description.CSRStatus(awidth)
@@ -88,40 +86,40 @@ class SDRAM_Host_Read(Module, description.AutoCSR):
 
         # we always read (never write)
         self.comb += hostif.i_wr.eq(0)
+
+        # blocked
         
-        # wait until a.) go is set, and b.) the fifo has space.
+        blocked = Signal()
+        self.comb += blocked.eq(rptr == self.wptr)
         
-        self.sdram_read_fsm.act("delay0",
+        # wait until there's data and go, and then when the fifo has space, issue request.
+        
+        self.sdram_read_fsm.act("BLOCKED",
             self.s2_acc.inc(),
-            NextState("delay1")
-        )
-        
-        self.sdram_read_fsm.act("delay1",
-            NextState("delay2")
-        )
-        
-        self.sdram_read_fsm.act("delay2",
-            NextState("IDLE")
+            If(go & ~blocked, NextState("IDLE"))
         )
         
         self.sdram_read_fsm.act("IDLE",
             self.s0_acc.inc(),
             hostif.i_addr.eq(rptr),
-            hostif.i_stb.eq(go & sdram_fifo.writable),
-            If (go & sdram_fifo.writable & hostif.i_ack,
+            hostif.i_stb.eq(sdram_fifo.writable),
+            If (hostif.i_stb & hostif.i_ack,
                 NextState("DATA")
             )
         )
-        
+
         # read until fifo is full; when fifo is not writable but data was received,
         # abort SDRAM read request.
+
+        wrap = Signal()
+        self.comb += wrap.eq(self.rptr == self._ring_end.storage)
         
         self.sdram_read_fsm.act("DATA",
             self.s1_acc.inc(),
-            hostif.d_term.eq(~sdram_fifo.writable | ~go),
-            If (~sdram_fifo.writable | ~go,
+            hostif.d_term.eq(~sdram_fifo.writable | ~go | blocked | wrap),
+            If (hostif.d_term,
                 If (hostif.d_stb,
-                    NextState("delay0")
+                    NextState("BLOCKED")
                 ).Else(
                     NextState("WAIT")
                 )
@@ -131,21 +129,25 @@ class SDRAM_Host_Read(Module, description.AutoCSR):
         self.sdram_read_fsm.act("WAIT",
             hostif.d_term.eq(1),
             If (hostif.d_stb,
-                NextState("delay0")
+                NextState("BLOCKED")
             )
         )
 
-        # allow rptr to be updated via CSR. Otherwise,        
+        # allow rptr to be updated via CSR. Otherwise,
         # increment read point whenever valid data is fed into the fifo.
-        self.sync += \
-            If(rptr_we, 
-                rptr.eq(rptr_w)
-            ).Elif(sdram_fifo.writable & hostif.d_stb, 
-                rptr.eq(rptr + 1))
-        
-        self.comb += sdram_fifo.we.eq(sdram_fifo.writable & hostif.d_stb & go)
-        self.comb += sdram_fifo.din.eq(hostif.d_read)
 
+        rptr_next = Signal(awidth)
+        self.comb += If(wrap, rptr_next.eq(self._ring_base.storage)).Else(rptr_next.eq(self.rptr + 1))
+        
+        self.sync += \
+            If(go &~ gor, 
+                rptr.eq(self._ring_base.storage),
+            ).Elif(hostif.d_stb &~hostif.d_term | wrap, 
+                rptr.eq(rptr_next))
+
+        self.comb += sdram_fifo.we.eq(hostif.d_stb &~ hostif.d_term)
+        self.comb += sdram_fifo.din.eq(hostif.d_read)
+        
         # fifo to host interface
         
         self.submodules.host_write_fsm = FSM()
@@ -161,7 +163,7 @@ class SDRAM_Host_Read(Module, description.AutoCSR):
         self.host_write_fsm.act("IDLE",
             self.source.payload.d.eq(0xD0),
             self.source.stb.eq(sdram_fifo.readable &~ sdram_fifo.writable),
-            If(self.source.ack & (sdram_fifo.readable &~ sdram_fifo.writable),
+            If(self.source.ack & self.source.stb,
                 burst_rem_next.eq(host_burst_length - 1),
                 NextState("SEND_DATA_ODD")
             )

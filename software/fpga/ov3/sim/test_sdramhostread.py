@@ -4,6 +4,8 @@ from sim.util import par, gather_files
 import unittest
 import sim.sdram_test_util
 from ovhw.sdram_host_read import SDRAM_Host_Read
+from ovhw.sdram_sink import SDRAM_Sink
+from ovhw.dummy_source import DummySource
 import os
 from migen.sim import icarus
 from migen.sim.generic import Simulator, TopLevel
@@ -13,24 +15,65 @@ class TestBench(Module):
         self.submodules.cpx = sim.sdram_test_util.TestSDRAMComplex(sdram_modname)
         self.submodules.mux = SDRAMMux(self.cpx.hostif)
         hostif = self.mux.getPort()
-        self.submodules.sdramhostread = SDRAM_Host_Read(hostif)
+        self.submodules.sdram_host_read = SDRAM_Host_Read(hostif)
         
         self.hostif = hostif
         self.wait_for_i = False
         
-        self.sync += self.sdramhostread.source.ack.eq(1)
+        self.sync += self.sdram_host_read.source.ack.eq(1)
+        
+        self.hostif_sink = self.mux.getPort()
 
+        self.submodules.dummy0 = DummySource(0xe0)
+        self.submodules.sdram_sink = SDRAM_Sink(self.hostif_sink)
+
+        self.comb += self.sdram_host_read.wptr.eq(self.sdram_sink.wptr)
+        self.comb += self.sdram_sink.rptr.eq(self.sdram_host_read.rptr)
+        self.comb += self.sdram_sink.sink.connect(self.dummy0.source)
+        
+        def expected():
+            while True:
+                yield 0xE0
+                yield 0
+                yield 0xE1
+                yield 0
+                for i in range(301):
+                    yield i & 0xFF
+                    yield 0
+        
+        self.exp = expected()
+        self.pkt = []
+    
     def do_simulation(self, selfp):
         if selfp.hostif.i_stb:
             self.wait_for_i = True
         if selfp.hostif.i_ack:
             self.wait_for_i = False
-        if selfp.hostif.d_stb and self.wait_for_i:
-            print("cycle %d %d %02x %d" % (selfp.simulator.cycle_counter, selfp.sdramhostread.source.stb, selfp.sdramhostread.source.payload.d, selfp.sdramhostread.source.payload.last))
+#        if selfp.hostif.d_stb and self.wait_for_i:
+        if selfp.sdram_host_read.source.stb:
+#            print("cycle %d %d %02x %d" % (selfp.simulator.cycle_counter, selfp.sdram_host_read.source.stb, selfp.sdram_host_read.source.payload.d, selfp.sdram_host_read.source.payload.last))
+            self.pkt.append(selfp.sdram_host_read.source.payload.d)
+            assert selfp.sdram_host_read.source.payload.last == (len(self.pkt) == 33)
+            
+            if selfp.sdram_host_read.source.payload.last:
+                print(self.pkt)
+                assert self.pkt[0] == 0xD0
+                for r in self.pkt[1:]:
+                    n = next(self.exp)
+                    assert r == n, "expected %02x, read %02x in %r" % (n, r, self.pkt)
+                self.pkt = []
+            
         if selfp.simulator.cycle_counter == 1000:
-            selfp.sdramhostread._go.storage = 1
+            ring_start = 1*1024*1024
+            ring_end = ring_start + 1024
+            selfp.sdram_host_read._ring_base.storage = ring_start
+            selfp.sdram_host_read._ring_end.storage = ring_end
+            selfp.sdram_host_read._go.storage = 1
+            selfp.sdram_sink._ring_base.storage = ring_start
+            selfp.sdram_sink._ring_end.storage = ring_end
+            selfp.sdram_sink._go.storage = 1
 #        if selfp.simulator.cycle_counter == 8000:
-#            selfp.sdramhostread._go.storage = 0
+#            selfp.sdram_host_read._go.storage = 0
 
 class SDRAMHostReadTest(sim.sdram_test_util.SDRAMUTFramework, unittest.TestCase):
     def setUp(self):
@@ -51,7 +94,7 @@ class SDRAMHostReadTest(sim.sdram_test_util.SDRAMUTFramework, unittest.TestCase)
         with self.sim:
             self.sim.run(100000)
     
-    def test_sdramhostread(self):
+    def test_sdram_host_read(self):
         self._run()
 
 if __name__ == "__main__":
