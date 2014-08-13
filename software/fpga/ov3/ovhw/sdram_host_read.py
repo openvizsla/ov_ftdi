@@ -10,7 +10,7 @@ Output = Signal
 Input = Signal
 
 class SDRAM_Host_Read(Module, description.AutoCSR):
-    def __init__(self, hostif):
+    def __init__(self, hostif, host_burst_length = 16):
         width = flen(hostif.d_write)
         assert width == 16
         
@@ -80,7 +80,6 @@ class SDRAM_Host_Read(Module, description.AutoCSR):
 
         self.submodules.sdram_read_fsm = FSM()
         
-        host_burst_length = 16
         sdram_fifo = SyncFIFO(width, host_burst_length)
         self.submodules += sdram_fifo
 

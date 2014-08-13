@@ -63,7 +63,7 @@ class OV3(Module):
         # connect wptr/rptr for ringbuffer flow control
         self.comb += self.sdram_host_read.wptr.eq(self.sdram_sink.wptr)
         self.comb += self.sdram_sink.rptr.eq(self.sdram_host_read.rptr)
-        self.comb += self.sdram_sink.sink.connect(self.dummy0.source)
+#        self.comb += self.sdram_sink.sink.connect(self.dummy0.source)
 
         # ULPI Interfce
 
@@ -107,6 +107,7 @@ class OV3(Module):
                 self.udata_fifo.sink.connect(self.ovf_insert.source),
                 self.cfilt.sink.connect(self.udata_fifo.source),
                 self.cstream.sink.connect(self.cfilt.source),
+                self.sdram_sink.sink.connect(self.cstream.source),
                 ]
 
 
@@ -118,7 +119,7 @@ class OV3(Module):
         # FTDI command processor
         self.submodules.randtest = FTDI_randtest()
         self.submodules.cmdproc = CmdProc(self.ftdi_bus,
-                [self.randtest, self.cstream, self.sdram_host_read])
+                [self.randtest, self.sdram_host_read])
 
         # GPIOs (leds/buttons)
         self.submodules.leds = LED_outputs(plat.request('leds'),

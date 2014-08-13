@@ -7,7 +7,7 @@ from migen.flow.actor import Sink
 from ovhw.whacker.util import Acc, Acc_inc
 
 class SDRAM_Sink(Module, description.AutoCSR):
-    def __init__(self, hostif):
+    def __init__(self, hostif, max_burst_length = 256):
         width = flen(hostif.d_write)
         assert width == 16
 
@@ -15,7 +15,6 @@ class SDRAM_Sink(Module, description.AutoCSR):
 
         self.sink = Sink([('d', 8), ('last', 1)])
 
-        max_burst_length = 256
         self.submodules.sdram_fifo = SyncFIFO(width, max_burst_length)
 
         self.submodules.fifo_write_fsm = FSM()
@@ -38,7 +37,7 @@ class SDRAM_Sink(Module, description.AutoCSR):
         self.comb += self.wrap_count.status.eq(self.wrap_count_acc.v)
 
         # wptr wrap around
-        
+
         wrap = Signal()
         self.comb += wrap.eq(self.wptr == self._ring_end.storage)
         wptr_next = Signal(awidth)
@@ -157,8 +156,27 @@ class SDRAM_Sink(Module, description.AutoCSR):
 
         # sink into fifo
 
-        self.comb += [
-            self.sdram_fifo.din.eq(self.sink.payload.d),
+        self.submodules.fifo_fsm = FSM()
+
+        capture_low = Signal()
+        din_low = Signal(8)
+
+        self.comb += self.sdram_fifo.din.eq(Cat(din_low, self.sink.payload.d))
+
+        self.sync += If(capture_low, din_low.eq(self.sink.payload.d))
+
+        self.fifo_fsm.act("READ_LOW",
+            capture_low.eq(1),
+            self.sink.ack.eq(1),
+            If(self.sink.stb,
+                NextState("READ_HI")
+            )
+        )
+
+        self.fifo_fsm.act("READ_HI",
             self.sdram_fifo.we.eq(self.sink.stb),
-            self.sink.ack.eq(self.sdram_fifo.writable)
-        ]
+            self.sink.ack.eq(self.sdram_fifo.writable),
+            If(self.sink.ack & self.sink.stb,
+                NextState("READ_LOW")
+            )
+        )

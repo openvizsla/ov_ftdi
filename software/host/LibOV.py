@@ -492,9 +492,10 @@ class SDRAMRead:
         def getNeededSizeForMagic(self, b):
             return 1
 
-        def __init__(self):
-            self.output = open("memdump", "wb")
-            pass
+        def __init__(self, verbose, services):
+            self.__buf = b""
+            self.__services = services
+            self.__verbose = verbose
 
         def matchMagic(self, byt):
             return byt == 0xD0
@@ -502,13 +503,32 @@ class SDRAMRead:
         def getPacketSize(self, buf):
             return 33
 
-        def consume(self, buf):
-#            print("SDRAM", ''.join("%02x"% r for r in buf))
-            self.output.write(buf[1:])
+        def consume(self, b):
+            b = b[1:]
+#            print("SDRAM", ''.join("%02x"% r for r in b))
+            if self.__verbose and b:
+                print("SD> %s" % " ".join("%02x" % i for i in b))
+
+            self.__buf += b
+
+            incomplete = False
+
+            while self.__buf and not incomplete:
+                for service in self.__services:
+                    code = service.presentBytes(self.__buf)
+                    if code == INCOMPLETE:
+                        incomplete = True
+                        break
+                    elif code:
+                        self.__buf = self.__buf[code:]
+                        break
+                else:
+                    print("Unmatched byte %02x - discarding" % self.__buf[0])
+                    self.__buf = self.__buf[1:]
             pass
         
-    def __init__(self):
-        self.service = SDRAMRead.__SDRAMReadService()
+    def __init__(self, verbose, services):
+        self.service = SDRAMRead.__SDRAMReadService(verbose, services)
 
 class Dummy:
     class __DummyService(baseService):
@@ -547,9 +567,10 @@ class OVDevice:
 
 
         self.io = IO()
+
         self.lfsrtest = LFSRTest()
         self.rxcsniff = RXCSniff()
-        self.sdram_read = SDRAMRead()
+        self.sdram_read = SDRAMRead(False, [self.rxcsniff.service])
         self.dummy = Dummy()
 
         self.__services = [self.io.service, self.lfsrtest.service, self.rxcsniff.service, self.sdram_read.service, self.dummy.service]

@@ -11,11 +11,12 @@ from migen.sim import icarus
 from migen.sim.generic import Simulator, TopLevel
 
 class TestBench(Module):
-    def __init__(self, sdram_modname):
+    def __init__(self, sdram_modname, dummy_data, dummy_idle, max_burst_length, host_burst_length):
         self.submodules.cpx = sim.sdram_test_util.TestSDRAMComplex(sdram_modname)
         self.submodules.mux = SDRAMMux(self.cpx.hostif)
         hostif = self.mux.getPort()
-        self.submodules.sdram_host_read = SDRAM_Host_Read(hostif)
+        self.submodules.sdram_host_read = SDRAM_Host_Read(hostif, host_burst_length)
+        self.host_burst_length = host_burst_length
         
         self.hostif = hostif
         self.wait_for_i = False
@@ -24,8 +25,8 @@ class TestBench(Module):
         
         self.hostif_sink = self.mux.getPort()
 
-        self.submodules.dummy0 = DummySource(0xe0)
-        self.submodules.sdram_sink = SDRAM_Sink(self.hostif_sink)
+        self.submodules.dummy0 = DummySource(0xe0, dummy_data, dummy_idle)
+        self.submodules.sdram_sink = SDRAM_Sink(self.hostif_sink, max_burst_length)
 
         self.comb += self.sdram_host_read.wptr.eq(self.sdram_sink.wptr)
         self.comb += self.sdram_sink.rptr.eq(self.sdram_host_read.rptr)
@@ -34,12 +35,9 @@ class TestBench(Module):
         def expected():
             while True:
                 yield 0xE0
-                yield 0
                 yield 0xE1
-                yield 0
                 for i in range(301):
                     yield i & 0xFF
-                    yield 0
         
         self.exp = expected()
         self.pkt = []
@@ -53,7 +51,7 @@ class TestBench(Module):
         if selfp.sdram_host_read.source.stb:
 #            print("cycle %d %d %02x %d" % (selfp.simulator.cycle_counter, selfp.sdram_host_read.source.stb, selfp.sdram_host_read.source.payload.d, selfp.sdram_host_read.source.payload.last))
             self.pkt.append(selfp.sdram_host_read.source.payload.d)
-            assert selfp.sdram_host_read.source.payload.last == (len(self.pkt) == 33)
+            assert selfp.sdram_host_read.source.payload.last == (len(self.pkt) == self.host_burst_length * 2 + 1)
             
             if selfp.sdram_host_read.source.payload.last:
                 print(self.pkt)
@@ -76,8 +74,10 @@ class TestBench(Module):
 #            selfp.sdram_host_read._go.storage = 0
 
 class SDRAMHostReadTest(sim.sdram_test_util.SDRAMUTFramework, unittest.TestCase):
-    def setUp(self):
-        self.tb = TestBench("mt48lc16m16a2")
+#    def setUp(self):
+
+    def _run(self, dummy_data, dummy_idle, max_burst_length, host_burst_length):
+        self.tb = TestBench("mt48lc16m16a2", dummy_data, dummy_idle, max_burst_length, host_burst_length)
         # Verify that all necessary files are present
         files = gather_files(self.tb)
         for i in files:
@@ -89,13 +89,20 @@ class SDRAMHostReadTest(sim.sdram_test_util.SDRAMUTFramework, unittest.TestCase)
         runner = icarus.Runner(extra_files=files)
         vcd = "test_%s.vcd" % self.__class__.__name__
         self.sim = Simulator(self.tb, TopLevel(vcd), sim_runner=runner) 
-
-    def _run(self):
         with self.sim:
-            self.sim.run(100000)
+            self.sim.run(10000)
     
     def test_sdram_host_read(self):
-        self._run()
+        self._run(300, 1000, 256, 16)
+
+    def test_sdram_host_read_2(self):
+        self._run(300, 10, 256, 256)
+
+    def test_sdram_host_read_3(self):
+        self._run(300, 1000, 16, 17)
+
+    def test_sdram_host_read_4(self):
+        self._run(300, 10, 32, 64)
 
 if __name__ == "__main__":
     unittest.main()
