@@ -145,7 +145,7 @@ class SDRAM_Sink(Module, description.AutoCSR):
         self.sync += gor.eq(go)
 
         # wrap around counter
-        self.comb += If(wrap & hostif.d_stb &~ hostif.d_term, self.i_stb_acc.inc())
+        self.comb += If(wrap & hostif.d_stb &~ hostif.d_term, self.wrap_count_acc.inc())
 
         # update wptr
         self.sync += If(go &~ gor,
