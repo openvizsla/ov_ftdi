@@ -132,12 +132,23 @@ def report(dev):
 
 
 class OutputCustom:
-    def __init__(self, output):
+    def __init__(self, output, speed):
         self.output = output
+        self.speed = speed
+        self.last_ts = 0
+        self.ts_offset = 0
+        try:
+            with open("template_custom.txt") as f:
+                self.template = f.readline()
+        except:
+            self.template = "data=%s speed=%s time=%f\n"
 
     def handle_usb(self, ts, pkt, flags):
-        self.output.write("ts=%d flags=%02x data=%s\n" % (
-            ts, flags, " ".join("%02x" % x for x in pkt)))
+        if ts < self.last_ts:
+            self.ts_offset += 0x1000000
+        self.last_ts = ts
+        pkthex = " ".join("%02x" % x for x in pkt)
+        self.output.write(bytes(self.template % (pkthex, self.speed.upper(), (ts + self.ts_offset) / 60e6), "ascii"))
 
 
 class OutputPcap:
@@ -227,7 +238,7 @@ def sniff(dev, speed, format, out, timeout):
     out = out and open(out, "wb")
 
     if format == "custom":
-        output_handler = OutputCustom(out or sys.stdout)
+        output_handler = OutputCustom(out or sys.stdout, speed)
     elif format == "pcap":
         assert out, "can't output pcap to stdout, use --out"
         output_handler = OutputPcap(out)
@@ -239,8 +250,10 @@ def sniff(dev, speed, format, out, timeout):
     try:
         dev.regs.CSTREAM_CFG.wr(1)
         while 1:
+            # FIXME: this is sometimes incorrect since this is not an atomic read
             rptr = dev.regs.SDRAM_HOST_READ_RPTR_STATUS.rd()
             wptr = dev.regs.SDRAM_SINK_WPTR.rd()
+            wrap_count = dev.regs.SDRAM_SINK_WRAP_COUNT.rd()
 
             rptr -= ring_base
             wptr -= ring_base
@@ -252,7 +265,10 @@ def sniff(dev, speed, format, out, timeout):
             if delta < 0:
                 delta += ring_size
 
-            print("%d / %d (%3.2f %% utilization)" % (delta, ring_size, delta * 100 / ring_size), file = sys.stderr)
+            total = wrap_count * ring_size + wptr
+            utilization = delta * 100 / ring_size
+
+            print("%d / %d (%3.2f %% utilization) %d kB" % (delta, ring_size, utilization, total / 1024), file = sys.stderr)
 
             if False:
                 print("rptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x | wptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x wrap=%x" % (
