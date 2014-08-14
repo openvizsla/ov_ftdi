@@ -193,11 +193,12 @@ def sniff(dev, speed, format, out, timeout):
     dev.regs.LEDS_MUX_1.wr(2)
 
     # enable SDRAM buffering
-    ring_start = 0
-    ring_end = ring_start + 8 * 1024 * 1024
-    dev.regs.SDRAM_SINK_RING_BASE.wr(ring_start)
+    ring_base = 0
+    ring_size = 8 * 1024 * 1024
+    ring_end = ring_base + ring_size
+    dev.regs.SDRAM_SINK_RING_BASE.wr(ring_base)
     dev.regs.SDRAM_SINK_RING_END.wr(ring_end)
-    dev.regs.SDRAM_HOST_READ_RING_BASE.wr(ring_start)
+    dev.regs.SDRAM_HOST_READ_RING_BASE.wr(ring_base)
     dev.regs.SDRAM_HOST_READ_RING_END.wr(ring_end)
     dev.regs.SDRAM_SINK_GO.wr(1)
     dev.regs.SDRAM_HOST_READ_GO.wr(1)
@@ -238,25 +239,41 @@ def sniff(dev, speed, format, out, timeout):
     try:
         dev.regs.CSTREAM_CFG.wr(1)
         while 1:
-            print("rptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x | wptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x wrap=%x" % (
-                dev.regs.SDRAM_HOST_READ_RPTR_STATUS.rd(),
-                dev.regs.SDRAM_HOST_READ_DEBUG_I_STB.rd(),
-                dev.regs.SDRAM_HOST_READ_DEBUG_I_ACK.rd(),
-                dev.regs.SDRAM_HOST_READ_DEBUG_D_STB.rd(),
-                dev.regs.SDRAM_HOST_READ_DEBUG_D_TERM.rd(),
-                dev.regs.SDRAM_HOST_READ_DEBUG_S0.rd(),
-                dev.regs.SDRAM_HOST_READ_DEBUG_S1.rd(),
-                dev.regs.SDRAM_HOST_READ_DEBUG_S2.rd(),
-                dev.regs.SDRAM_SINK_WPTR.rd(),
-                dev.regs.SDRAM_SINK_DEBUG_I_STB.rd(),
-                dev.regs.SDRAM_SINK_DEBUG_I_ACK.rd(),
-                dev.regs.SDRAM_SINK_DEBUG_D_STB.rd(),
-                dev.regs.SDRAM_SINK_DEBUG_D_TERM.rd(),
-                dev.regs.SDRAM_SINK_DEBUG_S0.rd(),
-                dev.regs.SDRAM_SINK_DEBUG_S1.rd(),
-                dev.regs.SDRAM_SINK_DEBUG_S2.rd(),
-                dev.regs.SDRAM_SINK_WRAP_COUNT.rd(),
-                ), file = sys.stderr)
+            rptr = dev.regs.SDRAM_HOST_READ_RPTR_STATUS.rd()
+            wptr = dev.regs.SDRAM_SINK_WPTR.rd()
+
+            rptr -= ring_base
+            wptr -= ring_base
+
+            assert 0 <= rptr <= ring_size
+            assert 0 <= wptr <= ring_size
+
+            delta = wptr - rptr
+            if delta < 0:
+                delta += ring_size
+
+            print("%d / %d (%3.2f %% utilization)" % (delta, ring_size, delta * 100 / ring_size), file = sys.stderr)
+
+            if False:
+                print("rptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x | wptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x wrap=%x" % (
+                    dev.regs.SDRAM_HOST_READ_RPTR_STATUS.rd(),
+                    dev.regs.SDRAM_HOST_READ_DEBUG_I_STB.rd(),
+                    dev.regs.SDRAM_HOST_READ_DEBUG_I_ACK.rd(),
+                    dev.regs.SDRAM_HOST_READ_DEBUG_D_STB.rd(),
+                    dev.regs.SDRAM_HOST_READ_DEBUG_D_TERM.rd(),
+                    dev.regs.SDRAM_HOST_READ_DEBUG_S0.rd(),
+                    dev.regs.SDRAM_HOST_READ_DEBUG_S1.rd(),
+                    dev.regs.SDRAM_HOST_READ_DEBUG_S2.rd(),
+                    dev.regs.SDRAM_SINK_WPTR.rd(),
+                    dev.regs.SDRAM_SINK_DEBUG_I_STB.rd(),
+                    dev.regs.SDRAM_SINK_DEBUG_I_ACK.rd(),
+                    dev.regs.SDRAM_SINK_DEBUG_D_STB.rd(),
+                    dev.regs.SDRAM_SINK_DEBUG_D_TERM.rd(),
+                    dev.regs.SDRAM_SINK_DEBUG_S0.rd(),
+                    dev.regs.SDRAM_SINK_DEBUG_S1.rd(),
+                    dev.regs.SDRAM_SINK_DEBUG_S2.rd(),
+                    dev.regs.SDRAM_SINK_WRAP_COUNT.rd(),
+                    ), file = sys.stderr)
             if timeout and elapsed_time > timeout:
                 break
             time.sleep(1)
@@ -308,13 +325,13 @@ def eepprogram(dev, serialno):
 @command('sdram_host_read_test')
 def sdram_host_read_test(dev):
 
-    ring_start = 0x10000
-    ring_end = ring_start + 1024*1024
+    ring_base = 0x10000
+    ring_end = ring_base + 1024*1024
 
-    dev.regs.SDRAM_SINK_RING_BASE.wr(ring_start)
+    dev.regs.SDRAM_SINK_RING_BASE.wr(ring_base)
     dev.regs.SDRAM_SINK_RING_END.wr(ring_end)
 
-    dev.regs.SDRAM_HOST_READ_RING_BASE.wr(ring_start)
+    dev.regs.SDRAM_HOST_READ_RING_BASE.wr(ring_base)
     dev.regs.SDRAM_HOST_READ_RING_END.wr(ring_end)
 
     cnt = 0
