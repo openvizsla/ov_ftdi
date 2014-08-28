@@ -21,6 +21,10 @@ class Acc_inc(Acc):
     def inc(self):
         return self._n.eq(self.v+1), self._s.eq(1)
 
+class Acc_inc_sat(Acc):
+    def inc(self):
+        return If(self.v != (1<<flen(self.v))-1, self._n.eq(self.v+1), self._s.eq(1))
+
 class Acc_or(Acc):
     def _or(self, v):
         return self._n.eq(self.v | v), self._s.eq(1)
