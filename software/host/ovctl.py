@@ -205,8 +205,10 @@ def sniff(dev, speed, format, out, timeout):
 
     # enable SDRAM buffering
     ring_base = 0
-    ring_size = 8 * 1024 * 1024
+    ring_size = 16 * 1024 * 1024
     ring_end = ring_base + ring_size
+    dev.regs.SDRAM_SINK_GO.wr(0)
+    dev.regs.SDRAM_HOST_READ_GO.wr(0)
     dev.regs.SDRAM_SINK_RING_BASE.wr(ring_base)
     dev.regs.SDRAM_SINK_RING_END.wr(ring_end)
     dev.regs.SDRAM_HOST_READ_RING_BASE.wr(ring_base)
@@ -250,8 +252,10 @@ def sniff(dev, speed, format, out, timeout):
     try:
         dev.regs.CSTREAM_CFG.wr(1)
         while 1:
-            # FIXME: this is sometimes incorrect since this is not an atomic read
-            rptr = dev.regs.SDRAM_HOST_READ_RPTR_STATUS.rd()
+            dev.regs.SDRAM_SINK_PTR_READ.wr(0)
+            dev.regs.OVF_INSERT_CTL.wr(0)
+
+            rptr = dev.regs.SDRAM_SINK_RPTR.rd()
             wptr = dev.regs.SDRAM_SINK_WPTR.rd()
             wrap_count = dev.regs.SDRAM_SINK_WRAP_COUNT.rd()
 
@@ -268,7 +272,11 @@ def sniff(dev, speed, format, out, timeout):
             total = wrap_count * ring_size + wptr
             utilization = delta * 100 / ring_size
 
-            print("%d / %d (%3.2f %% utilization) %d kB" % (delta, ring_size, utilization, total / 1024), file = sys.stderr)
+            print("%d / %d (%3.2f %% utilization) %d kB | %d overflow, %08x total | R%08x W%08x" %
+                (delta, ring_size, utilization, total / 1024,
+                dev.regs.OVF_INSERT_NUM_OVF.rd(), dev.regs.OVF_INSERT_NUM_TOTAL.rd(),
+                rptr, wptr
+                ), file = sys.stderr)
 
             if False:
                 print("rptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x | wptr = %08x i_stb=%08x i_ack=%08x d_stb=%08x d_term=%08x s0=%08x s1=%08x s2=%08x wrap=%x" % (
@@ -297,6 +305,8 @@ def sniff(dev, speed, format, out, timeout):
     except KeyboardInterrupt:
         pass
     finally:
+        dev.regs.SDRAM_SINK_GO.wr(0)
+        dev.regs.SDRAM_HOST_READ_GO.wr(0)
         dev.regs.CSTREAM_CFG.wr(0)
 
     if out is not None:
