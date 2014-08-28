@@ -25,7 +25,6 @@ from ovhw.cfilt import RXCmdFilter
 from ovhw.ov_types import ULPI_DATA_D
 from ovhw.sdram_host_read import SDRAM_Host_Read
 from ovhw.sdram_sink import SDRAM_Sink
-from ovhw.dummy_source import DummySource
 import ovplatform.sdram_params
 
 class OV3(Module):
@@ -54,16 +53,14 @@ class OV3(Module):
 
         # SDRAM host read
 
-        self.submodules.sdram_host_read = SDRAM_Host_Read(self.sdram_mux.getPort())
+        self.submodules.sdram_host_read = SDRAM_Host_Read(self.sdram_mux.getPort(), host_burst_length = 0x20)
         
         # SDRAM sink
-        self.submodules.dummy0 = DummySource(0xe0)
         self.submodules.sdram_sink = SDRAM_Sink(self.sdram_mux.getPort())
         
         # connect wptr/rptr for ringbuffer flow control
         self.comb += self.sdram_host_read.wptr.eq(self.sdram_sink.wptr)
         self.comb += self.sdram_sink.rptr.eq(self.sdram_host_read.rptr)
-#        self.comb += self.sdram_sink.sink.connect(self.dummy0.source)
 
         # ULPI Interfce
 
@@ -142,6 +139,7 @@ class OV3(Module):
                 'sdram_test' : 5,
                 'sdram_host_read' : 6,
                 'sdram_sink' : 7,
+                'ovf_insert' : 8,
                 }
 
         self.submodules.csrbankarray = BankArray(self,

@@ -490,7 +490,7 @@ class RXCSniff:
 class SDRAMRead:
     class __SDRAMReadService(baseService):
         def getNeededSizeForMagic(self, b):
-            return 1
+            return 2
 
         def __init__(self, verbose, services):
             self.__buf = b""
@@ -501,11 +501,11 @@ class SDRAMRead:
             return byt == 0xD0
 
         def getPacketSize(self, buf):
-            return (buf[1] + 1)* 2 + 2
+            return (buf[1] + 1) * 2 + 2
 
         def consume(self, b):
-            b = b[1:]
-#            print("SDRAM", ''.join("%02x"% r for r in b))
+            #print("SDRAM", ''.join("%02x"% r for r in b))
+            b = b[2:]
             if self.__verbose and b:
                 print("SD> %s" % " ".join("%02x" % i for i in b))
 

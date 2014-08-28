@@ -5,13 +5,14 @@ from migen.bank import description, csrgen
 from migen.flow.actor import Sink
 
 from ovhw.whacker.util import Acc, Acc_inc
+from ovhw.perfcounter import Perfcounter, CSRStorageEx
 
 class SDRAM_Sink(Module, description.AutoCSR):
     def __init__(self, hostif, max_burst_length = 256):
         width = flen(hostif.d_write)
         assert width == 16
 
-        awidth = flen(hostif.i_addr)
+        awidth = flen(hostif.i_addr) + 1
 
         self.sink = Sink([('d', 8), ('last', 1)])
 
@@ -21,10 +22,17 @@ class SDRAM_Sink(Module, description.AutoCSR):
 
         self.wptr = Signal(awidth)
 
+        # rptr (from SDRAM Source)
+        self.rptr = Signal(awidth)
+
         # CSRs
 
+        self._ptr_read = CSRStorageEx(1)
+        ptr_read = self._ptr_read.re
         self._wptr = description.CSRStatus(awidth)
-        self.comb += self._wptr.status.eq(self.wptr)
+        self.sync += If(ptr_read, self._wptr.status.eq(self.wptr))
+        self._rptr = description.CSRStatus(awidth)
+        self.sync += If(ptr_read, self._rptr.status.eq(self.rptr))
 
         self._ring_base = description.CSRStorage(awidth)
         self._ring_end = description.CSRStorage(awidth)
@@ -32,9 +40,11 @@ class SDRAM_Sink(Module, description.AutoCSR):
 
         go = self._go.storage[0]
 
-        self.submodules.wrap_count_acc = Acc_inc(32)
-        self.wrap_count = description.CSRStatus(32)
-        self.comb += self.wrap_count.status.eq(self.wrap_count_acc.v)
+        # 'go'-signal edge detect
+        gor = Signal()
+        self.sync += gor.eq(go)
+
+        self._wrap_count = Perfcounter(ptr_read, go &~ gor)
 
         # wptr wrap around
 
@@ -45,35 +55,23 @@ class SDRAM_Sink(Module, description.AutoCSR):
 
         # debug
 
-        self._debug_i_stb = description.CSRStatus(32)
-        self._debug_i_ack = description.CSRStatus(32)
-        self._debug_d_stb = description.CSRStatus(32)
-        self._debug_d_term = description.CSRStatus(32)
-        self._debug_s0 = description.CSRStatus(32)
-        self._debug_s1 = description.CSRStatus(32)
-        self._debug_s2 = description.CSRStatus(32)
+        self._debug_ctl = CSRStorageEx(1)
+        snapshot = self._debug_ctl.re
+        perf_reset = self._debug_ctl.storage[0]
+        self._debug_i_stb = Perfcounter(snapshot, perf_reset)
+        self._debug_i_ack = Perfcounter(snapshot, perf_reset)
+        self._debug_d_stb = Perfcounter(snapshot, perf_reset)
+        self._debug_d_term = Perfcounter(snapshot, perf_reset)
+        self._debug_s0 = Perfcounter(snapshot, perf_reset)
+        self._debug_s1 = Perfcounter(snapshot, perf_reset)
+        self._debug_s2 = Perfcounter(snapshot, perf_reset)
+        self._perf_busy = Perfcounter(snapshot, perf_reset)
 
-        self.submodules.i_stb_acc = Acc_inc(32)
-        self.submodules.i_ack_acc = Acc_inc(32)
-        self.submodules.d_stb_acc = Acc_inc(32)
-        self.submodules.d_term_acc = Acc_inc(32)
-
-        self.comb += self._debug_i_stb.status.eq(self.i_stb_acc.v)
-        self.comb += self._debug_i_ack.status.eq(self.i_ack_acc.v)
-        self.comb += self._debug_d_stb.status.eq(self.d_stb_acc.v)
-        self.comb += self._debug_d_term.status.eq(self.d_term_acc.v)
-        self.comb += If(hostif.i_stb, self.i_stb_acc.inc())
-        self.comb += If(hostif.i_ack, self.i_ack_acc.inc())
-        self.comb += If(hostif.d_stb, self.d_stb_acc.inc())
-        self.comb += If(hostif.d_term, self.d_term_acc.inc())
-
-        self.submodules.s0_acc = Acc_inc(32)
-        self.submodules.s1_acc = Acc_inc(32)
-        self.submodules.s2_acc = Acc_inc(32)
-
-        self.comb += self._debug_s0.status.eq(self.s0_acc.v)
-        self.comb += self._debug_s1.status.eq(self.s1_acc.v)
-        self.comb += self._debug_s2.status.eq(self.s2_acc.v)
+        self.comb += If(hostif.i_stb, self._debug_i_stb.inc())
+        self.comb += If(hostif.i_ack, self._debug_i_ack.inc())
+        self.comb += If(hostif.d_stb, self._debug_d_stb.inc())
+        self.comb += If(hostif.d_term, self._debug_d_term.inc())
+        self.comb += If(~self.sdram_fifo.writable, self._perf_busy.inc())
 
         # FSM to move FIFO data to SDRAM
 
@@ -87,10 +85,7 @@ class SDRAM_Sink(Module, description.AutoCSR):
 
         blocked = Signal()
 
-        rptr = Signal(awidth)
-        self.rptr = rptr
-
-        self.comb += blocked.eq(rptr == wptr_next)
+        self.comb += blocked.eq(self.rptr == wptr_next)
 
         # start writing data if
         # - 'go'-signal set, and
@@ -98,7 +93,7 @@ class SDRAM_Sink(Module, description.AutoCSR):
         # - not blocked
 
         self.fifo_write_fsm.act("IDLE",
-            self.s0_acc.inc(),
+            self._debug_s0.inc(),
             If(self.sdram_fifo.readable & go & ~blocked,
                 hostif.i_addr.eq(self.wptr),
                 hostif.i_stb.eq(1),
@@ -118,7 +113,7 @@ class SDRAM_Sink(Module, description.AutoCSR):
         # - blocked
 
         self.fifo_write_fsm.act("WRITE",
-            self.s1_acc.inc(),
+            self._debug_s1.inc(),
             hostif.d_term.eq((burst_rem == 0) | ~self.sdram_fifo.readable | wrap | blocked),
             self.sdram_fifo.re.eq(hostif.d_stb &~ hostif.d_term),
             If(~hostif.d_term & hostif.d_stb,
@@ -132,7 +127,7 @@ class SDRAM_Sink(Module, description.AutoCSR):
         )
 
         self.fifo_write_fsm.act("WAIT",
-            self.s2_acc.inc(),
+            self._debug_s2.inc(),
             hostif.d_term.eq(1),
             If(hostif.d_stb,
                 NextState("IDLE")
@@ -140,12 +135,8 @@ class SDRAM_Sink(Module, description.AutoCSR):
         )
 
 
-        # 'go'-signal edge detect
-        gor = Signal()
-        self.sync += gor.eq(go)
-
         # wrap around counter
-        self.comb += If(wrap & hostif.d_stb &~ hostif.d_term, self.wrap_count_acc.inc())
+        self.comb += If(wrap & hostif.d_stb &~ hostif.d_term, self._wrap_count.inc())
 
         # update wptr
         self.sync += If(go &~ gor,
