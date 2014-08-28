@@ -501,7 +501,7 @@ class SDRAMRead:
             return byt == 0xD0
 
         def getPacketSize(self, buf):
-            return 33
+            return (buf[1] + 1)* 2 + 2
 
         def consume(self, b):
             b = b[1:]
