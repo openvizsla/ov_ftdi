@@ -13,9 +13,7 @@ class SDRAM_Host_Read(Module, description.AutoCSR):
     def __init__(self, hostif, host_burst_length = 16):
         width = flen(hostif.d_write)
         assert width == 16
-        
-        awidth = flen(hostif.i_addr)
-        
+        awidth = flen(hostif.i_addr) + 1
         self.source = Source([('d', 8), ('last', 1)])
         
         go = Signal()
