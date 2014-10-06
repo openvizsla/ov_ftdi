@@ -1,4 +1,4 @@
-#!/usr/bin/python3.3
+#!/usr/bin/env python3
 
 # This needs python3.3 or greater - argparse changes behavior
 # TODO - workaround
@@ -13,6 +13,12 @@ import sys
 import os
 import struct
 #import yappi
+
+# We check the Python version in __main__ so we don't
+#   rudely bail if someone imports this module.
+MIN_MAJOR = 3
+MIN_MINOR = 3
+
 
 def as_ascii(arg):
     if arg == None:
@@ -313,6 +319,12 @@ class LB_Test(Command):
             dev.regs.randtest_cfg.wr(0)
 
 
+def min_version_check(major, minor):
+    error_msg = 'ERROR: I depend on behavior in Python {0}.{1} or greater'
+    if sys.version_info < (major, minor):
+        sys.exit(error_msg.format(major, minor))
+
+
 def main():
 
     ap = argparse.ArgumentParser()
@@ -366,6 +378,7 @@ def main():
         dev.close()
 
 if  __name__ == "__main__":
+    min_version_check(MIN_MAJOR, MIN_MINOR)
 #    yappi.start()
     main()
 #    yappi.print_stats()
