@@ -136,8 +136,8 @@ class OutputCustom:
         self.output = output
 
     def handle_usb(self, ts, pkt, flags):
-        pkthex = " ".join("%02x" % x for x in pkt)
-        self.output.write("data=%s speed=%s\n" % (pkthex, speed.upper()))
+        self.output.write("ts=%d flags=%02x data=%s\n" % (
+            ts, flags, " ".join("%02x" % x for x in pkt)))
 
 
 class OutputPcap:
