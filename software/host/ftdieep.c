@@ -136,8 +136,6 @@ static int FTDIEEP_MakeStringDescriptor(uint16_t *data, uint8_t id, uint8_t *add
 	   and removing the 0x0080 below, but the original code is weird and inconsistent.
 	*/
 
-	printf("%d!\n", *addr);
-
 	len = strlen(str);
 	if ((*addr + 2*len + 2) > EEP_CHECKSUM) {
 		fprintf(stderr, "EEPROM: String does not fit in EEPROM\n");
@@ -222,6 +220,8 @@ static int FTDIEEP_WriteDefaults(FTDIDevice *dev, unsigned int number)
 			return -1;
 	}
 
+	fprintf(stderr, "EEPROM: Progammed\n");
+
 	return 0;
 }
 
@@ -230,10 +230,55 @@ int FTDIEEP_Erase(FTDIDevice *dev)
 	int err = 0;
 	uint8_t addr;
 
+	err = FTDIEEP_SanityCheck(dev, 1);
+	if (err < 0)
+		return err;
+
 	for (addr = 0; addr < EEP_SIZE; addr++) {
-		err = FTDIEEP_WriteWord(dev, addr, 0xFF);
+		err = FTDIEEP_WriteWord(dev, addr, 0xFFFF);
 		if (err)
 			return err;
+	}
+	fprintf(stderr, "EEPROM: Erased\n");
+	return 0;
+}
+
+int FTDIEEP_SanityCheck(FTDIDevice *dev, bool verbose)
+{
+	int err;
+	uint8_t addr;
+	uint16_t data[EEP_SIZE];
+	uint16_t check = 0xaaaa;
+
+	for (addr = 0; addr < EEP_CHECKSUM; addr++) {
+		err = FTDIEEP_ReadWord(dev, addr, &data[addr]);
+		if (err)
+			return err;
+		check = check ^ data[addr];
+		check = (check<<1) | (check>>15);
+		if (verbose) {
+			if ((addr & 15) == 0)
+				printf("%02x:", addr);
+			printf(" %04x", data[addr]);
+			if ((addr & 15) == 15)
+				printf("\n");
+		}
+	}
+
+	err = FTDIEEP_ReadWord(dev, EEP_CHECKSUM, &data[EEP_CHECKSUM]);
+	if (verbose)
+		printf("(%04x)\n", data[EEP_CHECKSUM]);
+	if (err)
+		return err;
+	if (data[EEP_CHECKSUM] != check) {
+		fprintf(stderr, "EEPROM: Device blank or checksum incorrect\n");
+		return 1;
+	}
+	if (data[EEP_MODES] != EEP_MODES_SET(
+	                        /* PORT A */ EEP_245FIFO | EEP_D2XX,
+	                        /* PORT B */ EEP_245FIFO | EEP_D2XX )) {
+		fprintf(stderr, "EEPROM: Incorrect FIFO port modes\n");
+		return 2;
 	}
 	return 0;
 }
@@ -241,30 +286,22 @@ int FTDIEEP_Erase(FTDIDevice *dev)
 int FTDIEEP_CheckAndProgram(FTDIDevice *dev, unsigned int number)
 {
 	int err;
-	uint8_t addr;
-	uint16_t data;
-	uint16_t check = 0xaaaa;
-
-	for (addr = 0; addr < EEP_CHECKSUM; addr++) {
-		err = FTDIEEP_ReadWord(dev, addr, &data);
+	err = FTDIEEP_SanityCheck(dev, 1);
+	if (err < 0)
+		return err;
+	if (err > 0) {
+		err = FTDIEEP_WriteDefaults(dev, number);
 		if (err)
 			return err;
-		printf("%02x: %04x\n", addr, data);
-		check = check ^ data;
-		check = (check<<1) | (check>>15);
-	}
-
-	FTDIEEP_ReadWord(dev, EEP_CHECKSUM, &data);
-	if (data != check) {
-//		fprintf(stderr, "EEPROM: Device blank or checksum incorrect, programming\n");
-		fprintf(stderr, "EEPROM: Device blank or checksum incorrect\n");
-
-		err = FTDIEEP_WriteDefaults(dev, number);
+		fprintf(stderr, "EEPROM: Note: Ignore \"No such device\" errors\n");
+		err = FTDIEEP_SanityCheck(dev, 1);
 		if (err)
 			return err;
 		err = FTDIDevice_Reset(dev);
 		if (err)
 			return err;
+	} else {
+		fprintf(stderr, "EEPROM: Already programmed\n");
 	}
 
 	return 0;

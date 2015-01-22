@@ -33,6 +33,7 @@
  */
 
 int FTDIEEP_CheckAndProgram(FTDIDevice *dev, unsigned int number);
+int FTDIEEP_SanityCheck(FTDIDevice *dev, bool verbose);
 int FTDIEEP_Erase(FTDIDevice *dev);
 
 #endif /* __FTDIEEP_H */

@@ -87,6 +87,15 @@ FTDIEEP_CheckAndProgram.argtypes = [
         ]
 FTDIEEP_CheckAndProgram.restype = ctypes.c_int
 
+# int FTDIEEP_SanityCheck(FTDIDevice *dev, bool verbose)
+FTDIEEP_SanityCheck = libov.FTDIEEP_SanityCheck
+FTDIEEP_SanityCheck.argtypes = [
+        pFTDI_Device,    # dev
+        ctypes.c_bool,   # verbose
+        ]
+FTDIEEP_SanityCheck.restype = ctypes.c_int
+
+
 FTDI_INTERFACE_A = 1
 FTDI_INTERFACE_B = 2
 
@@ -148,12 +157,15 @@ class FTDIDevice:
         # uncomment next lines to use C code to parse packets
         #return FTDIDevice_ReadStream(self._dev, intf, p_cb_StreamCallback(libov.CStreamCallback), 
         #        cb, packetsPerTransfer, numTransfers)
-        
+
     def eeprom_erase(self):
         return FTDIEEP_Erase(self._dev)
 
     def eeprom_program(self, serialno):
         return FTDIEEP_CheckAndProgram(self._dev, serialno)
+
+    def eeprom_sanitycheck(self, verbose=False):
+        return FTDIEEP_SanityCheck(self._dev, verbose)
 
 _FPGA_GetConfigStatus = libov.FPGA_GetConfigStatus
 _FPGA_GetConfigStatus.restype = ctypes.c_int

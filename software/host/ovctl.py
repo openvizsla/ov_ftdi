@@ -499,6 +499,17 @@ def main():
     if args.config_only:
         return
 
+    if not (hasattr(args, 'hdlr') and args.hdlr.name.startswith("eep-")):
+        ret = dev.dev.eeprom_sanitycheck()
+        if ret > 0:
+            print("\nPlease run this tool with the subcommand 'eep-program <serial number>'")
+            print("to program your EEPROM. The FT2232H FIFO will not work correctly with")
+            print("default settings.")
+            return 1
+        elif ret < 0:
+            print("USB: Error checking EEPROM\n")
+            return 1
+
     dev.dev.write(LibOV.FTDI_INTERFACE_A, b'\x00' * 512, async=False)
 
     try:
