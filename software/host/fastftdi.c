@@ -27,7 +27,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef _MSC_VER
 #include <stdbool.h>
+#else
+#define bool int
+#define false 0
+#define true  1
+#endif
 #include "fastftdi.h"
 
 typedef struct {
@@ -189,7 +195,7 @@ FTDIDevice_SetMode(FTDIDevice *dev, FTDIInterface interface,
  * Internal callback for cleaning up async writes.
  */
 
-static void
+static void LIBUSB_CALL
 WriteAsyncCallback(struct libusb_transfer *transfer)
 {
    free(transfer->buffer);
@@ -282,7 +288,7 @@ FTDIDevice_ReadByteSync(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte)
  * Split it into packets and invoke the callbacks.
  */
 
-static void
+static void LIBUSB_CALL
 ReadStreamCallback(struct libusb_transfer *transfer)
 {
    FTDIStreamState *state = transfer->user_data;
@@ -443,6 +449,7 @@ FTDIDevice_ReadStream(FTDIDevice *dev, FTDIInterface interface,
       bool done_cleanup = false;
       while (!done_cleanup)
       {
+          struct timeval timeout = { 0, 10000 };
           done_cleanup = true;
 
           for (xferIndex = 0; xferIndex < numTransfers; xferIndex++) {
@@ -467,7 +474,6 @@ FTDIDevice_ReadStream(FTDIDevice *dev, FTDIInterface interface,
           }
 
           // pump events
-          struct timeval timeout = { 0, 10000 };
           libusb_handle_events_timeout(dev->libusb, &timeout);
       }
       free(transfers);

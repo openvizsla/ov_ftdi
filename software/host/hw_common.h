@@ -28,6 +28,15 @@
 
 #include "fastftdi.h"
 
+#ifdef _WIN32
+  #ifdef OV_API_EXPORT
+    #define OV_API __declspec(dllexport)
+  #else
+    #define OV_API __declspec(dllimport)
+  #endif
+#else
+  #define OV_API
+#endif
 
 /*
  * Hardware configuration registers
@@ -55,11 +64,11 @@
  * Public
  */
 
-void HW_Init(FTDIDevice *dev, const char *bitstream);
-void HW_SetSystemClock(FTDIDevice *dev, float mhz);
+OV_API void HW_Init(FTDIDevice *dev, const char *bitstream);
+OV_API void HW_SetSystemClock(FTDIDevice *dev, float mhz);
 
-void HW_ConfigWriteMultiple(FTDIDevice *dev, uint16_t *addrArray,
+OV_API void HW_ConfigWriteMultiple(FTDIDevice *dev, uint16_t *addrArray,
                             uint16_t *dataArray, int count, bool async);
-void HW_ConfigWrite(FTDIDevice *dev, uint16_t addr, uint16_t data, bool async);
+OV_API void HW_ConfigWrite(FTDIDevice *dev, uint16_t addr, uint16_t data, bool async);
 
 #endif // __HW_COMMON_H

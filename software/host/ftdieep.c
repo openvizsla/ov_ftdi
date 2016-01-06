@@ -29,6 +29,10 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+
 #define FTDI_READ_EEPROM_REQUEST      0x90
 #define FTDI_WRITE_EEPROM_REQUEST     0x91
 
