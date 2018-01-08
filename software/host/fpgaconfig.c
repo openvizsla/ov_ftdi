@@ -219,7 +219,7 @@ ConfigBegin(FTDIDevice *dev)
     return err;
 
   // Short delay while the FPGA initializes
-  usleep(10000);
+  sleep(10000);
 
   fprintf(stderr, "FPGA: sending configuration bitstream\n");
 
