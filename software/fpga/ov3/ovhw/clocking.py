@@ -1,4 +1,4 @@
-from migen.fhdl.std import *
+from migen import *
 
 class ClockGen(Module):
     def __init__(self, clkin):

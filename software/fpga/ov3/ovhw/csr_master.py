@@ -1,11 +1,7 @@
-from migen.flow.actor import Source, Sink
-from migen.fhdl.std import *
-from migen.fhdl import verilog
-from migen.genlib.cdc import MultiReg
+from misoc.interconnect.stream import Endpoint
+from migen import *
 from migen.genlib.fsm import FSM, NextState
-from migen.bank import description, csrgen
-from migen.bus.csr import Initiator, Interconnect, Interface
-from migen.bus.transactions import *
+from misoc.interconnect.csr_bus import Interface
 
 # CSR Bus master
 
@@ -20,11 +16,13 @@ from migen.bus.transactions import *
 CMD_REC = [('wr', 1), ('a', 14), ('d', 8)]
 class CSR_Master(Module):
     def __init__(self, has_completion=True):
-        self.cmd = Sink(CMD_REC)
+        self.cmd = Endpoint(CMD_REC)
+        self.source = self.cmd
 
         if has_completion:
-            self.completion = Source(CMD_REC)
-    
+            self.completion = Endpoint(CMD_REC)
+            self.sink = self.completion
+
         self.master = Interface()
 
         self.busy = Signal()

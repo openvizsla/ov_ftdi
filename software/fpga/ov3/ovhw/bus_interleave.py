@@ -1,6 +1,6 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.genlib.record import Record
-from migen.flow.actor import Source, Sink
+from misoc.interconnect.stream import Endpoint
 from migen.genlib.fsm import FSM, NextState
 from migen.genlib.roundrobin import RoundRobin, SP_CE
     
@@ -13,8 +13,8 @@ from ovhw.csr_master import CMD_REC
 class BusDecode(Module):
     def __init__(self):
         self.busy=Signal()
-        self.sink = Sink([('d',8)])
-        self.source = Source(CMD_REC)
+        self.sink = Endpoint([('d',8)])
+        self.source = Endpoint(CMD_REC)
 
         sm = FSM(reset_state="IDLE")
         self.submodules += sm
@@ -68,8 +68,8 @@ class BusEncode(Module):
     def __init__(self):
 
         self.busy = Signal()
-        self.sink = Sink(CMD_REC)
-        self.source = Source([('d',8), ('last',1)])
+        self.sink = Endpoint(CMD_REC)
+        self.source = Endpoint([('d',8), ('last',1)])
 
         sm = FSM(reset_state="IDLE")
         self.submodules += sm
@@ -121,7 +121,7 @@ class BusEncode(Module):
 
 class BusInterleave(Module):
     def __init__(self, mux_ports):
-        self.source = Source([('d', 8)])
+        self.source = Endpoint([('d', 8)])
 
         n = len(mux_ports)
 

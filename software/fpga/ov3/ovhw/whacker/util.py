@@ -1,4 +1,4 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.fhdl.bitcontainer import bits_for
 
 def dmatpl(depth):
@@ -23,7 +23,7 @@ class Acc_inc(Acc):
 
 class Acc_inc_sat(Acc):
     def inc(self):
-        return If(self.v != (1<<flen(self.v))-1, self._n.eq(self.v+1), self._s.eq(1))
+        return If(self.v != (1<<len(self.v))-1, self._n.eq(self.v+1), self._s.eq(1))
 
 class Acc_or(Acc):
     def _or(self, v):

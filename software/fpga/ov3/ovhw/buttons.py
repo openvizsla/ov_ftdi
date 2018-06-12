@@ -1,10 +1,6 @@
-from migen.fhdl.std import *
-from migen.fhdl import verilog
+from migen import *
 from migen.genlib.cdc import MultiReg
-from migen.bank import description, csrgen
-from migen.bus.csr import Initiator, Interconnect
-from migen.bus.transactions import *
-from migen.sim.generic import Simulator
+from misoc.interconnect.csr import CSR, AutoCSR
 
 # Button status register of layout:
 #    
@@ -16,9 +12,9 @@ from migen.sim.generic import Simulator
 #
 #   Sx bits are the current button status
 
-class _BTN_status_CSR(Module, description.CSR):
+class _BTN_status_CSR(Module, CSR):
     def __init__(self, btns):
-        description.CSR.__init__(self, size=8)
+        CSR.__init__(self, size=8)
         self.btn_cur = Signal(4, reset=0)
         self.btn_edge = Signal(4, reset=0)
 
@@ -31,8 +27,8 @@ class _BTN_status_CSR(Module, description.CSR):
         self.specials += MultiReg(btns, self.btn_cur)
 
 
-class BTN_status(Module, description.AutoCSR):
+class BTN_status(Module, AutoCSR):
     def __init__(self, btns):
-        assert flen(btns) <= 4
+        assert len(btns) <= 4
         self.submodules._stat = _BTN_status_CSR(btns)
 

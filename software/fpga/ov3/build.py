@@ -4,7 +4,8 @@ from ovhw.top import OV3
 def gen_mapfile(ov3_mod):
     # Generate mapfile for tool / sw usage
     r = ""
-    for name, csrs, mapaddr, rmap in ov3_mod.csrbankarray.banks:
+    for name, csrs, mapaddr, rmap in sorted(
+            ov3_mod.csrbankarray.banks, key=lambda x: x[2]):
         r += "\n# "+name+"\n"
         reg_base = 0x200 * mapaddr
         r += name.upper()+"_BASE = "+hex(reg_base)+"\n"
@@ -27,4 +28,4 @@ if __name__ == "__main__":
     # FIXME: build dir should come from command line arg
     open("build/map.txt", "w").write(gen_mapfile(top))
 
-    plat.build_cmdline(top)
+    plat.build(top)

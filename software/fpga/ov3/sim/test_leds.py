@@ -1,4 +1,4 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.bus.csr import Initiator, Interconnect
 from migen.sim.generic import Simulator
 from migen.bus.transactions import *

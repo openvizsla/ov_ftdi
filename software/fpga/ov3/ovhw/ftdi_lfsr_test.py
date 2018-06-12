@@ -1,19 +1,17 @@
 # Module for generating a pseudorandom bitstream for testing data backhaul from FTDI chip
 # Packets are of form 0xAA n* rand
 
-from migen.genlib.cdc import MultiReg
-from migen.bank import description, csrgen
-from migen.bus.csr import Initiator, Interconnect
-from migen.bus.transactions import *
+from migen import *
+from misoc.interconnect.csr import AutoCSR, CSRStorage
 from migen.genlib.fsm import FSM, NextState
-from migen.flow.actor import Source
+from misoc.interconnect.stream import Endpoint
 
-class FTDI_randtest(Module, description.AutoCSR):
+class FTDI_randtest(Module, AutoCSR):
     def __init__(self):
-        self._size = description.CSRStorage(8, reset=8)
-        self._cfg = description.CSRStorage(1, reset=0)
+        self._size = CSRStorage(8, reset=8)
+        self._cfg = CSRStorage(1, reset=0)
 
-        self.source = Source([('d', 8), ('last', 1)])
+        self.source = Endpoint([('d', 8), ('last', 1)])
 
         START_BYTE = 0xAA
 

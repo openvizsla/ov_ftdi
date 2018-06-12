@@ -1,20 +1,20 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.genlib.fsm import FSM, NextState
 from migen.genlib.fifo import SyncFIFO
-from migen.bank import description, csrgen
-from migen.flow.actor import Sink
+from misoc.interconnect.csr import AutoCSR, CSRStatus, CSRStorage
+from misoc.interconnect.stream import Endpoint
 
 from ovhw.whacker.util import Acc, Acc_inc
 from ovhw.perfcounter import Perfcounter, CSRStorageEx
 
-class SDRAM_Sink(Module, description.AutoCSR):
+class SDRAM_Sink(Module, AutoCSR):
     def __init__(self, hostif, max_burst_length = 256):
-        width = flen(hostif.d_write)
+        width = len(hostif.d_write)
         assert width == 16
 
-        awidth = flen(hostif.i_addr) + 1
+        awidth = len(hostif.i_addr) + 1
 
-        self.sink = Sink([('d', 8), ('last', 1)])
+        self.sink = Endpoint([('d', 8), ('last', 1)])
 
         self.submodules.sdram_fifo = SyncFIFO(width, max_burst_length)
 
@@ -29,14 +29,14 @@ class SDRAM_Sink(Module, description.AutoCSR):
 
         self._ptr_read = CSRStorageEx(1)
         ptr_read = self._ptr_read.re
-        self._wptr = description.CSRStatus(awidth)
+        self._wptr = CSRStatus(awidth)
         self.sync += If(ptr_read, self._wptr.status.eq(self.wptr))
-        self._rptr = description.CSRStatus(awidth)
+        self._rptr = CSRStatus(awidth)
         self.sync += If(ptr_read, self._rptr.status.eq(self.rptr))
 
-        self._ring_base = description.CSRStorage(awidth)
-        self._ring_end = description.CSRStorage(awidth)
-        self._go = description.CSRStorage(1)
+        self._ring_base = CSRStorage(awidth)
+        self._ring_end = CSRStorage(awidth)
+        self._go = CSRStorage(1)
 
         go = self._go.storage[0]
 

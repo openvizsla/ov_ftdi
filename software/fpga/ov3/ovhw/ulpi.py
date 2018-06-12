@@ -1,9 +1,9 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.fhdl import verilog
-from migen.sim.generic import Simulator, TopLevel
+#from migen.sim.generic import Simulator, TopLevel
 from migen.genlib.fsm import FSM, NextState
 from migen.genlib.record import *
-from migen.flow.actor import Source
+from misoc.interconnect.stream import Endpoint
 
 from ovhw.constants import *
 from ovhw.ov_types import ULPI_DATA_D
@@ -72,7 +72,7 @@ class ULPI_ctrl(Module):
 		ulpi_state_rx = Signal()
 		ulpi_state_rrd = Signal()
 		
-		self.data_out_source = Source(ULPI_DATA_D)
+		self.data_out_source = Endpoint(ULPI_DATA_D)
 
 		RegWriteReqR = Signal()
 		RegReadReqR = Signal()

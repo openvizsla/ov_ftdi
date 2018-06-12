@@ -1,4 +1,4 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.genlib.fsm import *
 from migen.genlib.fifo import *
 
@@ -8,13 +8,13 @@ class FTDI_sync245(Module):
 
         # Input FIFO for reads from FT245
         self.incoming_fifo = incoming_fifo = AsyncFIFO(8, 64)
-        self.submodules.incoming = RenameClockDomains(incoming_fifo, 
-                {"write":"ftdi", "read":"sys"})
+        self.submodules.incoming = ClockDomainsRenamer(
+            {"write":"ftdi", "read":"sys"})(incoming_fifo)
 
         # Output FIFO
         self.output_fifo = output_fifo = AsyncFIFO(8, 64)
-        self.submodules.outgoing = RenameClockDomains(output_fifo,
-                {"write":"sys", "read":"ftdi"})
+        self.submodules.outgoing = ClockDomainsRenamer(
+            {"write":"sys", "read":"ftdi"})(output_fifo)
 
         ftdi_domain = ClockDomain("ftdi")
         ftdi_domain.rst = reset
@@ -126,7 +126,7 @@ class FTDI_sync245(Module):
         bsf.state.reset = bsf.encoding['IDLE']
         
 
-        self.submodules.bsf = RenameClockDomains(bsf, {"sys": "ftdi"})
+        self.submodules.bsf = ClockDomainsRenamer({"sys": "ftdi"})(bsf)
 
 
         # LED Indicators for RX and TX

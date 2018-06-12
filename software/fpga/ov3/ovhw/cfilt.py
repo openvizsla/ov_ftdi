@@ -1,8 +1,8 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.genlib.fsm import FSM, NextState
 from migen.genlib.record import Record, DIR_M_TO_S
-from migen.flow.actor import Source, Sink
-from migen.bank.description import AutoCSR, CSRStorage, CSRStatus
+from misoc.interconnect.stream import Endpoint
+from misoc.interconnect.csr import AutoCSR, CSRStorage, CSRStatus
 
 from ovhw.constants import *
 from ovhw.ov_types import ULPI_DATA_D, ULPI_DATA_TAG
@@ -11,8 +11,8 @@ class RXCmdFilter(Module):
     # Merges/drops unnecessary RXCMDs for packet parsing
 
     def __init__(self):
-        self.sink = Sink(ULPI_DATA_D)
-        self.source = Source(ULPI_DATA_TAG)
+        self.sink = Endpoint(ULPI_DATA_D)
+        self.source = Endpoint(ULPI_DATA_TAG)
 
         is_sop = Signal()
         is_eop = Signal()
@@ -23,7 +23,7 @@ class RXCmdFilter(Module):
         is_nactive = Signal()
         is_error = Signal()
 
-        ts_counter = Signal(flen(self.source.payload.ts))
+        ts_counter = Signal(len(self.source.payload.ts))
 
         self.comb += [
                 is_sop.eq(self.sink.payload.rxcmd & (self.sink.payload.d == RXCMD_MAGIC_SOP)),

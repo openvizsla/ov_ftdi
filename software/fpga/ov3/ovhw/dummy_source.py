@@ -1,12 +1,10 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.genlib.fsm import FSM, NextState
-from migen.genlib.fifo import SyncFIFO
-from migen.bank import description, csrgen
-from migen.flow.actor import Source
+from misoc.interconnect.stream import Endpoint
 
 class DummySource(Module):
     def __init__(self, base, data = 300, idle = 1000):
-        self.source = Source([('d', 8), ('last', 1)])
+        self.source = Endpoint([('d', 8), ('last', 1)])
         
         self.submodules.dummy = FSM()
         

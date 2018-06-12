@@ -1,5 +1,5 @@
 from migen.genlib.roundrobin import RoundRobin, SP_CE
-from migen.fhdl.std import *
+from migen import *
 from migen.genlib.record import Record
 
 from ovhw.ov_types import sdramHostIf
@@ -11,8 +11,8 @@ class SDRAMMux(Module):
 
     def getPort(self):
         r = Record(sdramHostIf(
-            flen(self.downstream.d_read),
-            flen(self.downstream.i_addr)))
+            len(self.downstream.d_read),
+            len(self.downstream.i_addr)))
 
         self.ports.append(r)
         return r

@@ -1,4 +1,4 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.genlib.fsm import FSM, NextState
 
 TEST_ALT0 = 0   # 0000/FFFF
@@ -10,7 +10,7 @@ TEST_ONES = 5   # FFFF
 
 class SDRAMBIST(Module):
     def __init__(self, hostif, mem_size):
-        width = flen(hostif.d_write)
+        width = len(hostif.d_write)
         assert width == 16
 
         self.start = Signal()
@@ -53,10 +53,10 @@ class SDRAMBIST(Module):
 
         # Pattern selection
 
-        if (flen(self.addr) >= 2*width):
+        if (len(self.addr) >= 2*width):
             addr_ext = self.addr
         else:
-            addr_ext = Cat(self.addr, Replicate(0, 2*width - flen(self.addr)))
+            addr_ext = Cat(self.addr, Replicate(0, 2*width - len(self.addr)))
 
         self.comb += [
             Case(self.lat_test, {

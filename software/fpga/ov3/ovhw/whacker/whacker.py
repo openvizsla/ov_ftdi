@@ -1,6 +1,6 @@
-from migen.fhdl.std import *
-from migen.bank.description import AutoCSR, CSRStatus, CSRStorage
-from migen.flow.actor import Source, Sink
+from migen import *
+from misoc.interconnect.csr import AutoCSR, CSRStatus, CSRStorage
+from misoc.interconnect.stream import Endpoint
 from migen.genlib.fsm import FSM, NextState
 
 from ovhw.whacker.consumer import Consumer
@@ -105,7 +105,7 @@ class TestWhacker(Module):
 
         class SimSource(SimActor):
             def __init__(self):
-                self.source = Source(ULPI_DATA_D)
+                self.source = Endpoint(ULPI_DATA_D)
                 SimActor.__init__(self, gen())
     
         self.submodules.w = Whacker(1024)

@@ -1,19 +1,31 @@
-from migen.fhdl.std import *
-from migen.bank import description
+from migen import *
+from misoc.interconnect.csr import AutoCSR, CSRStorage
 from itertools import zip_longest
 
-class LED_outputs(Module, description.AutoCSR):
+# Basic programmable LED module
+class LED_outputs(Module, AutoCSR):
+
     def __init__(self, leds_raw, leds_muxes=None, active=1):
+        """
+        leds_raw: output IOs for the LEDs
+        leds_muxes: internal digital signals that could feed a LED
+        """
 
-        leds = Signal(flen(leds_raw))
 
-        self._out = description.CSRStorage(flen(leds), atomic_write=True)
+        leds = Signal(len(leds_raw))
+
+        # Register containing the desired LED status
+        self._out = CSRStorage(len(leds), atomic_write=True)
+
+        # For each LED, we generate a MUX register.
+        # The MUX register can connect either the bit in the 'output' register or
+        # signals supplied via led_muxes
 
         if leds_muxes:
-            assert len(leds_muxes) == flen(leds)
-            for n in range(flen(leds)):
+            assert len(leds_muxes) == len(leds)
+            for n in range(len(leds)):
                 name = "mux_%d" % n
-                attr = description.CSRStorage(8, atomic_write=True, name=name)
+                attr = CSRStorage(8, atomic_write=True, name=name)
                 setattr(self, "_%s" % name, attr)
 
                 mux_vals = [self._out.storage[n]]

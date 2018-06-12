@@ -1,6 +1,6 @@
-from mibuild.generic_platform import *
-from mibuild.xilinx_ise import XilinxISEPlatform
-from mibuild.crg import SimpleCRG
+from migen.build.generic_platform import *
+from migen.build.xilinx import XilinxPlatform
+from migen.genlib.io import CRG
 
 _io = [
     ("leds", 0, Pins("P57 P58 P59"), IOStandard("LVCMOS33"), Drive(24), Misc("SLEW=QUIETIO")),
@@ -80,12 +80,16 @@ _io = [
     ("init_b", 0, Pins("P39"), IOStandard("LVCMOS33")),
 ]
 
-class Platform(XilinxISEPlatform):
+class Platform(XilinxPlatform):
     def __init__(self):
-        XilinxISEPlatform.__init__(self, "xc6slx9-tqg144-3", _io,
-            lambda p: SimpleCRG(p, "clk50", None))
+        XilinxPlatform.__init__(self, "xc6slx9-tqg144-3", _io)
+
 
     def do_finalize(self, fragment):
+        # Add the CRG
+        crg = CRG(self.request("clk50"))
+        fragment += crg.get_fragment()
+
         clocks = {
             "clk50": 50.0,
             "clk12": 12.0,

@@ -1,5 +1,5 @@
-from migen.fhdl.std import *
-from migen.bank.description import CSR, AutoCSR
+from migen import *
+from misoc.interconnect.csr import CSR, AutoCSR
 
 class _bist_cmd_reg(Module, CSR):
     B_GO = 7

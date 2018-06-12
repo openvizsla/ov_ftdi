@@ -1,4 +1,4 @@
-from migen.fhdl.std import *
+from migen import *
 from sim.sdram_test_util import TestSDRAMComplex, SDRAMUTFramework
 import ovhw.sdram_bist
 import unittest

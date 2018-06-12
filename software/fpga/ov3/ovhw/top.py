@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
-from migen.fhdl.std import *
+from migen import *
 from migen.genlib.record import Record
-import migen.actorlib.fifo as al_fifo
-from migen.bus.csr import Interconnect
-from migen.bank.csrgen import BankArray
-from migen.bank.description import AutoCSR, CSRStorage, CSRStatus, CSR
+import misoc.interconnect.stream as al_fifo
+from misoc.interconnect.csr_bus import Interconnect, CSRBankArray
 
 import ovhw.clocking as clocking
 from ovhw.sdramctl import SDRAMCTL
@@ -27,15 +25,20 @@ from ovhw.sdram_host_read import SDRAM_Host_Read
 from ovhw.sdram_sink import SDRAM_Sink
 import ovplatform.sdram_params
 
+# Top level platform module
 class OV3(Module):
     def __init__(self, plat):
         # Clocking
-        clk_ref = plat.request("clk12")
+
+        clk_ref = plat.request("clk12") # 12mhz reference clock from which all else is derived
+
         self.submodules.clockgen = clocking.ClockGen(clk_ref)
         self.clock_domains.cd_sys = self.clockgen.cd_sys
 
         # SDRAM Controller
         sd_param = ovplatform.sdram_params.getSDRAMParams('mt48lc16m16a2')
+
+        # Build the SDRAM controller (TODO: Replace with MISOC SDRAM controller)
         self.submodules.sdramctl = SDRAMCTL(
             plat.request("sdram"),
             clk_out=self.clockgen.clk_sdram,
@@ -43,19 +46,18 @@ class OV3(Module):
             **sd_param._asdict()
         )
 
-        # SDRAM Master arbiter
+        # SDRAM Master arbiter (TODO: Replace with MISOC bus arbiter)
         self.submodules.sdram_mux = SDRAMMux(self.sdramctl.hostif)
 
-        # SDRAM BIST
+        # SDRAM BIST (TODO: Rewrite to use internal bus)
         memsize = 2 ** (sd_param.colbits + sd_param.rowbits + sd_param.bankbits)
         self.submodules.bist = SDRAMBIST(self.sdram_mux.getPort(), memsize)
         self.submodules.sdram_test = SDRAMBISTCfg(self.bist)
 
-        # SDRAM host read
-
+        # SDRAM host read translator
         self.submodules.sdram_host_read = SDRAM_Host_Read(self.sdram_mux.getPort(), host_burst_length = 0x20)
         
-        # SDRAM sink
+        # SDRAM sink - sends data from USB capture to host
         self.submodules.sdram_sink = SDRAM_Sink(self.sdram_mux.getPort())
         
         # connect wptr/rptr for ringbuffer flow control
@@ -75,9 +77,8 @@ class OV3(Module):
         
         # ULPI controller
         ulpi_reg = Record(ULPI_REG)
-        self.submodules.ulpi = RenameClockDomains(
+        self.submodules.ulpi = ClockDomainsRenamer({"sys": "ulpi"}) (
           ULPI_ctrl(self.ulpi_pl.ulpi_bus, ulpi_reg),
-          {"sys": "ulpi"}
         )
 
         # ULPI register R/W CSR interface
@@ -87,14 +88,13 @@ class OV3(Module):
 
 
         # Receive Path
-        self.submodules.ovf_insert = RenameClockDomains(
-            OverflowInserter(),
+        self.submodules.ovf_insert = ClockDomainsRenamer(
             {"sys": "ulpi"}
-        )
+        )(OverflowInserter())
 
-        self.submodules.udata_fifo = RenameClockDomains(
-            al_fifo.AsyncFIFO(ULPI_DATA_D, 1024),
-            {"write":"ulpi", "read":"sys"}
+        self.submodules.udata_fifo = ClockDomainsRenamer(
+            {"write":"ulpi", "read":"sys"})(
+            al_fifo.AsyncFIFO(ULPI_DATA_D, 1024)
         )
 
         self.submodules.cfilt = RXCmdFilter()
@@ -142,7 +142,7 @@ class OV3(Module):
                 'ovf_insert' : 8,
                 }
 
-        self.submodules.csrbankarray = BankArray(self,
+        self.submodules.csrbankarray = CSRBankArray(self,
             lambda name, _: self.csr_map[name])
 
         # Connect FTDI CSR Master to CSR bus

@@ -1,5 +1,5 @@
 import unittest
-from migen.fhdl.std import *
+from migen import *
 import sim.sdram_test_util
 
 class SDRAMSingleTester(sim.sdram_test_util.SDRAMUTFramework):

@@ -1,14 +1,12 @@
+from migen import *
 from migen.genlib.cdc import MultiReg
-from migen.bank import description, csrgen
-from migen.bus.csr import Initiator, Interconnect
-from migen.bus.transactions import *
-from migen.sim.generic import Simulator
+from misoc.interconnect.csr import CSR, CSRStorage, CSRStatus, AutoCSR
 
-class _ULPI_cmd_reg(Module, description.CSR):
+class _ULPI_cmd_reg(Module, CSR):
     B_GO = 7
 
     def __init__(self, trig, ack, addr):
-        description.CSR.__init__(self, size=8)
+        CSR.__init__(self, size=8)
         self.trig = trig
         self.trig.reset = 0
         self.ack = ack
@@ -27,7 +25,7 @@ class _ULPI_cmd_reg(Module, description.CSR):
 
         self.comb += self.w.eq(Cat(self.addr, self.ack, self.trig))
 
-class ULPICfg(Module, description.AutoCSR):
+class ULPICfg(Module, AutoCSR):
     def __init__(self, clk, cd_rst, ulpi_rst, ulpi_stp_ovr, ulpi_reg):
 
         # TESTING - UCFG_RST register
@@ -43,7 +41,7 @@ class ULPICfg(Module, description.AutoCSR):
         #    0    0    0    0    0    FSTP BRST URST
         #
 
-        self._rst = description.CSRStorage(3)
+        self._rst = CSRStorage(3)
         self.comb += ulpi_rst.eq(self._rst.storage[0])
         self.comb += cd_rst.eq(self._rst.storage[1])
         self.comb += ulpi_stp_ovr.eq(self._rst.storage[2])
@@ -61,7 +59,7 @@ class ULPICfg(Module, description.AutoCSR):
         #    0    0    0    0    0    0    0    CKACT
         #
 
-        self._stat = description.CSRStatus(1)
+        self._stat = CSRStatus(1)
 
         ulpi_clk_act_cd = Signal(8)
 
@@ -108,12 +106,12 @@ class ULPICfg(Module, description.AutoCSR):
         # To read: write ULPI_RCMD with GO | addr, poll 
         # until GO clear, then read ULPI_RDATA
 
-        self._wdata = description.CSRStorage(8)
+        self._wdata = CSRStorage(8)
         self._wcmd = _ULPI_cmd_reg(ulpi_reg.wreq, ulpi_reg.wack, ulpi_reg.waddr)
         self.submodules += self._wcmd
         self.comb += ulpi_reg.wdata.eq(self._wdata.storage)
 
-        self._rdata = description.CSRStatus(8)
+        self._rdata = CSRStatus(8)
         self._rcmd = _ULPI_cmd_reg(ulpi_reg.rreq, ulpi_reg.rack, ulpi_reg.raddr)
         self.submodules += self._rcmd
         self.sync += If(ulpi_reg.rack,

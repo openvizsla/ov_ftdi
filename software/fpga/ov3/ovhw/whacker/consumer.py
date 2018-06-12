@@ -1,5 +1,5 @@
-from migen.fhdl.std import *
-from migen.flow.actor import Source, Sink
+from migen import *
+from misoc.interconnect.stream import Endpoint
 from migen.fhdl.bitcontainer import bits_for
 from migen.genlib.fsm import FSM, NextState
 
@@ -12,14 +12,14 @@ def _inc(signal, modulo, dest_signal=None):
     if type(dest_signal) == type(None):
         dest_signal = signal
 
-    assert modulo == 2**flen(signal)
-    assert flen(dest_signal) == flen(signal)
+    assert modulo == 2**len(signal)
+    assert len(dest_signal) == len(signal)
     return dest_signal.eq(signal + 1)
 
 class Consumer(Module):
     def __init__(self, port, depth):
-        self.sink = Sink(dmatpl(depth))
-        self.source = Source(D_LAST)
+        self.sink = Endpoint(dmatpl(depth))
+        self.source = Endpoint(D_LAST)
         self.busy = Signal()
 
         self.pos = Signal(max=depth, reset=0)

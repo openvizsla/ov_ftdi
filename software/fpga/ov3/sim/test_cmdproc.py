@@ -1,14 +1,8 @@
 import unittest
 
-from migen.fhdl.std import *
-from migen.fhdl.bitcontainer import bits_for
-from migen.flow.actor import Source, Sink
-from migen.actorlib.sim import SimActor, Dumper, Token
-from migen.sim.generic import Simulator, TopLevel
+from migen import *
+from migen.sim import run_simulation
 
-from ovhw.ov_types import ULPI_DATA_TAG
-
-from ovhw.constants import *
 from ovhw.dummy_source import DummySource
 
 class TestBench(Module):
@@ -28,9 +22,6 @@ class TestBench(Module):
         self.ff.incoming_fifo.readable = Signal(reset=0)
         self.ff.incoming_fifo.dout = Signal(8)
 
-        #self.sync += self.ff.incoming_fifo.readable.eq(0)
-        #self.sync += self.ff.incoming_fifo.dout.eq(0)
-
         self.ff.output_fifo.we = Signal()
         self.ff.output_fifo.writable = Signal(reset=1)
         self.ff.output_fifo.din = Signal(8)
@@ -47,9 +38,7 @@ class TestBench(Module):
 class TestCmdproc(unittest.TestCase):
     def setUp(self):
         self.tb = TestBench()
-        vcd = None
-        vcd = "test_cmdproc.vcd"
-        self.sim = Simulator(self.tb, TopLevel(vcd, vcd_level = 3))
+        self.sim = run_simulation(self.tb, vcd_name="test_cmdproc.vcd")
 
     def _run(self):
         with self.sim as sim:

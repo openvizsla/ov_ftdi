@@ -1,11 +1,5 @@
-from migen.fhdl.std import *
-from migen.genlib.cdc import NoRetiming, MultiReg
-from migen.flow.network import DataFlowGraph, CompositeActor
-from migen.flow.actor import Source
-from migen.bus.csr import Interconnect
-from migen.bank.csrgen import BankArray
+from migen import *
 
-from ovhw.ftdi_bus import FTDI_sync245
 from ovhw.bus_interleave import BusDecode, BusEncode, BusInterleave
 from ovhw.csr_master import CSR_Master
 
@@ -31,10 +25,11 @@ class CmdProc(Module):
         benc = BusEncode()
         
         # Connect decoder to busmaster to encoder
-        g = DataFlowGraph()
-        g.add_connection(bdec, busmaster)
-        g.add_connection(busmaster, benc)
-        self.submodules.fg = CompositeActor(g)
+        #g = DataFlowGraph()
+
+        pipeline = [bdec, busmaster, benc]
+        for s, d in zip(pipeline[:-1], pipeline[1:]):
+            self.comb += s.source.connect(d.sink)
 
         # Bus interleaver to merge streaming and response packets
         bilv = BusInterleave([benc] + streaming_sources)

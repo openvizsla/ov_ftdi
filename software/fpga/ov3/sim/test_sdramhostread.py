@@ -1,4 +1,4 @@
-from migen.fhdl.std import *
+from migen import *
 from ovhw.sdram_mux import SDRAMMux
 from sim.util import par, gather_files
 import unittest

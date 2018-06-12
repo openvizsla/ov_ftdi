@@ -1,8 +1,8 @@
 import unittest
 
-from migen.fhdl.std import *
+from migen import *
 from migen.fhdl.bitcontainer import bits_for
-from migen.flow.actor import Source, Sink
+from misoc.interconnect.stream import Endpoint
 from migen.actorlib.sim import SimActor, Dumper, Token
 from migen.sim.generic import Simulator, TopLevel
 
@@ -42,12 +42,12 @@ class TestBench(Module):
 
         class SimSource(SimActor):
             def __init__(self):
-                self.source = Source(ULPI_DATA_TAG)
+                self.source = Endpoint(ULPI_DATA_TAG)
                 SimActor.__init__(self, _deferred_source_gen())
 
         class SimDMASink(SimActor):
             def __init__(self):
-                self.sink = Sink(dmatpl(1024))
+                self.sink = Endpoint(dmatpl(1024))
                 SimActor.__init__(self, _deferred_sink_gen())
 
         self.consume_watermark  =Signal(max=1024)

@@ -1,5 +1,5 @@
-from migen.fhdl.std import *
-from migen.flow.actor import Source, Sink
+from migen import *
+from misoc.interconnect.stream import Endpoint
 from migen.fhdl.bitcontainer import bits_for
 from migen.genlib.fsm import FSM, NextState
 
@@ -11,9 +11,9 @@ MAX_PACKET_SIZE = 800
 class Producer(Module):
 
     def __init__(self, wrport, depth, consume_watermark, ena, la_filters=[]):
-        self.ulpi_sink = Sink(ULPI_DATA_TAG)
+        self.ulpi_sink = Endpoint(ULPI_DATA_TAG)
 
-        self.out_addr = Source(dmatpl(depth))
+        self.out_addr = Endpoint(dmatpl(depth))
 
 
         # Produce side
@@ -47,7 +47,7 @@ class Producer(Module):
         self.comb += has_space.eq(((consume_watermark - self.produce_write.v - 1) & (depth - 1)) > 8)
 
         # Grab packet timestamp at SOP
-        pkt_timestamp = Signal(flen(self.ulpi_sink.payload.ts))
+        pkt_timestamp = Signal(len(self.ulpi_sink.payload.ts))
         self.sync += If(self.ulpi_sink.payload.is_start & self.ulpi_sink.ack,
                 pkt_timestamp.eq(self.ulpi_sink.payload.ts))
 

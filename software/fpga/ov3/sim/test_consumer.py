@@ -1,5 +1,5 @@
-from migen.fhdl.std import *
-from migen.flow.actor import Source, Sink
+from migen import *
+from misoc.interconnect.stream import Endpoint
 from migen.sim.generic import Simulator
 from migen.actorlib.sim import SimActor, Dumper, Token
 
@@ -33,12 +33,12 @@ class TestBench(Module):
 
         class SimSource(SimActor):
             def __init__(self):
-                self.source = Source(dmatpl(1024))
+                self.source = Endpoint(dmatpl(1024))
                 SimActor.__init__(self, _deferred_src_gen())
 
         class SimSink(SimActor):
             def __init__(self):
-                self.sink = Sink(D_LAST)
+                self.sink = Endpoint(D_LAST)
                 SimActor.__init__(self, _deferred_sink_gen())
 
         self.submodules.src = SimSource()

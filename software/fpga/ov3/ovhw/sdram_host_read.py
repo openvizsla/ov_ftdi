@@ -1,21 +1,21 @@
-from migen.fhdl.std import *
+from migen import *
 from migen.genlib.fsm import FSM, NextState
 from migen.genlib.fifo import SyncFIFO
-from migen.bank import description, csrgen
-from migen.flow.actor import Source
+from misoc.interconnect.csr import AutoCSR, CSRStorage, CSRStatus
+from misoc.interconnect.stream import Endpoint
 
 from ovhw.whacker.util import Acc, Acc_inc
 
 Output = Signal
 Input = Signal
 
-class SDRAM_Host_Read(Module, description.AutoCSR):
+class SDRAM_Host_Read(Module, AutoCSR):
     def __init__(self, hostif, host_burst_length = 16):
-        width = flen(hostif.d_write)
+        width = len(hostif.d_write)
         assert width == 16
-        awidth = flen(hostif.i_addr) + 1
+        awidth = len(hostif.i_addr) + 1
 
-        self.source = Source([('d', 8), ('last', 1)])
+        self.source = Endpoint([('d', 8), ('last', 1)])
 
         go = Signal()
         gor = Signal()
@@ -29,13 +29,13 @@ class SDRAM_Host_Read(Module, description.AutoCSR):
 
         ##
 
-        self._debug_i_stb = description.CSRStatus(32)
-        self._debug_i_ack = description.CSRStatus(32)
-        self._debug_d_stb = description.CSRStatus(32)
-        self._debug_d_term = description.CSRStatus(32)
-        self._debug_s0 = description.CSRStatus(32)
-        self._debug_s1 = description.CSRStatus(32)
-        self._debug_s2 = description.CSRStatus(32)
+        self._debug_i_stb = CSRStatus(32)
+        self._debug_i_ack = CSRStatus(32)
+        self._debug_d_stb = CSRStatus(32)
+        self._debug_d_term = CSRStatus(32)
+        self._debug_s0 = CSRStatus(32)
+        self._debug_s1 = CSRStatus(32)
+        self._debug_s2 = CSRStatus(32)
 
         self.submodules.i_stb_acc = Acc_inc(32)
         self.submodules.i_ack_acc = Acc_inc(32)
@@ -61,16 +61,16 @@ class SDRAM_Host_Read(Module, description.AutoCSR):
 
         ##
 
-        self._ring_base = description.CSRStorage(awidth)
-        self._ring_end = description.CSRStorage(awidth)
+        self._ring_base = CSRStorage(awidth)
+        self._ring_end = CSRStorage(awidth)
 
         # rptr readback
-        self._rptr_status = description.CSRStatus(awidth)
+        self._rptr_status = CSRStatus(awidth)
         self.comb += self._rptr_status.status.eq(rptr)
 
         # 'go' bit
 
-        self._go = description.CSRStorage(1)
+        self._go = CSRStorage(1)
 
         self.comb += go.eq(self._go.storage[0])
         self.sync += gor.eq(go)

@@ -1,4 +1,4 @@
-from migen.fhdl.std import *
+from migen import *
 from ovhw.sdramctl import SDRAMCTL
 import ovplatform.sdram_params
 import migen.test.support
