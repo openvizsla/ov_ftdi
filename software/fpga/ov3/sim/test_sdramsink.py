@@ -18,7 +18,7 @@ class TestBench(Module):
         self.submodules.dummy0 = DummySource(0xe0)
         self.submodules.sdram_sink = SDRAM_Sink(hostif)
         
-        self.comb += self.sdram_sink.sink.connect(self.dummy0.source)
+        self.comb += self.dummy0.source.connect(self.sdram_sink.sink)
 
         self.hostif = hostif
         self.wait_for_i = False

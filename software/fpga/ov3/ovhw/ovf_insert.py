@@ -4,16 +4,16 @@ from migen.genlib.record import Record
 
 from ovhw.ov_types import ULPI_DATA_D
 from ovhw.constants import RXCMD_MAGIC_OVF
-from ovhw.perfcounter import CSRStorageEx, Perfcounter
+from ovhw.perfcounter import Perfcounter
 
-from misoc.interconnect.csr import AutoCSR
+from misoc.interconnect.csr import AutoCSR, CSRStorage
 
 class OverflowInserter(Module, AutoCSR):
     def __init__(self):
         self.sink = Endpoint(ULPI_DATA_D)
         self.source = Endpoint(ULPI_DATA_D)
 
-        self._ctl = CSRStorageEx(1)
+        self._ctl = CSRStorage(1)
         snapshot = self._ctl.re
         reset = self._ctl.storage[0]
         self._num_ovf = Perfcounter(snapshot, reset)

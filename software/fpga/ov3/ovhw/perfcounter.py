@@ -11,13 +11,3 @@ class Perfcounter(CSRStatus):
 
     def inc(self):
         return self.acc.inc()
-
-# CSRStorage with accessible re
-class CSRStorageEx(CSRStorage):
-    def __init__(self, *args, **kwargs):
-        CSRStorage.__init__(self, *args, **kwargs)
-        self.re = Signal()
-    
-    def do_finalize(self, busword):
-        CSRStorage.do_finalize(self, busword)
-        self.comb += self.re.eq(self.simple_csrs[0].re)

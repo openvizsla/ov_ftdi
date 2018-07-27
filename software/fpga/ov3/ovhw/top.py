@@ -99,14 +99,14 @@ class OV3(Module):
 
         self.submodules.cfilt = RXCmdFilter()
         self.submodules.cstream = Whacker(1024)
-        self.comb += [
-                self.ovf_insert.sink.connect(self.ulpi.data_out_source),
-                self.udata_fifo.sink.connect(self.ovf_insert.source),
-                self.cfilt.sink.connect(self.udata_fifo.source),
-                self.cstream.sink.connect(self.cfilt.source),
-                self.sdram_sink.sink.connect(self.cstream.source),
-                ]
 
+        self.comb += [
+                self.ulpi.data_out_source.connect(self.ovf_insert.sink),
+                self.ovf_insert.source.connect(self.udata_fifo.sink),
+                self.udata_fifo.source.connect(self.cfilt.sink),
+                self.cfilt.source.connect(self.cstream.sink),
+                self.cstream.source.connect(self.sdram_sink.sink),
+                ]
 
         # FTDI bus interface
         ftdi_io = plat.request("ftdi")

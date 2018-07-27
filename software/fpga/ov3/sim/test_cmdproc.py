@@ -46,9 +46,8 @@ class TestCmdproc(unittest.TestCase):
         def collector():
             yield "passive"
             while 1:
-                master = (yield self.tb.cm.master)
-                if master.we:
-                    write_transactions.append((master.adr, master.dat_w))
+                if (yield self.tb.cm.master.we):
+                    write_transactions.append(((yield self.tb.cm.master.adr), (yield self.tb.cm.master.dat_w)))
                 yield
 
         def do_outbound_fifo_rd(o):

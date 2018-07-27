@@ -43,7 +43,7 @@ class TestBench(Module):
 
         self.submodules.src = SimSource()
         self.submodules.c = Consumer(self.port, 1024)
-        self.comb += self.c.sink.connect(self.src.source)
+        self.comb += self.src.source.connect(self.c.sink)
         self.comb += self.src.busy.eq(0)
 
         self.submodules.dmp = SimSink()

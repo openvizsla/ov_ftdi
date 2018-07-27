@@ -30,7 +30,7 @@ class TestBench(Module):
 
         self.comb += self.sdram_host_read.wptr.eq(self.sdram_sink.wptr)
         self.comb += self.sdram_sink.rptr.eq(self.sdram_host_read.rptr)
-        self.comb += self.sdram_sink.sink.connect(self.dummy0.source)
+        self.comb += self.dummy0.source.connect(self.sdram_sink.sink)
         
         def expected():
             while True:

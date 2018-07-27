@@ -54,7 +54,7 @@ class TestBench(Module):
 
         self.submodules.src = SimSource()
         self.submodules.p = Producer(self.port, 1024, self.consume_watermark, 1)
-        self.comb += self.p.ulpi_sink.connect(self.src.source)
+        self.comb += self.src.source.connect(self.p.ulpi_sink)
         self.comb += self.src.busy.eq(0)
 
         self.submodules.dmp = SimDMASink()

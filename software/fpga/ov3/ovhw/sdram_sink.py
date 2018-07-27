@@ -5,7 +5,7 @@ from misoc.interconnect.csr import AutoCSR, CSRStatus, CSRStorage
 from misoc.interconnect.stream import Endpoint
 
 from ovhw.whacker.util import Acc, Acc_inc
-from ovhw.perfcounter import Perfcounter, CSRStorageEx
+from ovhw.perfcounter import Perfcounter
 
 class SDRAM_Sink(Module, AutoCSR):
     def __init__(self, hostif, max_burst_length = 256):
@@ -27,7 +27,7 @@ class SDRAM_Sink(Module, AutoCSR):
 
         # CSRs
 
-        self._ptr_read = CSRStorageEx(1)
+        self._ptr_read = CSRStorage(1)
         ptr_read = self._ptr_read.re
         self._wptr = CSRStatus(awidth)
         self.sync += If(ptr_read, self._wptr.status.eq(self.wptr))
@@ -55,7 +55,7 @@ class SDRAM_Sink(Module, AutoCSR):
 
         # debug
 
-        self._debug_ctl = CSRStorageEx(1)
+        self._debug_ctl = CSRStorage(1)
         snapshot = self._debug_ctl.re
         perf_reset = self._debug_ctl.storage[0]
         self._debug_i_stb = Perfcounter(snapshot, perf_reset)
@@ -117,7 +117,7 @@ class SDRAM_Sink(Module, AutoCSR):
             hostif.d_term.eq((burst_rem == 0) | ~self.sdram_fifo.readable | wrap | blocked),
             self.sdram_fifo.re.eq(hostif.d_stb &~ hostif.d_term),
             If(~hostif.d_term & hostif.d_stb,
-                burst_rem_next.eq(burst_rem_next - 1)
+                burst_rem_next.eq(burst_rem - 1) # CHECKME: was burst_rem_next - 1 which is a comb loop
             ),
             If(hostif.d_term & ~hostif.d_stb,
                 NextState("WAIT")

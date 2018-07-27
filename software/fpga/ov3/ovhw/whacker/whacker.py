@@ -29,7 +29,7 @@ class Whacker(Module, AutoCSR):
         
 
         self.sink = self.producer.ulpi_sink
-        self.comb += self.consumer.sink.connect(self.producer.out_addr)
+        self.comb += self.producer.out_addr.connect(self.consumer.sink)
         self.source = self.consumer.source
 
         # Debug signals for state tracing
@@ -111,7 +111,7 @@ class TestWhacker(Module):
         self.submodules.w = Whacker(1024)
 
         self.submodules.src = SimSource()
-        self.comb += self.w.sink.connect(self.src.source)
+        self.comb += self.src.source.connect(self.w.sink)
         self.comb += self.src.busy.eq(0)
 
         self.submodules.dmp = Dumper(D_LAST)
