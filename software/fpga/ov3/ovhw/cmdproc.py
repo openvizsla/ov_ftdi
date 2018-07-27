@@ -34,6 +34,7 @@ class CmdProc(Module):
         # Bus interleaver to merge streaming and response packets
         bilv = BusInterleave([benc] + streaming_sources)
         self.submodules += bilv
+        self.submodules += pipeline
         self.comb += [
                 ftdi_sync.output_fifo.we.eq(bilv.source.stb),
                 ftdi_sync.output_fifo.din.eq(bilv.source.payload.d),

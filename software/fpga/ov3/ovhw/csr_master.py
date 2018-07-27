@@ -17,11 +17,11 @@ CMD_REC = [('wr', 1), ('a', 14), ('d', 8)]
 class CSR_Master(Module):
     def __init__(self, has_completion=True):
         self.cmd = Endpoint(CMD_REC)
-        self.source = self.cmd
+        self.sink = self.cmd
 
         if has_completion:
             self.completion = Endpoint(CMD_REC)
-            self.sink = self.completion
+            self.source = self.completion
 
         self.master = Interface()
 

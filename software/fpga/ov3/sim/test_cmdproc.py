@@ -18,9 +18,9 @@ class TestBench(Module):
 
         self.ff = ff()
 
-        self.ff.incoming_fifo.re = Signal()
-        self.ff.incoming_fifo.readable = Signal(reset=0)
-        self.ff.incoming_fifo.dout = Signal(8)
+        self.ff.incoming_fifo.re = Signal(name="FIFOI_re")
+        self.ff.incoming_fifo.readable = Signal(reset=0, name="FIFOI_readable")
+        self.ff.incoming_fifo.dout = Signal(8, name="FIFOI_dout")
 
         self.ff.output_fifo.we = Signal()
         self.ff.output_fifo.writable = Signal(reset=1)
@@ -29,23 +29,65 @@ class TestBench(Module):
         self.submodules.dummy0 = DummySource(0xE0)
         self.submodules.dummy1 = DummySource(0xE8)
         
-        self.submodules.cm = CmdProc(self.ff, [self.dummy0, self.dummy1])
+        self.submodules.cm = self.cm = CmdProc(self.ff, [self.dummy0, self.dummy1])
     
 
     def do_simulation(self, selfp):
         self.selfp = selfp
-    
+
+
 class TestCmdproc(unittest.TestCase):
     def setUp(self):
         self.tb = TestBench()
-        self.sim = run_simulation(self.tb, vcd_name="test_cmdproc.vcd")
-
-    def _run(self):
-        with self.sim as sim:
-            sim.run(400)
 
     def test_cmdproc(self):
-        self._run()
+        write_transactions = []
+
+        def collector():
+            yield "passive"
+            while 1:
+                master = (yield self.tb.cm.master)
+                if master.we:
+                    write_transactions.append((master.adr, master.dat_w))
+                yield
+
+        def do_outbound_fifo_rd(o):
+            yield o.writable.eq(1)
+            while (yield o.we) == 0:
+                yield 
+
+            v = yield o.din
+            yield o.writable.eq(0)
+            return v
+
+
+        def do_income_fifo_wr(o, v):
+            yield o.readable.eq(1)
+            yield o.dout.eq(v)
+
+            while (yield o.re) == 0:
+                yield
+            
+            yield
+            yield o.readable.eq(0)
+
+        def gen():
+            for i in range(5):
+                yield 
+
+            yield from do_income_fifo_wr(self.tb.ff.incoming_fifo, 0x55)
+            yield from do_income_fifo_wr(self.tb.ff.incoming_fifo, 0x92)
+            yield from do_income_fifo_wr(self.tb.ff.incoming_fifo, 0x34)
+            yield from do_income_fifo_wr(self.tb.ff.incoming_fifo, 0x56)
+            yield from do_income_fifo_wr(self.tb.ff.incoming_fifo, 0xAA)
+
+            for i in range(10):
+                yield 
+
+            self.assertEqual(write_transactions, [(0x1234, 0x56)])
+
+
+        self.sim = run_simulation(self.tb, [gen(), collector()], vcd_name="test_cmdproc.vcd")
 
 
 if __name__ == '__main__':

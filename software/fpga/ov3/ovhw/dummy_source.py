@@ -35,7 +35,7 @@ class DummySource(Module):
             self.source.stb.eq(1),
             If(self.source.ack,
                 If(dummy_count != data,
-                    dummy_count_next.eq(dummy_count_next+1)
+                    dummy_count_next.eq(dummy_count+1)
                 ).Else(dummy_count_next.eq(0),
                     self.source.payload.last.eq(1),
                     NextState("S3")
@@ -45,7 +45,7 @@ class DummySource(Module):
 
         self.dummy.act("S3",
                 If(dummy_count != idle,
-                    dummy_count_next.eq(dummy_count_next+1)
+                    dummy_count_next.eq(dummy_count+1)
                 ).Else(dummy_count_next.eq(0),
                     NextState("S0")
                 )

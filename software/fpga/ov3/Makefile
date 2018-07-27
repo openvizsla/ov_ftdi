@@ -5,7 +5,7 @@ BUILD := build
 BITFILE := $(BUILD)/ov3.bit
 FWPKG := $(BUILD)/ov3.fwpkg
 
-PYTHON := python3.3
+PYTHON := python3
 
 PY_FILES := $(shell find ovhw ovplatform -name '*.py')
 
