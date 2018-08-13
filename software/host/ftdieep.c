@@ -101,7 +101,7 @@ static int FTDIEEP_WriteWord(FTDIDevice *dev, uint8_t addr, uint16_t data)
 	                              addr,
 	                              NULL, 0,
 	                              FTDI_COMMAND_TIMEOUT);
-	return 0;
+	return err > 0 ? 0 : err;
 }
 
 static int FTDIEEP_ReadWord(FTDIDevice *dev, uint8_t addr, uint16_t *data)
