@@ -150,7 +150,9 @@ class SDRAM_Sink(Module, AutoCSR):
 
         # sink into fifo
 
-        self.submodules.fifo_fsm = FSM()
+        self.submodules.fifo_fsm = ResetInserter()(FSM())
+
+        self.sync += self.fifo_fsm.reset.eq(go &~ gor)
 
         capture_low = Signal()
         din_low = Signal(8)
