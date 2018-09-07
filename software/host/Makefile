@@ -33,7 +33,7 @@ CFLAGS += -I../include
 
 SO_OBJS := fastftdi.o fpgaconfig.o bit_file.o hw_common.o ftdieep.o usb_interp.o
 
-CFLAGS += -O3 -g --std=c99
+CFLAGS += -O3 -g --std=c99 -D_XOPEN_SOURCE=500
 
 all: $(SO)
 
