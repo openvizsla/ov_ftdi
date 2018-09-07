@@ -15,7 +15,7 @@ $(FWPKG): $(BITFILE)
 	$(PYTHON) -m zipfile -c $@ $< $(BUILD)/map.txt
 
 $(BITFILE): $(PY_FILES)
-	$(PYTHON) build.py build_dir $(BUILD) build_name ov3
+	$(PYTHON) build.py $(BUILD) ov3
 
 clean:
 	rm -rf $(BUILD)/*

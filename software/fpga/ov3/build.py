@@ -21,11 +21,13 @@ def gen_mapfile(ov3_mod):
     return r
 
 if __name__ == "__main__":
+    import sys
+
     plat = Platform()
     top = OV3(plat)
 
-    # Build the register map
-    # FIXME: build dir should come from command line arg
-    open("build/map.txt", "w").write(gen_mapfile(top))
+    _, build_dir, build_name = sys.argv
 
-    plat.build(top)
+    open("{}/map.txt".format(build_dir), "w").write(gen_mapfile(top))
+
+    plat.build(top, build_dir=build_dir, build_name=build_name)
