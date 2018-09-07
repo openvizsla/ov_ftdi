@@ -43,4 +43,4 @@ $(SO): $(SO_OBJS)
 *.o: *.h Makefile
 
 clean:
-	rm -f $(SO) $(OBJS)
+	rm -f $(SO) $(SO_OBJS)
