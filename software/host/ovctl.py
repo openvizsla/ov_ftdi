@@ -10,7 +10,7 @@ import time
 import zipfile
 
 import sys
-import os
+import os, os.path
 import struct
 #import yappi
 
@@ -19,6 +19,9 @@ import struct
 MIN_MAJOR = 3
 MIN_MINOR = 3
 
+default_package = os.getenv('OV_PKG')
+if default_package is None:
+    default_package = os.path.join(os.path.dirname(os.path.realpath(__file__)), "ov3.fwpkg")
 
 def as_ascii(arg):
     if arg == None:
@@ -459,7 +462,7 @@ def main():
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--pkg", "-p", type=lambda x: zipfile.ZipFile(x, 'r'), 
-            default=os.getenv('OV_PKG'))
+            default=default_package)
     ap.add_argument("-l", "--load", action="store_true")
     ap.add_argument("--verbose", "-v", action="store_true")
     ap.add_argument("--config-only", "-C", action="store_true")
