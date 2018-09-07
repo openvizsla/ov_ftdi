@@ -1,4 +1,4 @@
-PYTHONPATH := ../migen:../mibuild
+PYTHONPATH := ../migen:../misoc
 export PYTHONPATH
 OVCTL := ../../host/ovctl.py
 BUILD := build
