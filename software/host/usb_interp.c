@@ -2,7 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "fastftdi.h"
+#include "usb_interp.h"
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
 
 enum {
   HF0_ERR =  0x01, //  Physical layer error
@@ -241,11 +245,12 @@ unsigned char got_start = 0;
 int CStreamCallback (uint8_t *buffer, int length,
 			FTDIProgressInfo *progress, void *userdata) {
   unsigned char *p;
+  FTDIStreamCallback *cb;
   if (!buffer ||  !length) 
     return 0;
   //    printf("CStreamCallback(%p, %d, %p, %p)\n", buffer, length, progress, userdata);
   //  hexdump(buffer, length);
-  FTDIStreamCallback *cb = (FTDIStreamCallback *)userdata;
+  cb = (FTDIStreamCallback *)userdata;
 
   //  printf("packet_buf=%p, packet_buf_len=%d\n", packet_buf, packet_buf_len);
   memcpy(packet_buf + packet_buf_len, buffer, length);

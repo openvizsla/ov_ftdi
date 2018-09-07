@@ -1,5 +1,9 @@
 *~
 *.o
+*.obj
 ovctl
 libov.so
 libov.dylib
+libov.dll
+libov.exp
+libov.lib

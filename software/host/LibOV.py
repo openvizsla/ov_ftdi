@@ -13,6 +13,8 @@ if _lpath == '':
 
 if sys.platform == 'darwin':
     _lib_suffix = 'dylib'
+elif sys.platform == 'win32':
+	_lib_suffix = 'dll'
 else:
     _lib_suffix = 'so'
 

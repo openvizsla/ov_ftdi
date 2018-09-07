@@ -1,8 +1,7 @@
 /*
- * ftdieep.h - Support for generating EEPROM information for the FT2232H,
- *             using the 93C46 EEPROM.
+ * usb_interp.h - usb packet parsing
  *
- * Copyright (C) 2010 Hector Martin <hector@marcansoft.com>
+ * Copyright (C) 2009 Micah Elizabeth Scott
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +22,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef __FTDIEEP_H
-#define __FTDIEEP_H
+#ifndef __USB_INTERP_H
+#define __USB_INTERP_H
 
 #include "fastftdi.h"
 
@@ -39,11 +38,9 @@
 #endif
 
 /*
- * Public Functions
+ * Public
  */
 
-OV_API int FTDIEEP_CheckAndProgram(FTDIDevice *dev, unsigned int number);
-OV_API int FTDIEEP_SanityCheck(FTDIDevice *dev, bool verbose);
-OV_API int FTDIEEP_Erase(FTDIDevice *dev);
+OV_API void ChandlePacket(unsigned long long ts, unsigned int flags, unsigned char *buf, unsigned int len);
 
-#endif /* __FTDIEEP_H */
+#endif /* __USB_INTERP_H */

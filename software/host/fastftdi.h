@@ -29,7 +29,23 @@
 
 #include <libusb.h>
 #include <stdint.h>
+#ifndef _MSC_VER
 #include <stdbool.h>
+#else
+#define bool int
+#define false 0
+#define true  1
+#endif
+
+#ifdef _WIN32
+  #ifdef OV_API_EXPORT
+    #define OV_API __declspec(dllexport)
+  #else
+    #define OV_API __declspec(dllimport)
+  #endif
+#else
+  #define OV_API
+#endif
 
 typedef enum {
   FTDI_BITMODE_RESET        = 0,
@@ -102,34 +118,34 @@ typedef int (FTDIStreamCallback)(uint8_t *buffer, int length,
  * Public Functions
  */
 
-int FTDIDevice_Open(FTDIDevice *dev);
-void FTDIDevice_Close(FTDIDevice *dev);
-int FTDIDevice_Reset(FTDIDevice *dev);
+OV_API int FTDIDevice_Open(FTDIDevice *dev);
+OV_API void FTDIDevice_Close(FTDIDevice *dev);
+OV_API int FTDIDevice_Reset(FTDIDevice *dev);
 
-int FTDIDevice_SetMode(FTDIDevice *dev, FTDIInterface interface,
+OV_API int FTDIDevice_SetMode(FTDIDevice *dev, FTDIInterface interface,
                        FTDIBitmode mode, uint8_t pinDirections,
                        int baudRate);
 
-int FTDIDevice_Write(FTDIDevice *dev, FTDIInterface interface,
+OV_API int FTDIDevice_Write(FTDIDevice *dev, FTDIInterface interface,
                      uint8_t *data, size_t length, bool async);
 
-int FTDIDevice_WriteByteSync(FTDIDevice *dev, FTDIInterface interface, uint8_t byte);
-int FTDIDevice_ReadByteSync(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte);
+OV_API int FTDIDevice_WriteByteSync(FTDIDevice *dev, FTDIInterface interface, uint8_t byte);
+OV_API int FTDIDevice_ReadByteSync(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte);
 
-int FTDIDevice_ReadStream(FTDIDevice *dev, FTDIInterface interface,
+OV_API int FTDIDevice_ReadStream(FTDIDevice *dev, FTDIInterface interface,
                           FTDIStreamCallback *callback, void *userdata,
                           int packetsPerTransfer, int numTransfers);
 
-int FTDIDevice_MPSSE_Enable(FTDIDevice *dev, FTDIInterface interface);
-int FTDIDevice_MPSSE_SetDivisor(FTDIDevice *dev, FTDIInterface interface,
+OV_API int FTDIDevice_MPSSE_Enable(FTDIDevice *dev, FTDIInterface interface);
+OV_API int FTDIDevice_MPSSE_SetDivisor(FTDIDevice *dev, FTDIInterface interface,
                                 uint8_t ValueL, uint8_t ValueH);
 
-int FTDIDevice_MPSSE_SetLowByte(FTDIDevice *dev, FTDIInterface interface,
+OV_API int FTDIDevice_MPSSE_SetLowByte(FTDIDevice *dev, FTDIInterface interface,
                                 uint8_t data, uint8_t dir);
-int FTDIDevice_MPSSE_SetHighByte(FTDIDevice *dev, FTDIInterface interface,
+OV_API int FTDIDevice_MPSSE_SetHighByte(FTDIDevice *dev, FTDIInterface interface,
                                  uint8_t data, uint8_t dir);
 
-int FTDIDevice_MPSSE_GetLowByte(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte);
-int FTDIDevice_MPSSE_GetHighByte(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte);
+OV_API int FTDIDevice_MPSSE_GetLowByte(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte);
+OV_API int FTDIDevice_MPSSE_GetHighByte(FTDIDevice *dev, FTDIInterface interface, uint8_t *byte);
 
 #endif /* __FASTFTDI_H */

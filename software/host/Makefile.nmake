@@ -1,0 +1,2 @@
+libov.dll:
+	cl fastftdi.c fpgaconfig.c bit_file.c hw_common.c ftdieep.c usb_interp.c gettimeofday.c libusb-1.0.lib /I. /DOV_API_EXPORT /link /DLL /out:libov.dll

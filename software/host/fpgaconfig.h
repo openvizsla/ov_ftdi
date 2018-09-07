@@ -28,6 +28,22 @@
 
 #include "fastftdi.h"
 
+#ifdef _WIN32
+  #ifdef OV_API_EXPORT
+    #define OV_API __declspec(dllexport)
+  #else
+    #define OV_API __declspec(dllimport)
+  #endif
+#else
+  #define OV_API
+#endif
+
 int FPGAConfig_LoadFile(FTDIDevice *dev, const char *filename);
+
+/*
+ * Public
+ */
+
+OV_API int FPGA_GetConfigStatus(FTDIDevice * dev);
 
 #endif /* __FPGACONFIG_H */
