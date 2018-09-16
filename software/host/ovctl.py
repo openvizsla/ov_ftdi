@@ -513,7 +513,7 @@ def main():
             print("USB: Error checking EEPROM\n")
             return 1
 
-    dev.dev.write(LibOV.FTDI_INTERFACE_A, b'\x00' * 512, async=False)
+    dev.dev.write(LibOV.FTDI_INTERFACE_A, b'\x00' * 512, async_=False)
 
     try:
         if hasattr(args, 'hdlr'):
