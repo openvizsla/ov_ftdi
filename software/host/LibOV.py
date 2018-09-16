@@ -124,11 +124,11 @@ class FTDIDevice:
             self.__is_open = False
             FTDIDevice_Close(self._dev)
 
-    def write(self, intf, buf, async=False):
+    def write(self, intf, buf, async_=False):
         if not isinstance(buf, bytes):
             raise TypeError("buf must be bytes")
 
-        return FTDIDevice_Write(self._dev, intf, buf, len(buf), async)
+        return FTDIDevice_Write(self._dev, intf, buf, len(buf), async_)
 
     def read(self, intf, n):
         buf = []
@@ -595,7 +595,7 @@ class OVDevice:
                 if self.verbose:
                     print("< %s" % " ".join("%02x" % i for i in msg))
 
-                self.dev.write(FTDI_INTERFACE_A, msg, async=False)
+                self.dev.write(FTDI_INTERFACE_A, msg, async_=False)
 
             service.write = write
     
