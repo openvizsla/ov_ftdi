@@ -97,7 +97,7 @@ FTDIDevice_Open(FTDIDevice *dev)
     return err;
   }
 
-  libusb_set_debug(dev->libusb, 2);
+  libusb_set_option(dev->libusb, LIBUSB_OPTION_LOG_LEVEL, 2);
 
   dev->handle = libusb_open_device_with_vid_pid(dev->libusb,
 						OV_VENDOR,
