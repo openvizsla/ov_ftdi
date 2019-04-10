@@ -154,6 +154,56 @@ class OutputCustom:
         self.output.write(bytes(self.template % (pkthex, self.speed.upper(), (ts + self.ts_offset) / 60e6), "ascii"))
 
 
+class OutputITI1480A:
+    def __init__(self, output, speed):
+        self.output = output
+        self.speed = speed
+        self.ts_offset = 0
+        self.ts_last = None
+
+    def handle_usb(self, ts, pkt, flags):
+        buf = []
+
+        # Skip SOF and empty packets
+        if (len(pkt) == 0) or (pkt[0] == 0xa5):
+            return
+
+        # Normalize timestamp and get delta vs prev packet
+        if self.ts_last is None:
+            self.ts_last = ts
+
+        if ts < self.ts_last:
+            self.ts_offset
+
+        ts_delta = ts - self.ts_last
+
+        self.ts_last = ts
+
+        # Prepare data
+        buf = bytearray(4 + 2 + 2*len(pkt) + 2)
+
+        # Write timestamp delta
+        buf[0] = (ts_delta & 0x0000ff0) >> 4
+        buf[1] = (ts_delta & 0x000000f) | 0x30
+        buf[2] = (ts_delta & 0xff00000) >> 20
+        buf[3] = (ts_delta & 0x00ff000) >> 12
+
+        # Write packet start
+        buf[4] = 0x40
+        buf[5] = 0xc0
+
+        # Write packet data
+        buf[6:-2:2] = pkt
+        buf[7:-2:2] = b'\x80' * len(pkt)
+
+        # Write packet end
+        buf[-2] = 0x00
+        buf[-1] = 0xc0
+
+        # To file
+        self.output.write(buf)
+
+
 class OutputPcap:
     LINK_TYPE = 255 #FIXME
 
@@ -241,7 +291,7 @@ def sniff(dev, speed, format, out, timeout):
     else:
         assert 0,"Invalid Speed"
 
-    assert format in ["verbose", "custom", "pcap"]
+    assert format in ["verbose", "custom", "pcap", "iti1480a"]
 
     output_handler = None
     out = out and open(out, "wb")
@@ -251,6 +301,8 @@ def sniff(dev, speed, format, out, timeout):
     elif format == "pcap":
         assert out, "can't output pcap to stdout, use --out"
         output_handler = OutputPcap(out)
+    elif format == "iti1480a":
+        output_handler = OutputITI1480A(out, speed)
 
     if output_handler is not None:
       dev.rxcsniff.service.handlers = [output_handler.handle_usb]
