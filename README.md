@@ -101,7 +101,10 @@ Obtaining Hardware
 The OpenVizsla 3.2 hardware is finally again available for purchase. This
 means you don't have to build your own boards to work with the project.
 
-You can obtain boards from sysmocom, see https://shop.sysmocom.de/
+You can obtain boards from:
+* sysmocom, see https://shop.sysmocom.de/
+* 3mdeb, visit https://shop.3mdeb.com/
 
-Please note that it is in no way required to buy the boards from sysmocom,
-the design is open hardware and you can just as well build it all by yourself.
+Please note that it is in no way required to buy the boards from mentioned
+shops, the design is open hardware and you can just as well build it all by
+yourself.
