@@ -10,12 +10,32 @@ The repository contains
 * **software/host** contains the source code to the libusb-based host software
 * **software/wireshark** contains some experimental/outdated code for pcap/wireshark integration
 
+Getting Started
+===============
+
+Once you have [obtained hardware](#obtaining-hardware), you can build the software and set up udev rules as follows:
+
+```
+git clone https://github.com/openvizsla/ov_ftdi
+cd ov_ftdi
+sudo cp software/host/52-openvizsla.rules /etc/udev/rules.d/
+make -C software/host
+```
+
+If the board was plugged in before copying the udev rules, either unplug it and plug it back, or run `sudo udevadm trigger -s usb -c add`.
+
+To capture USB traffic, you need to know the speed beforehand; it is specified as one of `ls`, `fs` or `hs`. Sniff the traffic and print it to standard output with:
+
+```
+./software/host/ovctl.py sniff <speed>
+```
+
 Project Status
 ==============
 
 (as of January 2019):
 
-The hardware design and the FPBA *gateware* are considered stable and reliable,
+The hardware design and the FPGA *gateware* are considered stable and reliable,
 and have not been touched since late 2014.
 
 The host software is quite basic and just gives you a textual / hex decode of the
