@@ -33,16 +33,15 @@ To capture USB traffic, you need to know the speed beforehand; it is specified a
 Project Status
 ==============
 
-(as of January 2019):
+(as of October 2019):
 
 The hardware design and the FPGA *gateware* are considered stable and reliable,
 and have not been touched since late 2014.
 
 The host software is quite basic and just gives you a textual / hex decode of the
-USB packets in near real-time.  There is no GUI to visualize and represent the
-packets.  There is no code to aggregate packets into transfers.  There's **no
+USB packets in near real-time. Packets can currently be visualized with https://github.com/lambdaconcept/usb2sniffer-qt using the ITI1480A output format. There is no code to aggregate packets into transfers. There's **no
 integration with other tools** like [sigrok](https://sigrok.org/), the
-[virtual-usb-analyzer](http://vusb-analyzer.sourceforge.net/) or [wireshark](https://wireshark.org/).
+[virtual-usb-analyzer](http://vusb-analyzer.sourceforge.net/) or [wireshark](https://wireshark.org/), but the latter is being worked on, see https://github.com/openvizsla/ov_ftdi/pull/30.
 
 At least partly due to the lack of availability of boards, there hasn't been any
 progress over the years, particularly not with the original project founder bushing
