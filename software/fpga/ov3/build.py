@@ -53,20 +53,21 @@ if __name__ == "__main__":
     plat = Platform()
     top = OV3(plat)
 
-    # Build the register map
-    map_file_path = os.path.join(args.build_dir, "map.txt")
-    open(os.path.join(args.build_dir, "map.txt"), "w").write(gen_mapfile(top))
-
-    # Synthesis, pnr, bitgen, etc.
-    plat.build(top, **mibuild_params)
-
+    # Paths
     bit_file_name = args.build_name + '.bit'
+    map_file_path = os.path.join(args.build_dir, "map.txt")
     bit_file_path = os.path.join(args.build_dir, bit_file_name)
     fwpack_file_path = os.path.join(args.build_dir, args.build_name + '.fwpack')
 
+    # Build the register map
+    open(map_file_path, "w").write(gen_mapfile(top))
+
+    # Run the FPGA toolchain to build the bit file
+    plat.build(top, **mibuild_params)
+
     # Generate fwpack
     if args.generate_fwpack and os.path.isfile(bit_file_path):
-        with zipfile.ZipFile(fwpack_file_path, 'w') as pack:
+        with zipfile.ZipFile(fwpack_file_path, 'w', compression=zipfile.ZIP_DEFLATED) as pack:
             with pack.open('map.txt', 'w') as dst, open(map_file_path, 'rb') as src:
                 shutil.copyfileobj(src, dst)
             with pack.open(bit_file_name, 'w') as dst, open(bit_file_path, 'rb') as src:
