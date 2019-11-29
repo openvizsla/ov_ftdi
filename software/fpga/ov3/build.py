@@ -12,7 +12,7 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument('-d', '--build-dir', default='build', help='Override build directory.')
     p.add_argument('-n', '--build-name', default='ov3', help='Override build name.')
-    p.add_argument('-p', '--generate-fwpack', action='store_true', default=False, help='Generate FWPack after build finishes.')
+    p.add_argument('-p', '--generate-fwpkg', action='store_true', default=False, help='Generate firmware package after build finishes.')
     p.add_argument('-m', '--mibuild-params', default='{}', type=json.loads, help='Extra mibuild parameters (in JSON).')
     return p.parse_args()
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     bit_file_name = args.build_name + '.bit'
     map_file_path = os.path.join(args.build_dir, "map.txt")
     bit_file_path = os.path.join(args.build_dir, bit_file_name)
-    fwpack_file_path = os.path.join(args.build_dir, args.build_name + '.fwpack')
+    fwpkg_file_path = os.path.join(args.build_dir, args.build_name + '.fwpkg')
 
     # Build the register map
     open(map_file_path, "w").write(gen_mapfile(top))
@@ -65,9 +65,9 @@ if __name__ == "__main__":
     # Run the FPGA toolchain to build the bit file
     plat.build(top, **mibuild_params)
 
-    # Generate fwpack
-    if args.generate_fwpack and os.path.isfile(bit_file_path):
-        with zipfile.ZipFile(fwpack_file_path, 'w', compression=zipfile.ZIP_DEFLATED) as pack:
+    # Generate fwpkg
+    if args.generate_fwpkg and os.path.isfile(bit_file_path):
+        with zipfile.ZipFile(fwpkg_file_path, 'w', compression=zipfile.ZIP_DEFLATED) as pack:
             with pack.open('map.txt', 'w') as dst, open(map_file_path, 'rb') as src:
                 shutil.copyfileobj(src, dst)
             with pack.open(bit_file_name, 'w') as dst, open(bit_file_path, 'rb') as src:
