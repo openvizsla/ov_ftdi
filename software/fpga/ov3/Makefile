@@ -2,8 +2,9 @@ PYTHONPATH := ../migen:../misoc
 export PYTHONPATH
 OVCTL := ../../host/ovctl.py
 BUILD := build
-BITFILE := $(BUILD)/ov3.bit
-FWPKG := $(BUILD)/ov3.fwpkg
+TOP := ov3
+BITFILE := $(BUILD)/$(TOP).bit
+FWPKG := $(BUILD)/$(TOP).fwpkg
 
 PYTHON := python3
 
@@ -15,7 +16,7 @@ $(FWPKG): $(BITFILE)
 	$(PYTHON) -m zipfile -c $@ $< $(BUILD)/map.txt
 
 $(BITFILE): $(PY_FILES)
-	$(PYTHON) build.py build_dir=$(BUILD) build_name=ov3
+	$(PYTHON) build.py -d $(BUILD) -n $(TOP)
 
 clean:
 	rm -rf $(BUILD)/*
