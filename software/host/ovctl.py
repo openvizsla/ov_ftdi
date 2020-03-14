@@ -271,8 +271,10 @@ def sdramtest(dev):
 
     dev.regs.LEDS_MUX_0.wr(0)
 
-@command('sniff', 'Perform USB trace / sniffing', ('speed', str), ('format', str, 'verbose'), ('out', str, None), ('timeout', int, None))
-def sniff(dev, speed, format, out, timeout):
+sniff_speeds = ["hs", "fs", "ls"]
+sniff_formats = ["verbose", "custom", "pcap", "iti1480a"]
+
+def do_sniff(dev, speed, format, out, timeout):
     # LEDs off
     dev.regs.LEDS_MUX_2.wr(0)
     dev.regs.LEDS_OUT.wr(0)
@@ -298,7 +300,7 @@ def sniff(dev, speed, format, out, timeout):
     dev.regs.OVF_INSERT_CTL.wr(1)
     dev.regs.OVF_INSERT_CTL.wr(0)
 
-    assert speed in ["hs", "fs", "ls"]
+    assert speed in sniff_speeds
 
     if check_ulpi_clk(dev):
         return
@@ -316,7 +318,7 @@ def sniff(dev, speed, format, out, timeout):
     else:
         assert 0,"Invalid Speed"
 
-    assert format in ["verbose", "custom", "pcap", "iti1480a"]
+    assert format in sniff_formats
 
     output_handler = None
     out = out and open(out, "wb")
@@ -399,6 +401,26 @@ def sniff(dev, speed, format, out, timeout):
 
     if out is not None:
         out.close()
+
+class Sniff(Command):
+    name = "sniff"
+    help = 'Perform USB trace / sniffing'
+
+    @staticmethod
+    def setup_args(sp):
+        #@command('sniff', ('speed', str,), ('format', str, 'verbose', formats), ('out', str, None), ('timeout', int, None))
+        sp.add_argument('speed', type=str, choices=sniff_speeds,
+                        help='USB Speed (High Speed, Full Speed, Low Speed)')
+        sp.add_argument('--format', type=str, default='verbose', choices=sniff_formats,
+                        help='Output file format')
+        sp.add_argument('--out', type=str,
+                        help='Output file name')
+        sp.add_argument('--timeout', type=int, help='Timeout in seconds')
+
+    @staticmethod
+    def go(dev, args):
+        do_sniff(dev, args.speed, args.format, args.out, args.timeout)
+
 
 @command('debug-stream', 'Debug Stream')
 def debug_stream(dev):
