@@ -37,10 +37,11 @@ class Command:
         pass
 
 __cmd_keeper = []
-def command(_name, *_args):
+def command(_name, _help, *_args):
     def _i(todeco):
         class _sub(Command):
             name = _name
+            help = _help
 
             @staticmethod
             def setup_args(sp):
@@ -73,7 +74,7 @@ def check_ulpi_clk(dev):
 
     return 0
 
-@command('uwrite', ('addr', str), ('val', int16))
+@command('uwrite', 'Write ULPI Register', ('addr', str), ('val', int16))
 def uwrite(dev, addr, val):
     addr = int(addr, 16)
 
@@ -82,7 +83,7 @@ def uwrite(dev, addr, val):
 
     dev.ulpiwrite(addr, val)
 
-@command('uread', ('addr', str))
+@command('uread', 'Read ULPI Register', ('addr', str))
 def uread(dev, addr):
     addr = int(addr, 16)
 
@@ -91,7 +92,7 @@ def uread(dev, addr):
 
     print ("ULPI %02x: %02x" % (addr, dev.ulpiread(addr)))
 
-@command('report')
+@command('report', 'Hardware Health Report')
 def report(dev):
 
     print("USB PHY Tests")
@@ -257,7 +258,7 @@ def do_sdramtests(dev, cb=None, tests = range(0, 6)):
     else:
         return -1
 
-@command('sdramtest')
+@command('sdramtest', 'Perform SDRAM Test')
 def sdramtest(dev):
     # LEDS select
     dev.regs.LEDS_MUX_0.wr(1)
@@ -270,7 +271,7 @@ def sdramtest(dev):
 
     dev.regs.LEDS_MUX_0.wr(0)
 
-@command('sniff', ('speed', str), ('format', str, 'verbose'), ('out', str, None), ('timeout', int, None))
+@command('sniff', 'Perform USB trace / sniffing', ('speed', str), ('format', str, 'verbose'), ('out', str, None), ('timeout', int, None))
 def sniff(dev, speed, format, out, timeout):
     # LEDs off
     dev.regs.LEDS_MUX_2.wr(0)
@@ -399,7 +400,7 @@ def sniff(dev, speed, format, out, timeout):
     if out is not None:
         out.close()
 
-@command('debug-stream')
+@command('debug-stream', 'Debug Stream')
 def debug_stream(dev):
     cons = dev.regs.CSTREAM_CONS_LO.rd() | dev.regs.CSTREAM_CONS_HI.rd() << 8
     prod_hd = dev.regs.CSTREAM_PROD_HD_LO.rd() | dev.regs.CSTREAM_PROD_HD_HI.rd() << 8
@@ -415,27 +416,27 @@ def debug_stream(dev):
     print("cons: %04x prod-wr: %04x prod-hd: %04x size: %04x state: %02x" % (cons, prod, prod_hd, size, state))
     print("\tlaststart: %04x lastcount: %04x (end: %04x) pw-at-write: %04x" % (laststart, lastcount, laststart + lastcount, lastpw))
 
-@command('ioread', ('addr', str))
+@command('ioread', 'Read I/O', ('addr', str))
 def ioread(dev, addr):
     print("%s: %02x" % (addr, dev.ioread(addr)))
 
-@command('iowrite', ('addr', str), ('value', int16))
+@command('iowrite', 'Write I/O', ('addr', str), ('value', int16))
 def iowrite(dev, addr, value):
     dev.iowrite(addr, value)
 
-@command('led-test', ('v', int16))
+@command('led-test', 'Test LEDs', ('v', int16))
 def ledtest(dev, v):
     dev.regs.leds_out.wr(v)
 
-@command('eep-erase')
+@command('eep-erase', 'Erase EEPROM')
 def eeperase(dev):
     dev.dev.eeprom_erase()
 
-@command('eep-program', ('serialno', int))
+@command('eep-program', 'Write EEPROM', ('serialno', int))
 def eepprogram(dev, serialno):
     dev.dev.eeprom_program(serialno)
 
-@command('sdram_host_read_test')
+@command('sdram_host_read_test', 'Test SDRAM reading from host')
 def sdram_host_read_test(dev):
 
     ring_base = 0x10000
@@ -486,6 +487,7 @@ def sdram_host_read_test(dev):
 
 class LB_Test(Command):
     name = "lb-test"
+    help = ''
 
     @staticmethod
     def setup_args(sp):
@@ -544,9 +546,10 @@ def main():
     ap.add_argument("--config-only", "-C", action="store_true")
 
     # Bind commands
-    subparsers = ap.add_subparsers()
+    subparsers = ap.add_subparsers(title='subcommands',
+                                   description='Supported Sub-commands, each has their own --help')
     for i in Command.__subclasses__():
-        sp = subparsers.add_parser(i.name)
+        sp = subparsers.add_parser(i.name, help=i.help)
         i.setup_args(sp)
         sp.set_defaults(hdlr=i)
 
