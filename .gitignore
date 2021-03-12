@@ -1,2 +1,18 @@
 __pycache__
 *~
+hardware/__Previews/
+hardware/History/
+hardware/ov_ftdi.PcbDoc.htm
+
+hardware/Project Outputs for ov_ftdi/Design Rule Check - ov_ftdi.drc
+hardware/Project Outputs for ov_ftdi/Design Rule Check - ov_ftdi.html
+hardware/Project Outputs for ov_ftdi/Gerber/ov_ftdi-macro.APR_LIB
+hardware/Project Outputs for ov_ftdi/Gerber/ov_ftdi.EXTREP
+hardware/Project Outputs for ov_ftdi/Gerber/ov_ftdi.REP
+hardware/Project Outputs for ov_ftdi/Gerber/__Previews/
+hardware/Project Outputs for ov_ftdi/Gerber/ov_ftdi.apr
+hardware/Project Outputs for ov_ftdi/NC Drill/__Previews/
+hardware/Project Outputs for ov_ftdi/NC Drill/ov_ftdi.DRR
+hardware/Project Outputs for ov_ftdi/NC Drill/ov_ftdi.LDP
+hardware/Project Outputs for ov_ftdi/Pick Place/__Previews/
+hardware/Project Outputs for ov_ftdi/Status Report.Txt
