@@ -5,8 +5,8 @@ C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_ftdi\Pick Plac
 File Design Information:
 
 Date:       15/03/21
-Time:       20:17
-Revision:   6ba6f052213df99d93381f1195bdb4cd47299c5b
+Time:       21:08
+Revision:   8f46340678c33d52b66a5e50ca84fc8d6ddb2a0d
 Variant:    No variations
 Units used: mil
 
@@ -48,7 +48,7 @@ R11        "Res Semi"                  TopLayer    RESC1608N                2400
 R12        "Res Semi"                  TopLayer    RESC1608N                2460.000      3910.000      270      "Semiconductor Resistor"                                                                                      
 R13        "Res Semi"                  TopLayer    RESC1608N                2520.000      3910.000      270      "Semiconductor Resistor"                                                                                      
 R15        "Res Semi"                  TopLayer    RESC1608N                3050.000      3695.000      270      "Semiconductor Resistor"                                                                                      
-R2         "Res Semi"                  TopLayer    RESC1608N                3030.000      7060.000      360      "Semiconductor Resistor"                                                                                      
+R2         "Res Semi"                  TopLayer    RESC1608N                3015.748      7059.055      360      "Semiconductor Resistor"                                                                                      
 F1         "500mA resettable polyfuse" TopLayer    RESC3216N                3630.000      3210.000      360      Fuse                                                                                                          
 C2         "Cap Semi"                  TopLayer    CAPC2012N                4350.000      6740.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
 C3         "Cap Semi"                  TopLayer    CAPC2012N                2700.000      6230.000      360      "Capacitor (Semiconductor SIM Model)"                                                                         
