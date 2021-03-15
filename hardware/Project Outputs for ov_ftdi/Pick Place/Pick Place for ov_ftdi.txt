@@ -5,13 +5,19 @@ C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_ftdi\Pick Plac
 File Design Information:
 
 Date:       15/03/21
-Time:       13:05
-Revision:   73ba803ba1d2803d17a911e180f9b4d87118b751
+Time:       15:13
+Revision:   8cdc2880ff662238cc9fbc5bd8036c18362dec9e
 Variant:    No variations
 Units used: mil
 
 Designator Comment                     Layer       Footprint                Center-X(mil) Center-Y(mil) Rotation Description                                                                                                   
-R26        "Res Semi"                  BottomLayer RESC3216N                3220.000      7705.000      0        "Semiconductor Resistor"                                                                                      
+R29        "Res Semi"                  TopLayer    RESC1608N                2685.000      3105.000      270      "Semiconductor Resistor"                                                                                      
+C64        "Cap Semi"                  TopLayer    CAPC1608N                2760.000      3105.000      90       "Capacitor (Semiconductor SIM Model)"                                                                         
+C44        "Cap Semi"                  TopLayer    CAPC1608N                2330.000      7170.000      90       "Capacitor (Semiconductor SIM Model)"                                                                         
+C48        "Cap Semi"                  TopLayer    CAPC1608N                4140.000      7200.000      90       "Capacitor (Semiconductor SIM Model)"                                                                         
+R28        "Res Semi"                  TopLayer    RESC1608N                4210.000      7200.000      270      "Semiconductor Resistor"                                                                                      
+R27        "Res Semi"                  TopLayer    RESC1608N                2255.000      7170.000      270      "Semiconductor Resistor"                                                                                      
+R26        "Res Semi"                  BottomLayer RESC3216N                3220.000      7705.000      360      "Semiconductor Resistor"                                                                                      
 R25        "Res Semi"                  TopLayer    RESC1608N                3910.000      5475.000      360      "Semiconductor Resistor"                                                                                      
 J5         "Trigger out"               TopLayer    EMPCB.SMAFSTJ.C.HT       4430.000      3790.000      90       "PCB edge mount SMA jack"                                                                                     
 J4         "Trigger in"                TopLayer    EMPCB.SMAFSTJ.C.HT       4430.000      4180.000      90       "PCB edge mount SMA jack"                                                                                     
@@ -86,11 +92,9 @@ U2         XC6SLX9-3TQG144C            TopLayer    TQG144_N                 3300
 C61        "Cap Semi"                  TopLayer    CAPC1608N                2460.000      3330.000      360      "Capacitor (Semiconductor SIM Model)"                                                                         
 C60        "Cap Semi"                  TopLayer    CAPC1608N                2460.000      3770.000      360      "Capacitor (Semiconductor SIM Model)"                                                                         
 C11        "Cap Semi"                  TopLayer    CAPC1608N                3060.000      6940.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
-C48        "Cap Semi"                  TopLayer    CAPC1005N                4140.000      7200.000      90       "Capacitor (Semiconductor SIM Model)"                                                                         
 C62        "Cap Semi"                  TopLayer    CAPC1608N                2790.000      6600.000      360      "Capacitor (Semiconductor SIM Model)"                                                                         
 C63        "Cap Semi"                  TopLayer    CAPC1608N                2470.000      6600.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
 C45        "Cap Semi"                  TopLayer    CAPC1005N                2660.000      6970.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
-C44        "Cap Semi"                  TopLayer    CAPC1005N                2330.000      7170.000      90       "Capacitor (Semiconductor SIM Model)"                                                                         
 C12        "Cap Semi"                  TopLayer    CAPC1608N                3140.000      7150.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
 C13        "Cap Semi"                  TopLayer    CAPC1608N                2660.000      7090.000      360      "Capacitor (Semiconductor SIM Model)"                                                                         
 C41        "Cap Semi"                  TopLayer    CAPC1005N                2660.000      7030.000      360      "Capacitor (Semiconductor SIM Model)"                                                                         

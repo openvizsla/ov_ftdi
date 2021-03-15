@@ -1,5 +1,7 @@
 __pycache__
 *~
+*.swp
+
 hardware/__Previews/
 hardware/History/
 hardware/ov_ftdi.PcbDoc.htm
@@ -16,3 +18,5 @@ hardware/Project Outputs for ov_ftdi/NC Drill/ov_ftdi.DRR
 hardware/Project Outputs for ov_ftdi/NC Drill/ov_ftdi.LDP
 hardware/Project Outputs for ov_ftdi/Pick Place/__Previews/
 hardware/Project Outputs for ov_ftdi/Status Report.Txt
+hardware/Project Logs for ov_ftdi/
+hardware/ov_ftdi1/History/
