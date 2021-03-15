@@ -28,7 +28,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=
+OutputPath=Project Outputs for ov_ftdi
 LogFolderPath=
 ManagedProjectGUID=
 IncludeDesignInRelease=0
@@ -154,7 +154,7 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=MNYSWJEU
+DocumentUniqueId=OTDCKYAF
 
 [Document8]
 DocumentPath=usb.SchDoc
@@ -206,10 +206,6 @@ ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=
-
-[GeneratedDocument1]
-DocumentPath=Project Outputs for ov_ftdi\Design Rule Check - ov_ftdi.html
-DItemRevisionGUID=
 
 [Configuration1]
 Name=Default Configuration
@@ -374,7 +370,7 @@ TerminationPrefC7=0
 TerminationVCC7=5
 
 [Generic_EDE]
-OutputDir=
+OutputDir=Project Outputs for ov_ftdi
 
 [OutputGroup1]
 Name=Netlist Outputs
@@ -1410,9 +1406,9 @@ UpdateVariants=1
 UpdateToLatestRevision=1
 PartTypes=0
 ComponentLibIdentifierKind0=Library Name And Type
-ComponentLibraryIdentifier0=ov_ftdi.IntLib
-ComponentDesignItemID0=Cap Semi_1
-ComponentSymbolReference0=Cap Semi_1
+ComponentLibraryIdentifier0=Micron Memory Dynamic RAM.IntLib
+ComponentDesignItemID0=MT48LC16M16A2P-75
+ComponentSymbolReference0=MT48LC16M16A2P-75
 ComponentUpdate0=1
 ComponentIsDeviceSheet0=0
 FullReplace=1
@@ -1444,46 +1440,30 @@ ParameterName6=Substitutable
 ParameterUpdate6=1
 ParameterName7=Supplier 1
 ParameterUpdate7=1
-ParameterName8=Supplier Part Number 1
+ParameterName8=Supplier 2
 ParameterUpdate8=1
-ParameterName9=VALUE
+ParameterName9=Supplier Part Number 1
 ParameterUpdate9=1
+ParameterName10=Supplier Part Number 2
+ParameterUpdate10=1
+ParameterName11=VALUE
+ParameterUpdate11=1
 ModelTypeGroup0=PCBLIB
 ModelTypeUpdate0=1
 ModelType0=PCBLIB
-ModelName0=CAPC1005L
+ModelName0=TSOP2-54_L
 ModelUpdate0=1
 ModelType1=PCBLIB
-ModelName1=CAPC1005N
+ModelName1=TSOP2-54_M
 ModelUpdate1=1
 ModelType2=PCBLIB
-ModelName2=CAPC1608L
+ModelName2=TSOP2-54_N
 ModelUpdate2=1
-ModelType3=PCBLIB
-ModelName3=CAPC1608N
-ModelUpdate3=1
-ModelType4=PCBLIB
-ModelName4=CAPC2012N
-ModelUpdate4=1
-ModelType5=PCBLIB
-ModelName5=CAPC2512L
-ModelUpdate5=1
-ModelType6=PCBLIB
-ModelName6=CAPC3216L
-ModelUpdate6=1
-ModelType7=PCBLIB
-ModelName7=CAPC3225L
-ModelUpdate7=1
 ModelTypeGroup1=SI
 ModelTypeUpdate1=1
-ModelType8=SI
-ModelName8=Cap Semi
-ModelUpdate8=1
-ModelTypeGroup2=SIM
-ModelTypeUpdate2=1
-ModelType9=SIM
-ModelName9=CAP
-ModelUpdate9=1
+ModelType3=SI
+ModelName3=Guessed Model
+ModelUpdate3=1
 
 [DatabaseUpdateOptions]
 SelectedOnly=0
