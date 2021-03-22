@@ -7,6 +7,7 @@ Comment,Description,Designator,Footprint,Quantity,Value
 "Cap Semi","Capacitor (Semiconductor SIM Model)","C44, C48, C64","CAPC1608N","3","0.1uF"
 "Cap Semi","Capacitor (Semiconductor SIM Model)","C60, C61, C62, C63","CAPC1608N","4","18pF"
 "500mA resettable polyfuse","Fuse","F1","RESC3216N","1","0"
+"fiducial_1mm","","FID1, FID2, FID3","Fiducial_1mm","3",""
 "1-1470156-1","USB 1.1, Right Angle, Thru-Hole, B Type, Receptacle, 4 Position, White","J1, J2","1-1470156","2","61729-1011BLF"
 "787616-1","USB 1.1, Right Angle, Thru-Hole, A Type, Receptacle, 4 Position, Black","J3","787616","1","E27-AC54-100"
 "Trigger in","PCB edge mount SMA jack","J4","EMPCB.SMAFSTJ.C.HT","1",""
