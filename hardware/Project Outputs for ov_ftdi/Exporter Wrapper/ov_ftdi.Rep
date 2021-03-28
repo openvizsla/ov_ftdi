@@ -1,0 +1,147 @@
+Export log for : ov_ftdi.Rep
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+      Warning: Unknown Kind 11
+AddingPadStyle (Default)
+AddingPadStyle EF39X39TOP1
+AddingPadStyle EF39X35TOP1
+AddingPadStyle EF39X39TOP2
+AddingPadStyle EF71X51TOP1
+AddingPadStyle EF69X150TOP1
+AddingPadStyle EF69X150BOT1
+AddingPadStyle EF60X60TOP1
+AddingPadStyle EF24X31TOP1
+AddingPadStyle P:EX75Y75D351
+AddingPadStyle P:RRX75Y75D351
+AddingPadStyle EF59X106TOP1
+AddingPadStyle EF35X70TOP1
+AddingPadStyle EF124X70TOP1
+AddingPadStyle P:EX150Y150D911
+AddingPadStyle P:RRX63Y63D361
+AddingPadStyle P:EX63Y63D361
+AddingPadStyle EF24X79TOP1
+AddingPadStyle EF22X59TOP1
+AddingPadStyle EF26X43TOP1
+AddingPadStyle EF10X55TOP1
+AddingPadStyle EF98X98TOP1
+AddingPadStyle EF75X51TOP1
+AddingPadStyle EF12X69TOP1
+AddingPadStyle EF59X47TOP1
+AddingPadStyle EF217X79TOP1
+AddingPadStyle EF12X71TOP1
+AddingPadStyle EF31X39TOP1
+AddingPadStyle P:EX79Y79D391
+AddingPadStyle P:EX228Y228D1261
+AddingPadStyle EF126X126MID1
+AddingPadStyle EF160X160TOP1
+AddingPadStyle EF75X47TOP1
+Adding ViaStyle (Default)
+Adding ViaStyle V:EX24Y24D121
+Adding TextStyle (Default)
+Adding TextStyle T:H79W10
+Adding TextStyle T:H79W8
+Adding TextStyle T:H60W10
+Adding TextStyle T:H140W10
+Adding TextStyle T:H60W6
+Adding PatternDef Fiducial_1mm_1
+Adding PatternDef RESC1608N_1
+Adding PatternDef CAPC1608N_1
+Adding PatternDef RESC3216N_1
+Adding PatternDef EMPCB.SMAFSTJ.C.HT_1
+Adding PatternDef testpoint-60mil_1
+Adding PatternDef ASEMB 3.2x2.5 oscillator_1
+Adding PatternDef CAPC1005N_1
+Adding PatternDef HDR2X13_1
+Adding PatternDef HDR2X17_1
+Adding PatternDef 3X3MM INDUCTOR_1
+Adding PatternDef DCY4_1
+Adding PatternDef 1-1470156_1
+Adding PatternDef SOP8_N_1
+Adding PatternDef TSOP2-54_N_1
+Adding PatternDef SOT23-5AN_1
+Adding PatternDef SMSC USB334X QFN24_1
+Adding PatternDef INDC3216AN_1
+Adding PatternDef SQFP50P1200X1200X180-64N_1
+Adding PatternDef NetTie 0603_1
+Adding PatternDef 787616_1
+Adding PatternDef CAPC2012N_1
+Adding PatternDef HC49/4H_SMX_1
+Adding PatternDef TQG144_N_1
+Adding PatternDef HDR1X9_1
+Adding PatternDef HDR2X7_1
+Adding PatternDef LED 0603_1
+Adding PatternDef TL1105_1
+Adding PatternDef MOUNTING HOLE_1
+Adding PatternDef MOUNTING HOLE_2
+Adding PatternDef HDR1X2_1
+Adding PatternDef ground pad_1
+Adding PatternDef INDC3216N_1
+Adding CompDef Fiducial_1mm_1
+Adding CompDef RESC1608N_1
+Adding CompDef CAPC1608N_1
+Adding CompDef RESC3216N_1
+Adding CompDef EMPCB.SMAFSTJ.C.HT_1
+Adding CompDef testpoint-60mil_1
+Adding CompDef ASEMB 3.2x2.5 oscillator_1
+Adding CompDef CAPC1005N_1
+Adding CompDef HDR2X13_1
+Adding CompDef HDR2X17_1
+Adding CompDef 3X3MM INDUCTOR_1
+Adding CompDef DCY4_1
+Adding CompDef 1-1470156_1
+Adding CompDef SOP8_N_1
+Adding CompDef TSOP2-54_N_1
+Adding CompDef SOT23-5AN_1
+Adding CompDef SMSC USB334X QFN24_1
+Adding CompDef INDC3216AN_1
+Adding CompDef SQFP50P1200X1200X180-64N_1
+Adding CompDef NetTie 0603_1
+Adding CompDef 787616_1
+Adding CompDef CAPC2012N_1
+Adding CompDef HC49/4H_SMX_1
+Adding CompDef TQG144_N_1
+Adding CompDef HDR1X9_1
+Adding CompDef HDR2X7_1
+Adding CompDef LED 0603_1
+Adding CompDef TL1105_1
+Adding CompDef MOUNTING HOLE_1
+Adding CompDef MOUNTING HOLE_2
+Adding CompDef HDR1X2_1
+Adding CompDef ground pad_1
+Adding CompDef INDC3216N_1
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Unexpected Poly Region Object Found On Layer TopLayer.
+      Warning: Unexpected Poly Region Object Found On Layer TopLayer.
+      Warning: Unexpected Poly Region Object Found On Layer TopLayer.
+      Warning: Unexpected Poly Region Object Found On Layer TopLayer.
+      Warning: Polygon has been imported as unpoured.  It will need to be repoured in PCAD
+      Warning: Unexpected Poly Region Object Found On Layer BottomLayer.
+      Warning: Unexpected Poly Region Object Found On Layer BottomLayer.
+      Warning: Unexpected Poly Region Object Found On Layer BottomLayer.
+      Warning: Unexpected Poly Region Object Found On Layer BottomLayer.
+      Warning: Unexpected Poly Region Object Found On Layer TopSolder.
+      Warning: Unexpected Poly Region Object Found On Layer TopSolder.
+      Warning: Unexpected Poly Region Object Found On Layer TopSolder.
+      Warning: Unexpected Poly Region Object Found On Layer TopSolder.
+      Warning: Unexpected Free Track Object Found On Layer BottomOverlay.   This may cause problems in PCAD PCB
+      Warning: Unexpected Poly Region Object Found On Layer InternalPlane1.
+      Warning: Unexpected Poly Region Object Found On Layer InternalPlane1.
+      Warning: Unexpected Poly Region Object Found On Layer InternalPlane2.
+      Warning: Unexpected Poly Region Object Found On Layer InternalPlane2.
+      Warning: Unexpected Poly Region Object Found On Layer InternalPlane2.
+      Warning: Unexpected Poly Region Object Found On Layer InternalPlane2.
+ 
+EndLog

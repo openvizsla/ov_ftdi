@@ -1,0 +1,254 @@
+P-CAD Schematic ASCII File Export Log :
+   Current document: C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_ftdi\Exporter Wrapper\power.sch
+   BeginLog
+      Information : 
+      Information :   Start exporting symbols
+      Information :    Exporting symbol definition(s) for component [4-terminal resistor]
+      Warning :     Symbol name [4-terminal resistor], mode [Normal], part [1] changed to [4-terminal_resistor_1_N]
+      Warning :     Rectangle [-400mil : 50mil]-[200mil : 250mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [EMPCB.SMAFSTJ.C.HT]
+      Warning :     Symbol name [EMPCB.SMAFSTJ.C.HT], mode [Normal], part [1] changed to [EMPCB.SMAFSTJ.C.HT_1_N]
+      Warning :     Rectangle [-250mil : -350mil]-[250mil : 150mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [NCP303LSNxxT1G]
+      Warning :     Symbol name [NCP303LSNxxT1G], mode [Normal], part [1] changed to [NCP303LSNxxT1G_1_N]
+      Warning :     Rectangle [-300mil : -300mil]-[500mil : 100mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [MIC2211-GJYML]
+      Warning :     Symbol name [MIC2211-GJYML], mode [Normal], part [1] changed to [MIC2211-GJYML_1_N]
+      Warning :     Rectangle [-500mil : -500mil]-[500mil : 500mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [SN74LVC8T245]
+      Warning :     Symbol name [SN74LVC8T245], mode [Normal], part [1] changed to [SN74LVC8T245_1_N]
+      Warning :     Rectangle [-400mil : -700mil]-[400mil : 700mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [SN74LVC1G34]
+      Warning :     Symbol name [SN74LVC1G34], mode [Normal], part [1] changed to [SN74LVC1G34_1_N]
+      Warning :     Rectangle [-400mil : 50mil]-[50mil : 350mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [73725-0110B]
+      Warning :     Symbol name [73725-0110B], mode [Normal], part [1] changed to [73725-0110B_1_N]
+      Warning :     Rectangle [-150mil : -250mil]-[300mil : 150mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [TPS3809K33]
+      Warning :     Symbol name [TPS3809K33], mode [Normal], part [1] changed to [TPS3809K33_1_N]
+      Warning :     Rectangle [0mil : 0mil]-[600mil : 500mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [SKQGADE010]
+      Warning :     Symbol name [SKQGADE010], mode [Normal], part [1] changed to [SKQGADE010_1_N]
+      Information :    Exporting symbol definition(s) for component [Res Pack 8]
+      Warning :     Symbol name [Res Pack 8], mode [Normal], part [1] changed to [Res_Pack_8_1_N]
+      Warning :     Symbol name [Res Pack 8], mode [Normal], part [2] changed to [Res_Pack_8_2_N]
+      Warning :     Symbol name [Res Pack 8], mode [Normal], part [3] changed to [Res_Pack_8_3_N]
+      Warning :     Symbol name [Res Pack 8], mode [Normal], part [4] changed to [Res_Pack_8_4_N]
+      Warning :     Symbol name [Res Pack 8], mode [Normal], part [5] changed to [Res_Pack_8_5_N]
+      Warning :     Symbol name [Res Pack 8], mode [Normal], part [6] changed to [Res_Pack_8_6_N]
+      Warning :     Symbol name [Res Pack 8], mode [Normal], part [7] changed to [Res_Pack_8_7_N]
+      Warning :     Symbol name [Res Pack 8], mode [Normal], part [8] changed to [Res_Pack_8_8_N]
+      Information :    Exporting symbol definition(s) for component [Res Pack 4]
+      Warning :     Symbol name [Res Pack 4], mode [Normal], part [1] changed to [Res_Pack_4_1_N]
+      Warning :     Symbol name [Res Pack 4], mode [Normal], part [2] changed to [Res_Pack_4_2_N]
+      Warning :     Symbol name [Res Pack 4], mode [Normal], part [3] changed to [Res_Pack_4_3_N]
+      Warning :     Symbol name [Res Pack 4], mode [Normal], part [4] changed to [Res_Pack_4_4_N]
+      Information :    Exporting symbol definition(s) for component [Jumper/Tie]
+      Warning :     Symbol name [Jumper/Tie], mode [Normal], part [1] changed to [Jumper/Tie_1_N]
+      Warning :     Rectangle [-200mil : -100mil]-[200mil : 100mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [TPS62420]
+      Warning :     Symbol name [TPS62420], mode [Normal], part [1] changed to [TPS62420_1_N]
+      Warning :     Rectangle [-300mil : -900mil]-[400mil : 200mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [TPS62290]
+      Warning :     Symbol name [TPS62290], mode [Normal], part [1] changed to [TPS62290_1_N]
+      Warning :     Rectangle [-300mil : -300mil]-[300mil : 200mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [Test Pad]
+      Warning :     Symbol name [Test Pad], mode [Normal], part [1] changed to [Test_Pad_1_N]
+      Warning :     Ellipse at position [0mil : 90mil] approximated with a circular arc
+      Information :    Exporting symbol definition(s) for component [Standoff]
+      Warning :     Symbol name [Standoff], mode [Normal], part [1] changed to [Standoff_1_N]
+      Warning :     Round rectangle [-250mil : -250mil]-[300mil : 250mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [SG8002JF]
+      Warning :     Symbol name [SG8002JF], mode [Normal], part [1] changed to [SG8002JF_1_N]
+      Warning :     Rectangle [-300mil : -200mil]-[300mil : 200mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [Net Tie2]
+      Warning :     Symbol name [Net Tie2], mode [Normal], part [1] changed to [Net_Tie2_1_N]
+      Warning :     Rectangle [-100mil : -60mil]-[100mil : 60mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [MIC47100]
+      Warning :     Symbol name [MIC47100], mode [Normal], part [1] changed to [MIC47100_1_N]
+      Warning :     Rectangle [-400mil : -150mil]-[250mil : 450mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [ISP1506A]
+      Warning :     Symbol name [ISP1506A], mode [Normal], part [1] changed to [ISP1506A_1_N]
+      Warning :     Rectangle [-700mil : -1100mil]-[500mil : 1000mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [Fiducial]
+      Warning :     Symbol name [Fiducial], mode [Normal], part [1] changed to [Fiducial_1_N]
+      Warning :     Round rectangle [-250mil : -250mil]-[300mil : 250mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [USB3343]
+      Warning :     Symbol name [USB3343], mode [Normal], part [1] changed to [USB3343_1_N]
+      Warning :     Rectangle [-600mil : -1000mil]-[600mil : 1100mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [USB3318]
+      Warning :     Symbol name [USB3318], mode [Normal], part [1] changed to [USB3318_1_N]
+      Warning :     Rectangle [-600mil : -1000mil]-[600mil : 1100mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [TLV1117]
+      Warning :     Symbol name [TLV1117], mode [Normal], part [1] changed to [TLV1117_1_N]
+      Warning :     Rectangle [-600mil : -400mil]-[550mil : 150mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [SiT8002]
+      Warning :     Symbol name [SiT8002], mode [Normal], part [1] changed to [SiT8002_1_N]
+      Warning :     Rectangle [-300mil : 0mil]-[400mil : 400mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [Net Tie]
+      Warning :     Symbol name [Net Tie], mode [Normal], part [1] changed to [Net_Tie_1_N]
+      Warning :     Rectangle [-100mil : -30mil]-[100mil : 30mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [FT232RL]
+      Warning :     Symbol name [FT232RL], mode [Normal], part [1] changed to [FT232RL_1_N]
+      Warning :     Rectangle [0mil : -1900mil]-[1500mil : 0mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [FSUSB20]
+      Warning :     Symbol name [FSUSB20], mode [Normal], part [1] changed to [FSUSB20_1_N]
+      Warning :     Rectangle [-400mil : -500mil]-[400mil : 400mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [ADM4073]
+      Warning :     Symbol name [ADM4073], mode [Normal], part [1] changed to [ADM4073_1_N]
+      Warning :     Rectangle [-450mil : -500mil]-[300mil : 150mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [XS1-L2]
+      Warning :     Symbol name [XS1-L2], mode [Normal], part [1] changed to [XS1-L2_1_N]
+      Warning :     Rectangle [-1100mil : -700mil]-[1100mil : 1300mil] exported as lines.
+      Warning :     Symbol name [XS1-L2], mode [Normal], part [2] changed to [XS1-L2_2_N]
+      Warning :     Rectangle [-600mil : -1100mil]-[600mil : 500mil] exported as lines.
+      Warning :     Symbol name [XS1-L2], mode [Normal], part [3] changed to [XS1-L2_3_N]
+      Warning :     Rectangle [-600mil : -2400mil]-[1100mil : 2100mil] exported as lines.
+      Warning :     Symbol name [XS1-L2], mode [Normal], part [4] changed to [XS1-L2_4_N]
+      Warning :     Rectangle [-600mil : -2000mil]-[1600mil : 2100mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [M25P16]
+      Warning :     Symbol name [M25P16], mode [Normal], part [1] changed to [M25P16_1_N]
+      Warning :     Rectangle [-300mil : -200mil]-[300mil : 300mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [Screw]
+      Warning :     Symbol name [Screw], mode [Normal], part [1] changed to [Screw_1_N]
+      Warning :     Round rectangle [-250mil : -250mil]-[300mil : 250mil] exported as lines.
+      Information :    Exporting symbol definition(s) for component [Logo]
+      Warning :     Symbol name [Logo], mode [Normal], part [1] changed to [Logo_1_N]
+      Warning :     Rectangle [-200mil : -200mil]-[200mil : 200mil] exported as lines.
+      Information : Start exporting the symbol definitions for power ports
+      Warning :     End exporting the symbol defintions for power ports
+      Information :   End exporting symbols
+      Information : 
+      Information : 
+      Information :   Start exporting components
+      Information :    Exporting component [4-terminal resistor]
+      Warning :     Component [4-terminal resistor] changed to [4-TERMINAL_RESISTOR]
+      Information :    Exporting component [EMPCB.SMAFSTJ.C.HT]
+      Information :    Exporting component [NCP303LSNxxT1G]
+      Warning :     Component [NCP303LSNxxT1G] changed to [NCP303LSNXXT1G]
+      Information :    Exporting component [MIC2211-GJYML]
+      Information :    Exporting component [SN74LVC8T245]
+      Information :    Exporting component [SN74LVC1G34]
+      Information :    Exporting component [73725-0110B]
+      Information :    Exporting component [TPS3809K33]
+      Information :    Exporting component [SKQGADE010]
+      Information :    Exporting component [Res Pack 8]
+      Warning :     Component [Res Pack 8] changed to [RES_PACK_8]
+      Information :    Exporting component [Res Pack 4]
+      Warning :     Component [Res Pack 4] changed to [RES_PACK_4]
+      Information :    Exporting component [Jumper/Tie]
+      Warning :     Component [Jumper/Tie] changed to [JUMPER/TIE]
+      Information :    Exporting component [TPS62420]
+      Information :    Exporting component [TPS62290]
+      Information :    Exporting component [Test Pad]
+      Warning :     Component [Test Pad] changed to [TEST_PAD]
+      Information :    Exporting component [Standoff]
+      Warning :     Component [Standoff] changed to [STANDOFF]
+      Information :    Exporting component [SG8002JF]
+      Information :    Exporting component [Net Tie2]
+      Warning :     Component [Net Tie2] changed to [NET_TIE2]
+      Information :    Exporting component [MIC47100]
+      Information :    Exporting component [ISP1506A]
+      Information :    Exporting component [Fiducial]
+      Warning :     Component [Fiducial] changed to [FIDUCIAL]
+      Information :    Exporting component [USB3343]
+      Information :    Exporting component [USB3318]
+      Information :    Exporting component [TLV1117]
+      Information :    Exporting component [SiT8002]
+      Warning :     Component [SiT8002] changed to [SIT8002]
+      Information :    Exporting component [Net Tie]
+      Warning :     Component [Net Tie] changed to [NET_TIE]
+      Information :    Exporting component [FT232RL]
+      Information :    Exporting component [FSUSB20]
+      Information :    Exporting component [ADM4073]
+      Information :    Exporting component [XS1-L2]
+      Information :    Exporting component [M25P16]
+      Information :    Exporting component [Screw]
+      Warning :     Component [Screw] changed to [SCREW]
+      Information :    Exporting component [Logo]
+      Warning :     Component [Logo] changed to [LOGO]
+      Information : Start exporting component definitions for power ports
+      Warning :     End exporting component definitions for powerports
+      Information :   End exporting components
+      Information : 
+   EndLog
+   Imported succesfully!
+ 
+      Information : Start export of netlist
+      Information : Start export of component instances
+      Information : End export of component instances
+      Information : Start export of nets
+      Information : End export of nets
+      Information : End export of netlist
+      Warning :     Workspace size [180000 : 180000] exceeds maximum limit which is [60000 : 60000] units. Some objects may fall outside workspace
+      Information : Start exporting the objects for sheet [power]
+      Information : Start WIRES export
+      Information : End WIRES export
+      Information : Start BUSES export
+      Information : End BUSES export
+      Information : Start PORTS export
+      Information : End PORTS export
+      Warning :     Rectangle [280mil : 3230mil]-[3530mil : 4980mil] exported as lines.
+      Warning :     Rectangle [300mil : 5050mil]-[4200mil : 7150mil] exported as lines.
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     Exporting powerport at [5600mil : 5200mil] as component with designator [PP5v1]
+      Warning :     P-CAD doesn't support object type [ParameterSet]
+      Warning :     P-CAD doesn't support object type [ParameterSet]
+      Warning :     P-CAD doesn't support object type [ParameterSet]
+      Warning :     P-CAD doesn't support object type [ParameterSet]
+      Warning :     P-CAD doesn't support object type [ParameterSet]
+      Warning :     Exporting powerport at [1000mil : 4550mil] as component with designator [PP5v2]
+      Warning :     Exporting powerport at [600mil : 1300mil] as component with designator [PP3_3v1]
+      Warning :     Exporting powerport at [800mil : 1300mil] as component with designator [PP1_2v1]
+      Warning :     Exporting powerport at [1200mil : 1300mil] as component with designator [GND1]
+      Warning :     Exporting powerport at [1900mil : 3950mil] as component with designator [GND2]
+      Warning :     Exporting powerport at [2750mil : 4250mil] as component with designator [GND3]
+      Warning :     Exporting powerport at [2500mil : 1400mil] as component with designator [PP5v3]
+      Warning :     Exporting powerport at [2500mil : 1300mil] as component with designator [PP3_3v2]
+      Warning :     Exporting powerport at [2500mil : 1000mil] as component with designator [PP1_2v2]
+      Warning :     Exporting powerport at [2500mil : 800mil] as component with designator [PVusb1]
+      Warning :     Exporting powerport at [2500mil : 700mil] as component with designator [GND4]
+      Warning :     Exporting powerport at [1000mil : 4250mil] as component with designator [GND5]
+      Warning :     Exporting powerport at [5600mil : 7000mil] as component with designator [PVusb2]
+      Warning :     Exporting powerport at [3950mil : 6650mil] as component with designator [PP1_2v3]
+      Warning :     Exporting powerport at [3350mil : 6150mil] as component with designator [GND6]
+      Warning :     Exporting powerport at [1150mil : 5950mil] as component with designator [GND7]
+      Warning :     Exporting powerport at [650mil : 6050mil] as component with designator [GND8]
+      Warning :     Exporting powerport at [850mil : 6850mil] as component with designator [PP5v4]
+      Warning :     Exporting powerport at [2750mil : 4650mil] as component with designator [PP3_3v3]
+      Warning :     Exporting powerport at [500mil : 2100mil] as component with designator [GND9]
+      Warning :     Exporting powerport at [1000mil : 1300mil] as component with designator [PP5v5]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     P-CAD doesn't support object type [Parameter]
+      Information : End exporting the objects for sheet [power]
+      Information : Start exporting the objects for sheet [FPGA power v3]
+      Information : Start WIRES export
+EndLog
