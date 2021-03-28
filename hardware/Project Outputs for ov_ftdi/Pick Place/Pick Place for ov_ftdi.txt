@@ -4,9 +4,9 @@ C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_ftdi\Pick Plac
 ========================================================================================================================
 File Design Information:
 
-Date:       24/03/21
-Time:       23:15
-Revision:   600224551e890c51ad2fd06fba28de69e729e289
+Date:       28/03/21
+Time:       16:48
+Revision:   c061206dc4c3d24dc4f38f318a2ed5f104cedf9d
 Variant:    No variations
 Units used: mil
 
@@ -20,7 +20,7 @@ C44        "Cap Semi"                  TopLayer    CAPC1608N                589.
 C48        "Cap Semi"                  TopLayer    CAPC1608N                2399.018      4340.000      90       "Capacitor (Semiconductor SIM Model)"                                                                         
 R28        "Res Semi"                  TopLayer    RESC1608N                2469.018      4340.000      270      "Semiconductor Resistor"                                                                                      
 R27        "Res Semi"                  TopLayer    RESC1608N                514.018       4310.000      270      "Semiconductor Resistor"                                                                                      
-R26        "Res Semi"                  BottomLayer RESC3216N                1479.018      4845.000      360      "Semiconductor Resistor"                                                                                      
+R26        "Res Semi"                  BottomLayer RESC3216N                1479.018      4845.000      0        "Semiconductor Resistor"                                                                                      
 R25        "Res Semi"                  TopLayer    RESC1608N                2169.018      2615.000      360      "Semiconductor Resistor"                                                                                      
 J5         "Trigger out"               TopLayer    EMPCB.SMAFSTJ.C.HT       2689.018      930.000       90       "PCB edge mount SMA jack"                                                                                     
 J4         "Trigger in"                TopLayer    EMPCB.SMAFSTJ.C.HT       2689.018      1320.000      90       "PCB edge mount SMA jack"                                                                                     
