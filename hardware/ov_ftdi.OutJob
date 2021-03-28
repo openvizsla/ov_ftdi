@@ -15,7 +15,7 @@ LifeCycleDefinitionGUID=
 RevisionNamingSchemeGUID=
 
 [OutputGroup1]
-Name=
+Name=ov_ftdi.OutJob
 Description=
 TargetOutputMedium=New Folder Structure
 VariantName=[No Variations]
@@ -45,7 +45,7 @@ OutputEnabled1_OutputMedium3=1
 OutputEnabled1_OutputMedium4=0
 OutputDefault1=0
 Configuration1_Name1=OutputConfigurationParameter1
-Configuration1_Item1=Record=ExportDXFView|ACadVersion=5|UseRoundedTracks=True|Components=0|HoleMode=2|Units=0|OutputFormat=0|OnlyVisibleLayers=False|ZeroWidthLines=0
+Configuration1_Item1=Record=ExportDXFView|ACadVersion=61|UseRoundedTracks=True|Components=0|HoleMode=2|Units=0|OutputFormat=1|OnlyVisibleLayers=False|ZeroWidthLines=0
 OutputType2=Schematic Print
 OutputName2=Schematic Prints
 OutputCategory2=Documentation
