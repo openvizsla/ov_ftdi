@@ -2,7 +2,7 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
 
 (asciiHeader
   (asciiVersion 3 0)
-  (timeStamp 2021 4 10 17 32 0)
+  (timeStamp 2021 4 10 17 59 20)
   (program "Design Explorer 99 SE" "6.1.0")
   (copyright "Copyright ® 2002 Altium Ltd")
   (headerString "")
@@ -1118,9 +1118,9 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
         (line (pt -78.74mil 64.961mil) (pt -78.74mil 78.74mil) (width 7.874mil) )
         (line (pt 78.74mil -78.74mil) (pt 78.74mil -64.961mil) (width 7.874mil) )
         (line (pt -78.74mil 78.74mil) (pt -66.614mil 78.74mil) (width 7.874mil) )
-        (attr "RefDes" "" (pt -128.937mil 127.913mil) (isVisible True) (textStyleRef "(Default)") )
-        (attr "Type" "" (pt -128.937mil -227.913mil) (isVisible False) (textStyleRef "(Default)") )
-        (attr "Value" "" (pt -128.937mil 117.913mil) (isVisible True) (textStyleRef "(Default)") )
+        (attr "RefDes" "" (pt -128.937mil 126.338mil) (isVisible True) (textStyleRef "(Default)") )
+        (attr "Type" "" (pt -128.937mil -226.339mil) (isVisible False) (textStyleRef "(Default)") )
+        (attr "Value" "" (pt -128.937mil 116.338mil) (isVisible True) (textStyleRef "(Default)") )
       )
     )
   )
@@ -4020,8 +4020,8 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (node "R16" "2")
   )
   (net "NetR14_1"
-    (node "U4" "17")
     (node "R14" "1")
+    (node "U4" "17")
   )
   (net "NetTP17_1"
     (node "U2" "72")
@@ -4171,16 +4171,16 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (node "R26" "1")
   )
   (net "TARGETD_P"
-    (node "U4" "13")
     (node "R5" "1")
     (node "J3" "3")
     (node "J2" "3")
+    (node "U4" "13")
   )
   (net "TARGETD_N"
-    (node "U4" "14")
     (node "R4" "1")
     (node "J3" "2")
     (node "J2" "2")
+    (node "U4" "14")
   )
   (net "TARGET1ULPI_STP"
     (node "P2" "2")
@@ -4194,8 +4194,8 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
   )
   (net "TARGET1ULPI_NXT"
     (node "P2" "5")
-    (node "U4" "3")
     (node "U2" "121")
+    (node "U4" "3")
   )
   (net "TARGET1ULPI_DIR"
     (node "P2" "3")
@@ -4203,9 +4203,9 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (node "U4" "1")
   )
   (net "TARGET1ULPI_D7"
-    (node "U4" "12")
     (node "U2" "112")
     (node "P2" "13")
+    (node "U4" "12")
   )
   (net "TARGET1ULPI_D6"
     (node "U2" "114")
@@ -4214,38 +4214,38 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
   )
   (net "TARGET1ULPI_D5"
     (node "U2" "115")
-    (node "U4" "10")
     (node "P2" "11")
+    (node "U4" "10")
   )
   (net "TARGET1ULPI_D4"
     (node "P2" "10")
-    (node "U4" "8")
     (node "U2" "116")
+    (node "U4" "8")
   )
   (net "TARGET1ULPI_D3"
     (node "P2" "9")
-    (node "U4" "7")
     (node "U2" "117")
+    (node "U4" "7")
   )
   (net "TARGET1ULPI_D2"
     (node "P2" "8")
-    (node "U4" "6")
     (node "U2" "118")
+    (node "U4" "6")
   )
   (net "TARGET1ULPI_D1"
     (node "P2" "7")
-    (node "U4" "5")
     (node "U2" "119")
+    (node "U4" "5")
   )
   (net "TARGET1ULPI_D0"
     (node "P2" "6")
-    (node "U4" "4")
     (node "U2" "120")
+    (node "U4" "4")
   )
   (net "TARGET1ULPI_CLK"
     (node "P2" "4")
-    (node "U4" "2")
     (node "U2" "123")
+    (node "U4" "2")
   )
   (net "RAM_WE#"
     (node "U3" "16")
@@ -4409,9 +4409,9 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (node "R15" "1")
   )
   (net "NetR2_2"
-    (node "U4" "19")
     (node "R2" "2")
     (node "TP14" "1")
+    (node "U4" "19")
   )
   (net "NetNT1_2"
     (node "NT1" "2")
@@ -4433,8 +4433,8 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (node "C60" "2")
   )
   (net "LOCAL1.8V"
-    (node "U4" "23")
     (node "C11" "1")
+    (node "U4" "23")
   )
   (net "J3_SHIELD"
     (node "R28" "1")
@@ -4442,9 +4442,9 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (node "J3" "6")
   )
   (net "TARGETID"
-    (node "U4" "18")
     (node "C45" "1")
     (node "TP13" "1")
+    (node "U4" "18")
   )
   (net "J2_SHIELD"
     (node "R27" "1")
@@ -4743,8 +4743,6 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (node "U7" "31")
     (node "U7" "20")
     (node "L4" "1")
-    (node "U4" "9")
-    (node "U4" "16")
     (node "U3" "1")
     (node "U3" "3")
     (node "U3" "9")
@@ -4808,6 +4806,8 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (node "P1" "1")
     (node "P4" "26")
     (node "P4" "25")
+    (node "U4" "9")
+    (node "U4" "16")
   )
   (net "+1.8V"
     (node "U7" "64")
@@ -4930,20 +4930,20 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (node "P3" "24")
   )
   (net "LOCAL3.3V"
-    (node "U4" "15")
     (node "C12" "1")
+    (node "U4" "15")
   )
   (net "NetC63_2"
-    (node "U4" "20")
     (node "R24" "2")
     (node "C63" "2")
     (node "Y1" "1")
+    (node "U4" "20")
   )
   (net "NetC62_2"
-    (node "U4" "21")
     (node "R24" "1")
     (node "C62" "2")
     (node "Y1" "2")
+    (node "U4" "21")
   )
   (net "NetR3_2"
     (node "U2" "50")
@@ -4987,12 +4987,12 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
   (pcbDesignHeader
     (workspaceSize 812.8mm 812.8mm)
     (gridDfns
-      (grid "0.01mm")
+      (grid "0.025mm")
     )
     (designInfo
       (fieldSet "(Default)"
         (fieldDef "Date" "4/10/2021")
-        (fieldDef "Time" "5:32:00 PM")
+        (fieldDef "Time" "5:59:20 PM")
         (fieldDef "Author" "")
         (fieldDef "Revision" "")
         (fieldDef "Title" "")
@@ -5625,7 +5625,7 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
         (attr "Value" "" (pt -6.6167mm -8.1915mm) (isVisible False) (textStyleRef "T:H79W8") )
       )
     )
-    (pattern (patternRef "testpoint-60mil_1") (refDesRef "TP14") (pt 79.2mm 179.39999mm) (rotation 180.0)(patternGraphicsNameRef "Primary")
+    (pattern (patternRef "testpoint-60mil_1") (refDesRef "TP14") (pt 79.12095mm 179.444mm) (rotation 180.0)(patternGraphicsNameRef "Primary")
       (patternGraphicsRef
         (patternGraphicsNameRef "Primary")
         (attr "RefDes" "" (pt 0.254mm 1.016mm) (rotation 90.0) (isVisible False) (textStyleRef "T:H79W8") )
@@ -8573,7 +8573,7 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (line (pt 59.6138mm 137.0076mm) (pt 59.6392mm 157.45461mm) (width 1.524mm) )
   )
   (layerContents (layerNumRef 6)
-    (line (pt 78.15047mm 180.5mm) (pt 78.40837mm 180.2421mm) (width 0.254mm) )
+    (line (pt 78.15047mm 180.5mm) (pt 78.31371mm 180.33676mm) (width 0.254mm) )
     (line (pt 77.4mm 180.5mm) (pt 78.15047mm 180.5mm) (width 0.254mm) )
     (line (pt 63.5mm 123.3mm) (pt 63.5mm 124.1mm) (width 0.254mm) )
     (line (pt 70.895mm 175.418mm) (pt 70.895mm 175.92599mm) (width 0.254mm) )

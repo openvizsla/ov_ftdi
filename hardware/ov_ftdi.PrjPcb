@@ -28,7 +28,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=
+OutputPath=Project Outputs for ov_ftdi
 LogFolderPath=
 ManagedProjectGUID=
 IncludeDesignInRelease=0
@@ -154,7 +154,7 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=OTDCKYAF
+DocumentUniqueId=CUZHUCOK
 
 [Document8]
 DocumentPath=usb.SchDoc
@@ -226,6 +226,14 @@ DocumentUniqueId=TEERUGXB
 
 [GeneratedDocument1]
 DocumentPath=Project Outputs for ov_ftdi\Design Rule Check - ov_ftdi.html
+DItemRevisionGUID=
+
+[GeneratedDocument2]
+DocumentPath=Project Outputs for ov_ftdi\Exporter Wrapper\ov_ftdi.PCB
+DItemRevisionGUID=
+
+[GeneratedDocument3]
+DocumentPath=Project Outputs for ov_ftdi\Exporter Wrapper\power.sch
 DItemRevisionGUID=
 
 [Parameter1]
@@ -399,7 +407,7 @@ TerminationPrefC7=0
 TerminationVCC7=5
 
 [Generic_EDE]
-OutputDir=
+OutputDir=Project Outputs for ov_ftdi
 
 [OutputGroup1]
 Name=Netlist Outputs
