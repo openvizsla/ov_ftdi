@@ -4,9 +4,9 @@ C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_ftdi\Pick Plac
 ========================================================================================================================
 File Design Information:
 
-Date:       06/04/21
-Time:       19:48
-Revision:   eb9e5777476d5e0926ac9fa4d2bf60baa5e07f6d
+Date:       10/04/21
+Time:       17:31
+Revision:   8289ce9d6d0fe8bfd663abc834f23487a805db31
 Variant:    No variations
 Units used: mil
 
@@ -124,7 +124,7 @@ SW1        "4pin button"               TopLayer    TL1105                   2260
 C18        "Cap Semi"                  TopLayer    CAPC1608N                1399.017      4410.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
 R3         "Res Semi"                  TopLayer    RESC1608N                719.018       410.000       180      "Semiconductor Resistor"                                                                                      
 R4         "Res Semi"                  TopLayer    RESC1608N                1659.018      4280.000      270      "Semiconductor Resistor"                                                                                      
-R5         "Res Semi"                  TopLayer    RESC1608N                1659.018      4400.000      90       "Semiconductor Resistor"                                                                                      
+R5         "Res Semi"                  TopLayer    RESC1608N                1659.018      4397.638      90       "Semiconductor Resistor"                                                                                      
 R16        "Res Semi"                  TopLayer    RESC1608N                1629.017      980.000       180      "Semiconductor Resistor"                                                                                      
 R18        "Res Semi"                  TopLayer    RESC1608N                494.017       1555.000      180      "Semiconductor Resistor"                                                                                      
 R19        "Res Semi"                  TopLayer    RESC1608N                494.018       1495.000      360      "Semiconductor Resistor"                                                                                      
