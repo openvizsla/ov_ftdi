@@ -530,7 +530,6 @@ P-CAD Schematic ASCII File Export Log :
       Information : End BUSES export
       Information : Start PORTS export
       Information : End PORTS export
-      Warning :     Rectangle [0mil : -500mil]-[400mil : 0mil] exported as lines.
-      Warning :     P-CAD doesn't support object type [Parameter]
+      Warning :     Rectangle [-600mil : -1000mil]-[600mil : 1100mil] exported as lines.
       Information : End exporting the objects for sheet [ov_ftdi]
 EndLog
