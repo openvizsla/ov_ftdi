@@ -10,6 +10,9 @@ ifeq ($(UNAME), Darwin)
 	# Large file support
 	CFLAGS += -DFILE_OFFSET_BITS=64
 
+	# Fix issue that snprintf is not found on recent versions of macOS
+	CFLAGS += -D_DARWIN_C_SOURCE
+
 	SO := $(LIBNAME).dylib
 	SO_LDFLAGS = -dynamiclib -lusb-1.0
 
