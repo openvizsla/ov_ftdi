@@ -2,7 +2,7 @@ ACCEL_ASCII "C:\Users\matt\OTHER-~1\ov_ftdi\hardware\PROJEC~1\EXPORT~1\power.sch
 
 (asciiHeader
   (asciiVersion 3 0)
-  (timeStamp 2021 4 14 14 56 7)
+  (timeStamp 2021 5 22 20 44 54)
   (program "Protel DXP" "Version 1.0.0.30000")
   (copyright "Copyright © Altium Limited 2015")
   (fileAuthor "")
@@ -11357,10 +11357,10 @@ ACCEL_ASCII "C:\Users\matt\OTHER-~1\ov_ftdi\hardware\PROJEC~1\EXPORT~1\power.sch
   )
   (sheet "ov_ftdi" (sheetNum 6)
     (fieldSetRef "(Default)")
-    (line (pt -600 -1000) (pt -600 1100) (width 10) )
-    (line (pt -600 -1000) (pt 600 -1000) (width 10) )
-    (line (pt -600 1100) (pt 600 1100) (width 10) )
-    (line (pt 600 1100) (pt 600 -1000) (width 10) )
+    (line (pt 0 -500) (pt 0 0) (width 10) )
+    (line (pt 0 -500) (pt 400 -500) (width 10) )
+    (line (pt 0 0) (pt 400 0) (width 10) )
+    (line (pt 400 0) (pt 400 -500) (width 10) )
   )
   (schematicPrintSettings
     (sheetList
