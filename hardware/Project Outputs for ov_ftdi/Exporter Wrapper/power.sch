@@ -2,7 +2,7 @@ ACCEL_ASCII "C:\Users\matt\OTHER-~1\ov_ftdi\hardware\PROJEC~1\EXPORT~1\power.sch
 
 (asciiHeader
   (asciiVersion 3 0)
-  (timeStamp 2021 5 24 21 10 47)
+  (timeStamp 2021 5 24 21 16 40)
   (program "Protel DXP" "Version 1.0.0.30000")
   (copyright "Copyright © Altium Limited 2015")
   (fileAuthor "")

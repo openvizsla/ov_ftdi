@@ -2,7 +2,7 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
 
 (asciiHeader
   (asciiVersion 3 0)
-  (timeStamp 2021 5 24 21 10 50)
+  (timeStamp 2021 5 24 21 16 42)
   (program "Design Explorer 99 SE" "6.1.0")
   (copyright "Copyright ® 2002 Altium Ltd")
   (headerString "")
@@ -5082,7 +5082,7 @@ ACCEL_ASCII "C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_f
     (designInfo
       (fieldSet "(Default)"
         (fieldDef "Date" "5/24/2021")
-        (fieldDef "Time" "9:10:50 PM")
+        (fieldDef "Time" "9:16:42 PM")
         (fieldDef "Author" "")
         (fieldDef "Revision" "")
         (fieldDef "Title" "")
