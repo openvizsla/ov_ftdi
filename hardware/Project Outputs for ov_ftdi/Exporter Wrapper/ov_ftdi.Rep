@@ -12,6 +12,7 @@ Export log for : ov_ftdi.Rep
       Warning: Unknown Kind 11
       Warning: Unknown Kind 11
 AddingPadStyle (Default)
+AddingPadStyle EF47X17TOP1
 AddingPadStyle EF39X39TOP1
 AddingPadStyle EF39X35TOP1
 AddingPadStyle EF39X39TOP2
@@ -20,19 +21,19 @@ AddingPadStyle EF69X150TOP1
 AddingPadStyle EF69X150BOT1
 AddingPadStyle EF60X60TOP1
 AddingPadStyle EF24X31TOP1
-AddingPadStyle P:RRX75Y75D351
 AddingPadStyle P:EX75Y75D351
+AddingPadStyle P:RRX75Y75D351
 AddingPadStyle EF59X106TOP1
-AddingPadStyle EF124X70TOP1
 AddingPadStyle EF35X70TOP1
+AddingPadStyle EF124X70TOP1
 AddingPadStyle P:EX150Y150D911
-AddingPadStyle P:EX63Y63D361
 AddingPadStyle P:RRX63Y63D361
+AddingPadStyle P:EX63Y63D361
 AddingPadStyle EF24X79TOP1
 AddingPadStyle EF22X59TOP1
 AddingPadStyle EF26X43TOP1
-AddingPadStyle EF98X98TOP1
 AddingPadStyle EF10X55TOP1
+AddingPadStyle EF98X98TOP1
 AddingPadStyle EF75X51TOP1
 AddingPadStyle EF12X69TOP1
 AddingPadStyle EF59X47TOP1
@@ -52,6 +53,8 @@ Adding TextStyle T:H79W8
 Adding TextStyle T:H60W10
 Adding TextStyle T:H140W10
 Adding TextStyle T:H60W6
+Adding TextStyle T:H39W4
+Adding PatternDef FP-PG-SOD323-2-IPC_C_1
 Adding PatternDef Fiducial_1mm_1
 Adding PatternDef RESC1608N_1
 Adding PatternDef CAPC1608N_1
@@ -85,6 +88,7 @@ Adding PatternDef MOUNTING HOLE_2
 Adding PatternDef HDR1X2_1
 Adding PatternDef ground pad_1
 Adding PatternDef INDC3216N_1
+Adding CompDef FP-PG-SOD323-2-IPC_C_1
 Adding CompDef Fiducial_1mm_1
 Adding CompDef RESC1608N_1
 Adding CompDef CAPC1608N_1

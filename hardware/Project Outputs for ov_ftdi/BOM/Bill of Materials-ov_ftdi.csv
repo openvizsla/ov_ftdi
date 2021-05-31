@@ -6,6 +6,7 @@ Comment,Description,Designator,Footprint,Quantity,Value
 "Cap Semi","Capacitor (Semiconductor SIM Model)","C19, C20, C21, C22, C23, C24, C25, C26, C27, C28, C29, C30, C31, C32, C33, C34, C35, C36, C37, C38, C39, C40, C41, C42, C43, C45, C46, C47, C49, C50, C51, C52, C53, C54, C55, C56, C57, C58, C59","CAPC1005N","39","0.1uF"
 "Cap Semi","Capacitor (Semiconductor SIM Model)","C44, C48, C64","CAPC1608N","3","0.1uF"
 "Cap Semi","Capacitor (Semiconductor SIM Model)","C60, C61, C62, C63","CAPC1608N","4","18pF"
+"BAT60AE6327HTSA1","DIODE SCHOTTKY 10V 3A SOD323-2","D1, D2","FP-PG-SOD323-2-IPC_C","2",""
 "500mA resettable polyfuse","Fuse","F1","RESC3216N","1","0"
 "fiducial_1mm","","FID1, FID2, FID3","Fiducial_1mm","3",""
 "1-1470156-1","USB 1.1, Right Angle, Thru-Hole, B Type, Receptacle, 4 Position, White","J1, J2","1-1470156","2","61729-1011BLF"

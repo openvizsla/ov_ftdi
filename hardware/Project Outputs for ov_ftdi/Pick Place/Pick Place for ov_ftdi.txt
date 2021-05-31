@@ -4,13 +4,15 @@ C:\Users\matt\Other-Repos\ov_ftdi\hardware\Project Outputs for ov_ftdi\Pick Plac
 ========================================================================================================================
 File Design Information:
 
-Date:       11/04/21
-Time:       16:49
-Revision:   c0fcfa320e103b58bdb92f53467fdd30a578d304
+Date:       26/05/21
+Time:       18:17
+Revision:   ceee7eac1f8aed82a58b2d0138e54530f567a0ae
 Variant:    No variations
 Units used: mil
 
 Designator Comment                     Layer       Footprint                Center-X(mil) Center-Y(mil) Rotation Description                                                                                                   
+D2         BAT60AE6327HTSA1            TopLayer    FP-PG-SOD323-2-IPC_C     1755.906      311.024       270      "DIODE SCHOTTKY 10V 3A SOD323-2"                                                                              
+D1         BAT60AE6327HTSA1            TopLayer    FP-PG-SOD323-2-IPC_C     1755.906      456.693       90       "DIODE SCHOTTKY 10V 3A SOD323-2"                                                                              
 FID3       fiducial_1mm                TopLayer    Fiducial_1mm             2719.961      250.000       90       ""                                                                                                            
 FID2       fiducial_1mm                TopLayer    Fiducial_1mm             59.055        250.000       90       ""                                                                                                            
 FID1       fiducial_1mm                TopLayer    Fiducial_1mm             59.055        4680.000      90       ""                                                                                                            
@@ -32,7 +34,7 @@ C30        "Cap Semi"                  TopLayer    CAPC1005N                2639
 P4         "Header 13X2"               TopLayer    HDR2X13                  2569.018      3060.000      270      "Header, 13-Pin, Dual row"                                                                                    
 L1         "3x3mm power inductor"      TopLayer    3X3MM_INDUCTOR           2089.018      2210.000      90       "Magnetic-Core Inductor"                                                                                      
 U9         TLV1117LV33                 TopLayer    DCY4                     1949.018      710.000       270      ""                                                                                                            
-J1         1-1470156-1                 TopLayer    1-1470156                1369.018      498.228       270      "USB 1.1, Right Angle, Thru-Hole, B Type, Receptacle, 4 Position, White"                                      
+J1         1-1470156-1                 TopLayer    1-1470156                1369.291      499.213       270      "USB 1.1, Right Angle, Thru-Hole, B Type, Receptacle, 4 Position, White"                                      
 J2         1-1470156-1                 TopLayer    1-1470156                949.018       4431.772      90       "USB 1.1, Right Angle, Thru-Hole, B Type, Receptacle, 4 Position, White"                                      
 U8         M93C46WMN1                  TopLayer    SOP8_N                   709.018       1230.000      180      "1Kb (x8/x16) Serial Microwire Bus EEPROM"                                                                    
 U3         MT48LC16M16A2P-75           TopLayer    TSOP2-54_N               385.018       2935.000      360      "256Mb Synchronous High-Speed CMOS DRAM, 16Mb x 16Bit x 4 Banks, 54-Pin TSOP Pb-free, Commercial"             
@@ -40,7 +42,7 @@ U1         LM3670MF-1.2/NOPB           TopLayer    SOT23-5AN                2259
 U4         USB3343                     TopLayer    SMSC_USB334X_QFN24       1509.018      4120.000      90       "Hi-Speed USB Transceiver with 1.8V-3.3V ULPI Interface - MHz Reference Clock"                                
 L4         "ferrite bead"              TopLayer    INDC3216AN               1159.018      720.000       360      Inductor                                                                                                      
 L3         "ferrite bead"              TopLayer    INDC3216AN               1469.018      720.000       180      Inductor                                                                                                      
-L2         "ferrite bead"              TopLayer    INDC3216AN               1889.018      460.000       360      Inductor                                                                                                      
+L2         "ferrite bead"              TopLayer    INDC3216AN               2055.118      455.885       360      Inductor                                                                                                      
 U7         Component_1                 TopLayer    SQFP50P1200X1200X180-64N 1379.018      1240.000      90       FT2232H                                                                                                       
 J3         787616-1                    TopLayer    787616                   2029.018      4481.929      90       "USB 1.1, Right Angle, Thru-Hole, A Type, Receptacle, 4 Position, Black"                                      
 C36        "Cap Semi"                  TopLayer    CAPC1005N                1129.018      995.000       360      "Capacitor (Semiconductor SIM Model)"                                                                         
@@ -52,14 +54,14 @@ R12        "Res Semi"                  TopLayer    RESC1608N                719.
 R13        "Res Semi"                  TopLayer    RESC1608N                779.018       1050.000      270      "Semiconductor Resistor"                                                                                      
 R15        "Res Semi"                  TopLayer    RESC1608N                1309.018      835.000       270      "Semiconductor Resistor"                                                                                      
 R2         "Res Semi"                  TopLayer    RESC1608N                1274.766      4199.055      360      "Semiconductor Resistor"                                                                                      
-F1         "500mA resettable polyfuse" TopLayer    RESC3216N                1889.018      350.000       360      Fuse                                                                                                          
+F1         "500mA resettable polyfuse" TopLayer    RESC3216N                2055.118      345.885       360      Fuse                                                                                                          
 C2         "Cap Semi"                  TopLayer    CAPC2012N                2609.017      3880.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
 C3         "Cap Semi"                  TopLayer    CAPC2012N                959.018       3370.000      360      "Capacitor (Semiconductor SIM Model)"                                                                         
 C4         "Cap Semi"                  TopLayer    CAPC2012N                2169.017      2510.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
 C7         "Cap Semi"                  TopLayer    CAPC2012N                959.018       3450.000      360      "Capacitor (Semiconductor SIM Model)"                                                                         
 C6         "Cap Semi"                  TopLayer    CAPC2012N                1004.018      2445.000      360      "Capacitor (Semiconductor SIM Model)"                                                                         
 C5         "Cap Semi"                  TopLayer    CAPC2012N                999.018       2580.000      360      "Capacitor (Semiconductor SIM Model)"                                                                         
-C46        "Cap Semi"                  TopLayer    CAPC1005N                1879.017      260.000       180      "Capacitor (Semiconductor SIM Model)"                                                                         
+C46        "Cap Semi"                  TopLayer    CAPC1005N                1653.563      619.921       270      "Capacitor (Semiconductor SIM Model)"                                                                         
 C47        "Cap Semi"                  TopLayer    CAPC1005N                1189.018      800.000       360      "Capacitor (Semiconductor SIM Model)"                                                                         
 C50        "Cap Semi"                  TopLayer    CAPC1005N                1439.017      800.000       180      "Capacitor (Semiconductor SIM Model)"                                                                         
 C58        "Cap Semi"                  TopLayer    CAPC1005N                469.018       1280.000      270      "Capacitor (Semiconductor SIM Model)"                                                                         
@@ -106,7 +108,7 @@ C39        "Cap Semi"                  TopLayer    CAPC1005N                89.0
 C15        "Cap Semi"                  TopLayer    CAPC1608N                89.018        2960.000      270      "Capacitor (Semiconductor SIM Model)"                                                                         
 C37        "Cap Semi"                  TopLayer    CAPC1005N                300.017       2460.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
 C17        "Cap Semi"                  TopLayer    CAPC1608N                1969.018      920.000       360      "Capacitor (Semiconductor SIM Model)"                                                                         
-C16        "Cap Semi"                  TopLayer    CAPC1608N                2249.018      580.000       90       "Capacitor (Semiconductor SIM Model)"                                                                         
+C16        "Cap Semi"                  TopLayer    CAPC1608N                1740.158      649.606       270      "Capacitor (Semiconductor SIM Model)"                                                                         
 C10        "Cap Semi"                  TopLayer    CAPC2012N                2384.018      2195.000      270      Capacitor                                                                                                     
 C1         "Cap Semi"                  TopLayer    CAPC2012N                2139.017      2340.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
 C40        "Cap Semi"                  TopLayer    CAPC1005N                89.018        3080.000      90       "Capacitor (Semiconductor SIM Model)"                                                                         
@@ -114,12 +116,12 @@ C22        "Cap Semi"                  TopLayer    CAPC1005N                125.
 C28        "Cap Semi"                  TopLayer    CAPC1005N                749.018       2990.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
 R6         "Res Semi"                  TopLayer    RESC1608N                639.018       2390.000      180      "Semiconductor Resistor"                                                                                      
 R7         "Res Semi"                  TopLayer    RESC1608N                634.018       2265.000      180      "Semiconductor Resistor"                                                                                      
-R9         "Res Semi"                  TopLayer    RESC1608N                2179.018      450.000       90       "Semiconductor Resistor"                                                                                      
+R9         "Res Semi"                  TopLayer    RESC1608N                2345.118      445.885       90       "Semiconductor Resistor"                                                                                      
 R10        "Res Semi"                  TopLayer    RESC1608N                2269.018      1260.000      360      "Semiconductor Resistor"                                                                                      
 LD1        RED-LED                     TopLayer    LED_0603                 799.805       2389.606      90       RED-LED                                                                                                       
 LD2        RED-LED                     TopLayer    LED_0603                 799.805       2264.606      90       RED-LED                                                                                                       
 LD3        RED-LED                     TopLayer    LED_0603                 799.805       2139.606      90       RED-LED                                                                                                       
-LD4        GREEN-LED                   TopLayer    LED_0603                 2109.411      450.787       180      GREEN-LED                                                                                                     
+LD4        GREEN-LED                   TopLayer    LED_0603                 2275.512      446.673       180      GREEN-LED                                                                                                     
 SW1        "4pin button"               TopLayer    TL1105                   2260.435      1492.047      270      "4pin button"                                                                                                 
 C18        "Cap Semi"                  TopLayer    CAPC1608N                1399.017      4410.000      180      "Capacitor (Semiconductor SIM Model)"                                                                         
 R3         "Res Semi"                  TopLayer    RESC1608N                719.018       410.000       180      "Semiconductor Resistor"                                                                                      

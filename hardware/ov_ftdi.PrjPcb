@@ -237,12 +237,12 @@ DocumentPath=Project Outputs for ov_ftdi\Exporter Wrapper\power.sch
 DItemRevisionGUID=
 
 [Parameter1]
-Name=ProjectName
-Value=OpenVizsla
+Name=VersionRevision
+Value=v3.4
 
 [Parameter2]
-Name=VersionRevision
-Value=v3.3
+Name=ProjectName
+Value=OpenVizsla
 
 [Configuration1]
 Name=Default Configuration
