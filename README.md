@@ -44,7 +44,7 @@ USB packets in near real-time. Alternatively the host software can save captures
 
 There is basic integration with Wireshark using the extcap interface. The ovextcap available at https://github.com/matwey/libopenvizsla is known to work on Windows and Linux.
 
-There is no code to aggregate packets into transfers. Future Wireshark versions will reassemble packets into transfers and pass the data to upper layer dissectors (HID, Audio, Mass Storage, CCID, DFU, etc.). The Wireshark dissector progress is tracked at https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=15908
+Wireshark since the 3.5.0 release reassembles packets into transfers and pass the data to upper layer dissectors (HID, Audio, Mass Storage, CCID, DFU, etc.).
 
 There's **no integration with other tools** like [sigrok](https://sigrok.org/) or the [virtual-usb-analyzer](http://vusb-analyzer.sourceforge.net/). Integration with sigrok would be nice to show the packet level of USB.
 
