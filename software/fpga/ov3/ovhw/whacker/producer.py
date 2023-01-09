@@ -22,7 +22,7 @@ class Producer(Module):
 
         self.consume_point = Acc(max=depth)
         
-        self.submodules.size = Acc_inc(16)
+        self.submodules.size = Acc_inc_sat(16)
         self.submodules.flags = Acc_or(16)
 
         self.submodules.to_start = Acc(1)
@@ -146,10 +146,7 @@ class Producer(Module):
         self.comb += packet_too_long.eq(self.size.v >= MAX_PACKET_SIZE)
 
         self.fsm.act("DATA",
-                If(packet_too_long,
-                    self.flags._or(HF0_TRUNC),
-                    NextState("WH0")
-                ).Elif(has_space & self.ulpi_sink.stb,
+                If(has_space & self.ulpi_sink.stb,
                     self.ulpi_sink.ack.eq(1),
                     If(payload_is_rxcmd,
 
@@ -173,11 +170,15 @@ class Producer(Module):
                         NextState("waitdone")
                     ).Else(
                         self.size.inc(),
-                        self.produce_write.inc(),
-                        wrport.adr.eq(self.produce_write.v),
-                        wrport.dat_w.eq(self.ulpi_sink.payload.d),
-                        wrport.we.eq(1),
-                        do_filter_write.eq(1)
+                        If(packet_too_long,
+                            self.flags._or(HF0_TRUNC)
+                        ).Else(
+                            self.produce_write.inc(),
+                            wrport.adr.eq(self.produce_write.v),
+                            wrport.dat_w.eq(self.ulpi_sink.payload.d),
+                            wrport.we.eq(1),
+                            do_filter_write.eq(1)
+                        )
                     )
                 )
             )
@@ -209,7 +210,11 @@ class Producer(Module):
         self.fsm.act("SEND",
             self.out_addr.stb.eq(1),
             self.out_addr.payload.start.eq(self.produce_header.v),
-            self.out_addr.payload.count.eq(self.size.v + 8),
+            If(packet_too_long,
+                self.out_addr.payload.count.eq(MAX_PACKET_SIZE + 8)
+            ).Else(
+                self.out_addr.payload.count.eq(self.size.v + 8),
+            ),
             If(self.out_addr.ack,
                 self.produce_header.set(self.produce_write.v),
                 NextState("IDLE")

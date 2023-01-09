@@ -147,7 +147,7 @@ class OutputCustom:
         except:
             self.template = "data=%s speed=%s time=%f\n"
 
-    def handle_usb(self, ts, pkt, flags):
+    def handle_usb(self, ts, pkt, flags, orig_len):
         if ts < self.last_ts:
             self.ts_offset += 0x1000000
         self.last_ts = ts
@@ -162,7 +162,7 @@ class OutputITI1480A:
         self.ts_offset = 0
         self.ts_last = None
 
-    def handle_usb(self, ts, pkt, flags):
+    def handle_usb(self, ts, pkt, flags, orig_len):
         buf = []
 
         # Skip SOF and empty packets
@@ -217,7 +217,7 @@ class OutputPcap:
         self.last_ts = 0
         self.ts_offset = 0
 
-    def handle_usb(self, ts, pkt, flags):
+    def handle_usb(self, ts, pkt, flags, orig_len):
         # Increment timestamp based on the 60 MHz 24-bit counter value.
         # Convert remaining clocks to nanoseconds: 1 clk = 1 / 60 MHz = 16.(6) ns
         if ts < self.last_ts:
@@ -232,10 +232,7 @@ class OutputPcap:
         if len(pkt) == 0:
             return
         # Write pcap record header in host endian
-        # TODO: FPGA does not provide us with the untruncated packet length thus incl_len is set to orig_len
-        # When (and if) FPGA does indicate the length of truncated packets, change the record header to
-        # contain different incl_len (len(pkt)) and orig_len (untruncated packet size)
-        self.output.write(struct.pack("IIII", self.utc_ts, nanosec, len(pkt), len(pkt)))
+        self.output.write(struct.pack("IIII", self.utc_ts, nanosec, len(pkt), orig_len))
         # Write USB packet, beginning with a PID as it appeared on the bus
         self.output.write(pkt)
 
