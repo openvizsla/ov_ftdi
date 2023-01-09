@@ -7,7 +7,6 @@ from ovhw.ov_types import ULPI_DATA_TAG
 from ovhw.constants import *
 from ovhw.whacker.util import *
 
-MAX_PACKET_SIZE = 800
 class Producer(Module):
 
     def __init__(self, wrport, depth, consume_watermark, ena, la_filters=[]):

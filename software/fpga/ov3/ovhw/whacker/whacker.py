@@ -108,7 +108,7 @@ class TestWhacker(Module):
                 self.source = Endpoint(ULPI_DATA_D)
                 SimActor.__init__(self, gen())
     
-        self.submodules.w = Whacker(1024)
+        self.submodules.w = Whacker(2048)
 
         self.submodules.src = SimSource()
         self.comb += self.src.source.connect(self.w.sink)

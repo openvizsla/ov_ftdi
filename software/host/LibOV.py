@@ -412,7 +412,7 @@ class LFSRTest:
 def hd(x):
     return " ".join("%02x" % i for i in x)
 
-MAX_PACKET_SIZE = 800
+MAX_PACKET_SIZE = 1027
 
 #  Physical layer error
 HF0_ERR =  0x01
