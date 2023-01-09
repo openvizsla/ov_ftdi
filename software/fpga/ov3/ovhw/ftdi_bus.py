@@ -1,4 +1,5 @@
 from migen import *
+from migen.genlib.cdc import MultiReg
 from migen.genlib.fsm import *
 from migen.genlib.fifo import *
 

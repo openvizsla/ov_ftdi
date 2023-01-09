@@ -1,6 +1,6 @@
 [submodule "software/fpga/migen"]
 	path = software/fpga/migen
-	url = git://github.com/m-labs/migen.git
+	url = https://github.com/m-labs/migen.git
 [submodule "software/fpga/misoc"]
 	path = software/fpga/misoc
 	url = https://github.com/m-labs/misoc

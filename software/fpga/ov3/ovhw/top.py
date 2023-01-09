@@ -98,7 +98,7 @@ class OV3(Module):
         )
 
         self.submodules.cfilt = RXCmdFilter()
-        self.submodules.cstream = Whacker(1024)
+        self.submodules.cstream = Whacker(2048)
 
         self.comb += [
                 self.ulpi.data_out_source.connect(self.ovf_insert.sink),

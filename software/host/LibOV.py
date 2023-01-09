@@ -412,13 +412,15 @@ class LFSRTest:
 def hd(x):
     return " ".join("%02x" % i for i in x)
 
+MAX_PACKET_SIZE = 1027
+
 #  Physical layer error
 HF0_ERR =  0x01
 # RX Path Overflow
 HF0_OVF =  0x02
 # Clipped by Filter
 HF0_CLIP = 0x04
-# Clipped due to packet length (> 800 bytes)
+# Clipped due to packet length (> MAX_PACKET_SIZE bytes)
 HF0_TRUNC = 0x08
 # First packet of capture session; IE, when the cap hardware was enabled
 HF0_FIRST = 0x10
@@ -467,13 +469,16 @@ class RXCSniff:
                 return 2
             else:
                 #print("SIZING: %s" % " ".join("%02x" %i for i in buf))
+                flags = buf[1] | buf[2] << 8
+                if flags & HF0_TRUNC:
+                    return MAX_PACKET_SIZE + 8
                 return (buf[4] << 8 | buf[3]) + 8
 
 
         def consume(self, buf):
             if buf[0] == 0xA0:
                 flags = buf[1] | buf[2] << 8
-
+                orig_len = buf[4] << 8 | buf[3]
                 ts = buf[5] | buf[6] << 8 | buf[7] << 16
 
                 if flags != 0 and flags != HF0_FIRST and flags != HF0_LAST:
@@ -483,18 +488,18 @@ class RXCSniff:
                     self.got_start = True
 
                 if self.got_start:
-                    self.handle_usb(ts, buf[8:], flags)
+                    self.handle_usb(ts, buf[8:], flags, orig_len)
 
                 if flags & HF0_LAST:
                     self.got_start = False
 
-        def handle_usb(self, ts, buf, flags):
+        def handle_usb(self, ts, buf, flags, orig_len):
             for handler in self.handlers:
-                handler(ts, buf, flags)
+                handler(ts, buf, flags, orig_len)
 
-        def handle_usb_verbose(self, ts, buf, flags):
+        def handle_usb_verbose(self, ts, buf, flags, orig_len):
 #                ChandlePacket(ts, flags, buf, len(buf))
-                self.ui.handlePacket(ts, buf, flags)
+                self.ui.handlePacket(ts, buf, flags, orig_len)
 
             
     def __init__(self):

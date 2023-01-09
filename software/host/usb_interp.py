@@ -18,7 +18,7 @@ class USBInterpreter(object):
         self.ts_base = 0
         self.ts_roll_cyc = 2**24
 
-    def handlePacket(self, ts, buf, flags):
+    def handlePacket(self, ts, buf, flags, orig_len):
         CRC_BAD = 1
         CRC_GOOD = 2
         CRC_NONE = 3
@@ -75,7 +75,9 @@ class USBInterpreter(object):
 
                 msg += "DATA%d: %s" % (n,hd(buf[1:]))
 
-                if len(buf) > 2:
+                if orig_len > len(buf):
+                    msg += "\tTruncated %d bytes" % (orig_len - len(buf))
+                elif len(buf) > 2:
                     calc_check = self.data_crc(buf[1:-2])^0xFFFF 
                     pkt_check = buf[-2] | buf[-1] << 8
 
