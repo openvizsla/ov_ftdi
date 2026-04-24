@@ -1,0 +1,87 @@
+# ovweb gateware toolchain: Xilinx ISE 14.7 WebPACK + migen/misoc build deps
+# Target: Spartan-6 LX9 (XC6SLX9-3TQG144C) on OpenVizsla 3.2
+# Scope: ov_ftdi/software/fpga/ov3 -> build/ov3.fwpkg
+
+# ----------------------------------------------------------------------------
+# Stage 1: installer. Extracts the 6.5 GB tarball and runs batchxsetup.
+# The resulting /opt/Xilinx tree is copied into the runtime stage so we do not
+# ship the installer in the final image.
+# ----------------------------------------------------------------------------
+FROM debian:bullseye-slim AS installer
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        expect \
+        libncurses5 \
+        libglib2.0-0 \
+        libsm6 libxi6 libxrender1 libxrandr2 libxtst6 \
+        libfreetype6 libfontconfig1 \
+        libstdc++6 \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# ADD auto-extracts the local tar. Result: /tmp/installer/Xilinx_ISE_DS_Lin_14.7_1015_1/...
+ADD Xilinx_ISE_DS_Lin_14.7_1015_1.tar /tmp/installer/
+
+COPY install_config.txt /tmp/install_config.txt
+COPY xsetup_expect.sh   /tmp/xsetup_expect.sh
+RUN chmod +x /tmp/xsetup_expect.sh
+
+# batchxsetup initialises terminal handling at startup and aborts with
+# "TERM environment variable not set." without this.
+ENV TERM=xterm
+
+RUN mkdir -p /opt/Xilinx \
+ && /tmp/xsetup_expect.sh \
+ && test -d /opt/Xilinx/14.7/ISE_DS
+
+# Modern-glibc workaround: libPortability.so uses removed stat64 symbol; the
+# bundled libPortabilityNOSH.so is the fallback the installer ships for it.
+RUN set -eu; \
+    find /opt/Xilinx/14.7 -type f -name 'libPortability.so' | while read -r p; do \
+        d=$(dirname "$p"); \
+        if [ -f "$d/libPortabilityNOSH.so" ]; then \
+            cp "$d/libPortabilityNOSH.so" "$p"; \
+        fi; \
+    done; \
+    find /opt/Xilinx/14.7 -type f -name 'libstdc++.so.6' -exec mv {} {}.bak \; ; true
+
+# ----------------------------------------------------------------------------
+# Stage 2: runtime. ISE + Python build env only.
+# ----------------------------------------------------------------------------
+FROM debian:bullseye-slim AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libncurses5 \
+        libglib2.0-0 \
+        libsm6 libxi6 libxrender1 libxrandr2 libxtst6 \
+        libfreetype6 libfontconfig1 \
+        libstdc++6 \
+        python3 python3-pip python3-setuptools \
+        make git \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=installer /opt/Xilinx /opt/Xilinx
+
+# ISE env. settings64.sh is the canonical source-me script; we also export the
+# essentials directly so `exec` without a shell still finds the tools.
+ENV XILINX=/opt/Xilinx/14.7/ISE_DS/ISE \
+    XILINX_DSP=/opt/Xilinx/14.7/ISE_DS/ISE \
+    XILINX_EDK=/opt/Xilinx/14.7/ISE_DS/EDK \
+    XILINX_PLANAHEAD=/opt/Xilinx/14.7/ISE_DS/PlanAhead \
+    PATH=/opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64:/opt/Xilinx/14.7/ISE_DS/common/bin/lin64:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    LD_LIBRARY_PATH=/opt/Xilinx/14.7/ISE_DS/ISE/lib/lin64:/opt/Xilinx/14.7/ISE_DS/common/lib/lin64 \
+    XILINXD_LICENSE_FILE=/opt/Xilinx/license/Xilinx.lic
+
+RUN mkdir -p /opt/Xilinx/license
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+WORKDIR /work
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["make", "-C", "/work/software/fpga/ov3", "all"]
