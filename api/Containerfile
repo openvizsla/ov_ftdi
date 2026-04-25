@@ -1,0 +1,154 @@
+# ov-api: FastAPI + WebSocket + built Svelte UI + in-process capture supervisor.
+#
+# Three stages:
+#   1. libopenvizsla — debian:bookworm-slim; compiles libopenvizsla (C) from
+#                      api/third_party/libopenvizsla/ against libusb-1.0 +
+#                      libftdi1 + libzip. The embedded ov3.fwpkg is baked in.
+#   2. ui            — node:20-bookworm-slim; compiles frontend/ via pnpm.
+#   3. runtime       — debian:bookworm-slim; Python 3.11 via apt, uv for the
+#                      project venv, tshark for live-ingest, libopenvizsla +
+#                      libftdi1 + libusb-1.0-0 runtime libs.
+#
+# Build context is the repo root (see api/build-image.sh and .containerignore).
+# Run with rootless podman; see api/run.sh for the expected USB passthrough.
+
+# ----------------------------------------------------------------------------
+# Stage 1: build libopenvizsla (C shared library + embedded fwpkg).
+# ----------------------------------------------------------------------------
+FROM docker.io/library/debian:bookworm-slim AS libopenvizsla-builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        pkg-config \
+        gperf \
+        libusb-1.0-0-dev \
+        libftdi1-dev \
+        libzip-dev \
+        check \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+COPY api/third_party/libopenvizsla /src/
+
+# Out-of-tree build. Tests skipped; ovextcap skipped (we drive the library
+# directly from the supervisor via ctypes). The embedded fwpkg comes from the
+# repo's own ov3.fwpkg, the version matwey's firmware is validated against.
+RUN cmake -S . -B build \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DBUILD_SHARED_LIBS=ON \
+        -DBUILD_TESTING=OFF \
+ && cmake --build build -j"$(nproc)" \
+ && cmake --install build \
+ && ldconfig
+
+# ----------------------------------------------------------------------------
+# Stage 2: build the Svelte UI.
+# ----------------------------------------------------------------------------
+FROM docker.io/library/node:20-bookworm-slim AS ui
+
+ENV PNPM_HOME=/pnpm \
+    PATH=/pnpm:$PATH \
+    CI=1
+
+# Pin pnpm via corepack so the image is reproducible regardless of what's
+# committed in frontend/package.json's packageManager field.
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+
+WORKDIR /ui
+
+# Install deps first for layer caching — package.json + lockfile only.
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# Then copy the rest of the frontend tree and build. The CLI --outDir
+# override sidesteps vite.config.ts's `../api/src/ovweb/ui` default, which
+# would resolve outside the stage's workdir.
+COPY frontend/ ./
+RUN pnpm exec vite build --outDir /ui-dist --emptyOutDir
+
+# ----------------------------------------------------------------------------
+# Stage 3: runtime — Python 3.11 + tshark + uv + libopenvizsla + packaged ovweb.
+# ----------------------------------------------------------------------------
+FROM docker.io/library/debian:bookworm-slim AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PROJECT_ENVIRONMENT=/app/.venv \
+    PATH=/app/.venv/bin:/usr/local/bin:/usr/bin:/bin \
+    HOME=/app \
+    OV_DB_PATH=/data/ovweb.sqlite \
+    OV_UI_DIR=/app/ui \
+    SPEED_PROBE_TIMEOUT=2.0
+
+# tshark pinned to Wireshark 4.0.x via the bookworm distribution pin. CLAUDE.md:
+# "Pin tshark major version in the Containerfile … do not float." Phases 3 and 4
+# validated against 4.0; a major bump would change -T json schema and break the
+# class-aware decoders landing in Phase 5.
+#
+# libusb-1.0-0 + libftdi1 + libzip4 are the runtime shared libs libopenvizsla
+# was linked against in stage 1; without them ov-api fails to load at import
+# time when the ctypes loader hits libopenvizsla.so.
+#
+# tini reaps the tshark children live_ingest.py spawns per session. Without a
+# PID-1 reaper, cancelled live sessions leak zombies until the container exits.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3 \
+        python3-venv \
+        ca-certificates \
+        tshark \
+        tini \
+        libusb-1.0-0 \
+        libftdi1-2 \
+        libzip4 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Drop in libopenvizsla (shared lib + headers). Headers not strictly needed at
+# runtime but are ~50 KB and make debugging-inside-container easier. The
+# explicit /sbin/ldconfig is because our PATH above omits /sbin (the venv
+# shells don't need it).
+COPY --from=libopenvizsla-builder /usr/local/lib/ /usr/local/lib/
+COPY --from=libopenvizsla-builder /usr/local/include/ /usr/local/include/
+RUN /sbin/ldconfig
+
+# Pull uv as a static binary from the official image — smaller and more
+# reproducible than `pip install uv`.
+COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# Resolve deps first so re-copying src/ doesn't invalidate the dep layer.
+COPY api/pyproject.toml api/uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-install-project
+
+COPY api/src ./src
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
+# Drop the built UI into the spot app.py's static mount reads (OV_UI_DIR).
+COPY --from=ui /ui-dist /app/ui
+
+# Runtime dirs for the bind-mounts in api/run.sh. Non-root so the default
+# `podman run` without --user flags still works; api/run.sh overrides uid/gid
+# via --userns=keep-id + --user "$(id -u):$(id -g)" in practice.
+#
+# Numeric uid/gid used directly — debian:bookworm-slim strips the `shadow`
+# package, so useradd/groupadd aren't available. USER accepts raw numbers and
+# chown accepts them without needing /etc/passwd entries; uvicorn / python
+# don't care either.
+RUN mkdir -p /data \
+ && chown -R 1000:1000 /app /data
+
+USER 1000:1000
+EXPOSE 8000
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["uvicorn", "ovweb.app:app", "--host", "0.0.0.0", "--port", "8000"]

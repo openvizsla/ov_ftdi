@@ -1,2 +1,7 @@
-# allow all users to access OpenVizsla devices
-SUBSYSTEM=="usb", ATTR{idVendor}=="1d50", ATTR{idProduct}=="607c", MODE="0666", GROUP="plugdev"
+# OpenVizsla 3.2: grant the currently-logged-in seat user read/write via
+# systemd-logind ACLs (TAG+="uaccess"), no group membership required.
+# Matches both the OpenMoko-branded EEPROM (1d50:607c) and the raw FTDI
+# fallback (0403:6010) for boards with blank / mis-flashed EEPROMs.
+
+SUBSYSTEM=="usb", ATTR{idVendor}=="1d50", ATTR{idProduct}=="607c", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6010", TAG+="uaccess"

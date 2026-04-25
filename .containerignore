@@ -1,0 +1,38 @@
+# Build context excludes. Applies to all Containerfiles in this repo.
+#
+# The api/Containerfile uses repo root as its build context (so it can COPY
+# both api/ and frontend/). Without this file the context would include the
+# 6.5 GB Xilinx installer tarball, the ov_ftdi submodule, and every
+# node_modules + __pycache__ in the tree.
+
+**/__pycache__
+**/.mypy_cache
+**/.pytest_cache
+**/.ruff_cache
+**/.venv
+**/node_modules
+
+# Xilinx ISE installer: 6.5 GB, never needed in an api or capture image.
+Xilinx/Xilinx_ISE_DS_Lin_*.tar
+
+# Gateware submodule / fork: only the Xilinx container consumes it.
+ov_ftdi/
+
+# Third-party source submodule keeps a .git dir; strip it from the build
+# context — the libopenvizsla builder stage doesn't need version control.
+api/third_party/libopenvizsla/.git/
+api/logs/
+
+# Force the api container to rebuild the UI from frontend/ every time. The
+# committed tree under api/src/ovweb/ui/ is a dev-convenience artifact
+# produced by local `pnpm build`; shipping it into the image would defeat
+# the point of the stage-1 Svelte build and let a stale UI sneak through.
+api/src/ovweb/ui/
+
+.git/
+.gitignore
+.github/
+*.pcap
+*.pcapng
+*.sqlite
+*.sqlite-*

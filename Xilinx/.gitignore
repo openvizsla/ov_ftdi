@@ -1,0 +1,4 @@
+# Do not commit the 6.5 GB ISE installer tarball; it is reproducibly
+# downloadable from xilinx.com (login required).
+Xilinx_ISE_DS_Lin_*.tar
+Xilinx_ISE_DS_Lin_*.tar.gz

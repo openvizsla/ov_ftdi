@@ -2,6 +2,45 @@ __pycache__
 *~
 *.swp
 
+# ---- ovweb (Phase 4.6) ----
+# Python dev artifacts
+*.pyc
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+**/.venv
+
+# Node / Svelte dev artifacts
+node_modules/
+**/node_modules
+frontend/dist/
+
+# Svelte build output that the Containerfile produces in-image (kept out of git
+# per CLAUDE.md "built output not committed"; re-produced at container build).
+api/src/ovweb/ui/
+
+# Session data + raw captures — dev artifacts, never ship
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.pcap
+*.pcapng
+
+# Runtime logs
+api/logs/
+Xilinx/logs/
+*.log
+
+# Xilinx ISE 14.7 installer (~6.5 GB) — host-side, never committed
+Xilinx/Xilinx_ISE_DS_Lin_*.tar
+
+# Claude Code local session state
+.claude/
+
+# OS / editor junk
+.DS_Store
+
 hardware/__Previews/
 hardware/History/
 hardware/ov_ftdi.PcbDoc.htm

@@ -4,3 +4,6 @@
 [submodule "software/fpga/misoc"]
 	path = software/fpga/misoc
 	url = https://github.com/m-labs/misoc
+[submodule "api/third_party/libopenvizsla"]
+	path = api/third_party/libopenvizsla
+	url = https://github.com/matwey/libopenvizsla.git

@@ -1,0 +1,27 @@
+################################################################################
+# Xilinx ISE 14.7 batchxsetup config: headless WebPACK install.
+# Consumed by: bin/lin64/batchxsetup --batch /tmp/install_config.txt
+#
+# Flag convention: "<key>::1" means selected/enabled, "<key>::0" means
+# not-selected/disabled. The template file (`batchxsetup --samplebatchscript`)
+# ships every option commented-out at ::0; do NOT copy that form verbatim.
+################################################################################
+
+destination_dir=/opt/Xilinx
+
+copy_preferences=N
+use_multiple_cores=Y
+
+# Defer license registration; we bind-mount Xilinx.lic at runtime and set
+# XILINXD_LICENSE_FILE instead of going through the ISE license manager.
+application=Acquire or Manage a License Key::0
+
+# ISE WebPACK only. LX9 is a WebPACK-eligible device; we do not need the
+# Logic / Embedded / DSP / System editions.
+package=ISE WebPACK::1
+application=setupEnv.sh::1
+application=Install Linux System Generator Info XML::1
+application=Ensure Linux System Generator Symlinks::1
+
+# Don't install udev/cable drivers: host provides those outside the container.
+application=Install Cable Drivers::0
